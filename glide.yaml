@@ -1,0 +1,15 @@
+package: github.com/andreas-kokkalis/dock-server
+import:
+- package: github.com/docker/docker
+  version: ^1.13.0-rc1
+  subpackages:
+  - api/types
+  - api/types/container
+  - api/types/network
+  - client
+- package: github.com/docker/go-connections
+  version: ^0.2.1
+  subpackages:
+  - nat
+- package: github.com/julienschmidt/httprouter
+  version: ^1.1.0
