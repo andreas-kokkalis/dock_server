@@ -13,3 +13,13 @@ type Img struct {
 	ID       string   `json:"Id"`
 	RepoTags []string `json:"RepoTags"`
 }
+
+// ImgHistory is identical to docker types.ImgHistory
+type ImgHistory struct {
+	ID        string `json:"Id"`
+	Created   int64
+	CreatedBy string
+	Tags      []string
+	Size      int64
+	Comment   string
+}
