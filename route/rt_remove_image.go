@@ -9,7 +9,7 @@ import (
 )
 
 // RemoveImage removes an image from the registry
-// DELETE /images/abc33412ad
+// DELETE /images/abc33412adqw
 func RemoveImage(res http.ResponseWriter, req *http.Request, params httprouter.Params) {
 	res.Header().Set("Content-Type", "application/json")
 	response := NewResponse()

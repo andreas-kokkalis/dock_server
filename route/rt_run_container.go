@@ -30,6 +30,7 @@ type runRequest struct {
 // 		a new container, but recreate the url for the old container
 
 // RunContainer POST
+// POST /v0/containers/run
 func RunContainer(res http.ResponseWriter, req *http.Request, params httprouter.Params) {
 	res.Header().Set("Content-Type", "application/json")
 	response := NewResponse()

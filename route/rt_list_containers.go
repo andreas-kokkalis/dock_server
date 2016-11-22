@@ -8,7 +8,9 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-// GetContainers returns list of running containers
+// GetContainers returns list of containers by status.
+// GET /v0/containers
+// GET /v0/containers/:status
 func GetContainers(res http.ResponseWriter, req *http.Request, params httprouter.Params) {
 	res.Header().Set("Content-Type", "application/json")
 	response := NewResponse()

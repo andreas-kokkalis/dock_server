@@ -22,7 +22,9 @@ func main() {
 	// Containers
 	router.GET("/v0/containers", route.GetContainers)
 	router.GET("/v0/containers/:status", route.GetContainers)
-	router.POST("/v0/run", route.RunContainer)
+	router.POST("/v0/containers/run", route.RunContainer)
+	router.POST("/v0/containers/commit", route.CommitContainer)
+	router.DELETE("/v0/containers/kill/:id", route.KillContainer)
 
 	// Images
 	router.GET("/v0/images", route.ListImages)

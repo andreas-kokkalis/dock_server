@@ -9,7 +9,7 @@ import (
 )
 
 // GetImageHistory returns the history of a particular image
-// GET /images/history/abc33412ad
+// GET /images/history/abc33412adwq
 func GetImageHistory(res http.ResponseWriter, req *http.Request, params httprouter.Params) {
 	res.Header().Set("Content-Type", "application/json")
 	response := NewResponse()

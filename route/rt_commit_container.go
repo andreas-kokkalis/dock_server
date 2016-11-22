@@ -17,7 +17,7 @@ type commitContainerRequest struct {
 }
 
 // CommitContainer creates a new image out of a running container
-// POST containers/commit
+// POST /v0/containers/commit
 // data:
 //	* Comment
 //	* Author

@@ -9,6 +9,7 @@ import (
 )
 
 // ListImages returns the list of images along with data per image
+// GET /v0/images
 func ListImages(res http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 	res.Header().Set("Content-Type", "application/json")
 	response := NewResponse()
