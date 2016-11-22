@@ -8,9 +8,9 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-// RemoveImage removes an image from the registry
-// DELETE /images/abc33412ad
-func RemoveImage(res http.ResponseWriter, req *http.Request, params httprouter.Params) {
+// GetImageHistory returns the history of a particular image
+// GET /images/history/abc33412ad
+func GetImageHistory(res http.ResponseWriter, req *http.Request, params httprouter.Params) {
 	res.Header().Set("Content-Type", "application/json")
 	response := NewResponse()
 
@@ -25,15 +25,13 @@ func RemoveImage(res http.ResponseWriter, req *http.Request, params httprouter.P
 		return
 	}
 
-	// Remove Image
-	err := dc.RemoveImage(imageID)
+	// Retrieve image history
+	history, err := dc.ImageHistory(imageID)
 	if err != nil {
 		http.Error(res, er.ServerError, http.StatusInternalServerError)
 		response.AddError(err.Error())
-		res.Write(response.Marshal())
-		return
 	}
 
-	response.Data = "OK"
+	response.Data = history
 	res.Write(response.Marshal())
 }

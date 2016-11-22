@@ -18,10 +18,16 @@ func main() {
 	router := httprouter.New()
 
 	// List of Routes
+
+	// Containers
 	router.GET("/v0/containers", route.GetContainers)
 	router.GET("/v0/containers/:status", route.GetContainers)
-	router.GET("/v0/images", route.ListImages)
 	router.POST("/v0/run", route.RunContainer)
+
+	// Images
+	router.GET("/v0/images", route.ListImages)
+	router.GET("/v0/images/history/:id", route.GetImageHistory)
+	router.DELETE("/v0/images/:id", route.RemoveImage)
 
 	// Start the server
 	log.Fatal(http.ListenAndServe(":8080", router))

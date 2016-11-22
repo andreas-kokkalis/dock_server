@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"regexp"
 
 	"github.com/andreas-kokkalis/dock-server/dc"
+	"github.com/andreas-kokkalis/dock-server/er"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -22,7 +22,6 @@ type runRequest struct {
 	Password string `json:"pwd"`
 }
 
-// XXX: validator for imageID
 // TODO: might need to extend this with
 //	* session data.
 //	* username for user
@@ -30,39 +29,37 @@ type runRequest struct {
 // 		If a session already exists, then you shouldn't run
 // 		a new container, but recreate the url for the old container
 
-var validPassword = regexp.MustCompile(`^([a-zA-Z0-9]){5,6}$`)
-var validUsername = regexp.MustCompile(`^([a-zA-Z0-9]){2,16}$`)
-
 // RunContainer POST
 func RunContainer(res http.ResponseWriter, req *http.Request, params httprouter.Params) {
 	res.Header().Set("Content-Type", "application/json")
 	response := NewResponse()
 
+	// TODO: auth
+
 	decoder := json.NewDecoder(req.Body)
 	var reqData runRequest
 	err := decoder.Decode(&reqData)
 	if err != nil {
-		http.Error(res, err.Error(), http.StatusBadRequest)
+		http.Error(res, er.InvalidPostData, http.StatusUnprocessableEntity)
 		return
 	}
 
-	if reqData.Name == "" || reqData.RefTag == "" || reqData.Username == "" || reqData.Password == "" ||
-		validUsername.MatchString(reqData.Username) == false || validPassword.MatchString(reqData.Password) == false {
+	// XXX: might not need to get the name as a parameter
+	if reqData.Name == "" || reqData.RefTag == "" ||
+		vUsername.MatchString(reqData.Username) == false || vPassword.MatchString(reqData.Password) == false {
 		http.Error(res, errors.New("Insufficient post arguments").Error(), http.StatusBadRequest)
 		return
 	}
 
-	var url string
-	url, err = dc.RunContainer(reqData.Name, reqData.RefTag, reqData.Username, reqData.Password)
-	if err != nil {
-		http.Error(res, err.Error(), http.StatusInternalServerError)
-		response.AddError(err.Error())
-	}
-	response.Data = runResponse{URL: url}
-	js, err2 := json.Marshal(response)
-	if err2 != nil {
-		http.Error(res, err2.Error(), http.StatusInternalServerError)
+	// Run the container and get the url
+	url, err1 := dc.RunContainer(reqData.Name, reqData.RefTag, reqData.Username, reqData.Password)
+	if err1 != nil {
+		http.Error(res, er.ServerError, http.StatusInternalServerError)
+		response.AddError(err1.Error())
+		res.Write(response.Marshal())
 		return
 	}
-	res.Write(js)
+
+	response.Data = runResponse{URL: url}
+	res.Write(response.Marshal())
 }

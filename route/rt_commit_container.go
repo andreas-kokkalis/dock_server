@@ -2,10 +2,10 @@ package route
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	"github.com/andreas-kokkalis/dock-server/dc"
+	"github.com/andreas-kokkalis/dock-server/er"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -16,33 +16,43 @@ type commitContainerRequest struct {
 	RefTag      string `json:"tag"`
 }
 
-// CommitContainer TODO:
+// CommitContainer creates a new image out of a running container
+// POST containers/commit
+// data:
+//	* Comment
+//	* Author
+//	* ContainerID
+//	* RefTag
 func CommitContainer(res http.ResponseWriter, req *http.Request, params httprouter.Params) {
 	res.Header().Set("Content-Type", "application/json")
 	response := NewResponse()
 
+	// Parse post params
 	decoder := json.NewDecoder(req.Body)
 	var reqData commitContainerRequest
 	err := decoder.Decode(&reqData)
 	if err != nil {
-		http.Error(res, err.Error(), http.StatusBadRequest)
+		http.Error(res, err.Error(), http.StatusUnprocessableEntity)
 		return
 	}
 
+	// Validate post params
 	if reqData.Comment == "" || reqData.Author == "" || reqData.ContainerID == "" || reqData.RefTag == "" {
-		http.Error(res, errors.New("Insufficient post arguments").Error(), http.StatusBadRequest)
+		http.Error(res, er.InvalidPostData, http.StatusUnprocessableEntity)
+		response.AddError(er.InvalidPostData)
+		res.Write(response.Marshal())
 		return
 	}
 
+	// Create the new image
 	err = dc.CommitContainer(reqData.Comment, reqData.Author, reqData.ContainerID, reqData.RefTag)
 	if err != nil {
-		http.Error(res, err.Error(), http.StatusInternalServerError)
+		http.Error(res, er.ServerError, http.StatusInternalServerError)
 		response.AddError(err.Error())
-	}
-	js, err2 := json.Marshal(response)
-	if err2 != nil {
-		http.Error(res, err2.Error(), http.StatusInternalServerError)
+		res.Write(response.Marshal())
 		return
 	}
-	res.Write(js)
+
+	response.Data = "OK"
+	res.Write(response.Marshal())
 }
