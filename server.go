@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/andreas-kokkalis/dock-server/dc"
 	"github.com/andreas-kokkalis/dock-server/route"
@@ -15,6 +16,14 @@ func main() {
 	dc.ClientInit("", "")
 	srv.InitPortMappings(100)
 	srv.InitRedisClient()
+	srv.InitPostgres()
+
+	// Create Schema and insert data if mode is set to dev
+	mode := os.Getenv("MODE")
+	if mode == "dev" {
+		srv.MigrateData()
+	}
+
 	router := httprouter.New()
 
 	// List of Routes
@@ -31,6 +40,12 @@ func main() {
 	router.GET("/v0/images/history/:id", route.GetImageHistory)
 	router.DELETE("/v0/images/:id", route.RemoveImage)
 
+	// Admin
+	router.POST("/v0/login/", route.AdminLogin)
+
 	// Start the server
-	log.Fatal(http.ListenAndServe(":8080", router))
+	err := http.ListenAndServeTLS(":8080", "ssl/server.pem", "ssl/server.key", router)
+	if err != nil {
+		log.Fatal("ListenAndServe: ", err)
+	}
 }

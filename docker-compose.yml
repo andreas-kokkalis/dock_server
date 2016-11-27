@@ -1,23 +1,34 @@
 version: '2'
 
 services:
+    # redis
     redisdb:
         image: redis
         ports:
             - "6379:6379"
         networks:
-            redis_net:
-                ipv4_address: 172.16.238.10
+            default_net:
+                ipv4_address: 179.16.238.10
+    # postgres
+    postgresdb:
+        image: postgres
+        ports:
+            - "5432:5432"
+        environment:
+            - POSTGRES_USER=dock
+            - POSTGRES_PASSWORD=dock
+            - POSTGRES_DB=dock
+        networks:
+            default_net:
+                ipv4_address: 179.16.238.11
 
+
+# bridge network
 networks:
-  redis_net:
+  default_net:
     driver: bridge
-    # driver_opts:
-    #   com.docker.network.enable_ipv6: "true"
     ipam:
       driver: default
       config:
-      - subnet: 172.16.238.0/24
-        gateway: 172.16.238.1
-    #   - subnet: 2001:3984:3989::/64
-        # gateway: 2001:3984:3989::1
+      - subnet: 179.16.238.0/24
+        gateway: 179.16.238.1

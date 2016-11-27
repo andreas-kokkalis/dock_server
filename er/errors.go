@@ -11,4 +11,11 @@ const (
 	InvalidContainerState = "Container state is invalid"
 	// InvalidPostData when running a container and post data are insufficient
 	InvalidPostData = "POST parameters have errors"
+	// DatabaseError occured
+	DatabaseError = "A database error occured"
+
+	// UsernameNotExists when username does not exist in db
+	UsernameNotExists = "Username does not exist mismatch"
+	// PasswordMismatch when given password does not match the stored
+	PasswordMismatch = "Password mismatch"
 )

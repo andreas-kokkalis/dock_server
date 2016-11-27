@@ -6,6 +6,7 @@ import (
 	"github.com/docker/docker/api/types"
 )
 
+// ImageHistory returns image history
 func ImageHistory(imageID string) ([]ImgHistory, error) {
 	var history []types.ImageHistory
 	var err error

@@ -12,7 +12,7 @@ var RCli *redis.Client
 // InitRedisClient initializes the redis connection
 func InitRedisClient() {
 	RCli = redis.NewClient(&redis.Options{
-		Addr:     "172.16.238.10:6379",
+		Addr:     "179.16.238.10:6379",
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
