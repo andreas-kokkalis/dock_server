@@ -20,8 +20,9 @@ func GetContainers(res http.ResponseWriter, req *http.Request, params httprouter
 	// Validate if status has any of the accepted input
 	status := params.ByName("status")
 	if vContainerState.MatchString(status) == false {
-		http.Error(res, er.InvalidContainerState, http.StatusUnprocessableEntity)
+		// http.Error(res, er.InvalidContainerState, http.StatusUnprocessableEntity)
 		response.AddError(er.InvalidContainerState)
+		response.SetStatus(http.StatusUnprocessableEntity)
 		res.Write(response.Marshal())
 		return
 	}
@@ -29,12 +30,13 @@ func GetContainers(res http.ResponseWriter, req *http.Request, params httprouter
 	// Get the list of containers
 	containers, err := dc.GetContainers(status)
 	if err != nil {
-		http.Error(res, er.ServerError, http.StatusInternalServerError)
+		// http.Error(res, er.ServerError, http.StatusInternalServerError)
 		response.AddError(err.Error())
+		response.SetStatus(http.StatusInternalServerError)
 		res.Write(response.Marshal())
 		return
 	}
 
-	response.Data = containers
+	response.SetData(containers)
 	res.Write(response.Marshal())
 }

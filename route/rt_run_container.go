@@ -2,7 +2,6 @@ package route
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	"github.com/andreas-kokkalis/dock-server/dc"
@@ -40,27 +39,26 @@ func RunContainer(res http.ResponseWriter, req *http.Request, params httprouter.
 	decoder := json.NewDecoder(req.Body)
 	var reqData runRequest
 	err := decoder.Decode(&reqData)
-	if err != nil {
-		http.Error(res, er.InvalidPostData, http.StatusUnprocessableEntity)
-		return
-	}
-
 	// XXX: might not need to get the name as a parameter
-	if reqData.Name == "" || reqData.RefTag == "" ||
+	if err != nil || reqData.Name == "" || reqData.RefTag == "" ||
 		vUsername.MatchString(reqData.Username) == false || vPassword.MatchString(reqData.Password) == false {
-		http.Error(res, errors.New("Insufficient post arguments").Error(), http.StatusBadRequest)
+		// http.Error(res, errors.New("Insufficient post arguments").Error(), http.StatusBadRequest)
+		response.AddError(er.InvalidPostData)
+		response.SetStatus(http.StatusUnprocessableEntity)
+		res.Write(response.Marshal())
 		return
 	}
 
 	// Run the container and get the url
 	url, err1 := dc.RunContainer(reqData.Name, reqData.RefTag, reqData.Username, reqData.Password)
 	if err1 != nil {
-		http.Error(res, er.ServerError, http.StatusInternalServerError)
+		// http.Error(res, er.ServerError, http.StatusInternalServerError)
 		response.AddError(err1.Error())
+		response.SetStatus(http.StatusInternalServerError)
 		res.Write(response.Marshal())
 		return
 	}
 
-	response.Data = runResponse{URL: url}
+	response.SetData(runResponse{URL: url})
 	res.Write(response.Marshal())
 }

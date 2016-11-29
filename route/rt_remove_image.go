@@ -19,8 +19,9 @@ func RemoveImage(res http.ResponseWriter, req *http.Request, params httprouter.P
 	// Validate imageID
 	imageID := params.ByName("id")
 	if !vImageID.MatchString(imageID) {
-		http.Error(res, er.InvalidImageID, http.StatusUnprocessableEntity)
+		// http.Error(res, er.InvalidImageID, http.StatusUnprocessableEntity)
 		response.AddError(er.InvalidImageID)
+		response.SetStatus(http.StatusUnprocessableEntity)
 		res.Write(response.Marshal())
 		return
 	}
@@ -28,12 +29,12 @@ func RemoveImage(res http.ResponseWriter, req *http.Request, params httprouter.P
 	// Remove Image
 	err := dc.RemoveImage(imageID)
 	if err != nil {
-		http.Error(res, er.ServerError, http.StatusInternalServerError)
+		// http.Error(res, er.ServerError, http.StatusInternalServerError)
 		response.AddError(err.Error())
+		response.SetStatus(http.StatusInternalServerError)
 		res.Write(response.Marshal())
 		return
 	}
 
-	response.Data = "OK"
 	res.Write(response.Marshal())
 }
