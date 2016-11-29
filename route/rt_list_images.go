@@ -28,6 +28,7 @@ func ListImages(res http.ResponseWriter, req *http.Request, _ httprouter.Params)
 		return
 	}
 
+	response.SetStatus(http.StatusOK)
 	response.SetData(images)
 	res.Write(response.Marshal())
 }

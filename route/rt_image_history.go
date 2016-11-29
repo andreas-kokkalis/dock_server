@@ -36,6 +36,7 @@ func GetImageHistory(res http.ResponseWriter, req *http.Request, params httprout
 		return
 	}
 
+	response.SetStatus(http.StatusOK)
 	response.SetData(history)
 	res.Write(response.Marshal())
 }

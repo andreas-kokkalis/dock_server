@@ -59,6 +59,7 @@ func RunContainer(res http.ResponseWriter, req *http.Request, params httprouter.
 		return
 	}
 
+	response.SetStatus(http.StatusOK)
 	response.SetData(runResponse{URL: url})
 	res.Write(response.Marshal())
 }

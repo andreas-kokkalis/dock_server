@@ -49,5 +49,6 @@ func CommitContainer(res http.ResponseWriter, req *http.Request, params httprout
 		return
 	}
 
+	response.SetStatus(http.StatusOK)
 	res.Write(response.Marshal())
 }

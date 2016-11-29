@@ -37,6 +37,7 @@ func GetContainers(res http.ResponseWriter, req *http.Request, params httprouter
 		return
 	}
 
+	response.SetStatus(http.StatusOK)
 	response.SetData(containers)
 	res.Write(response.Marshal())
 }

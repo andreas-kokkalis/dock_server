@@ -36,5 +36,6 @@ func RemoveImage(res http.ResponseWriter, req *http.Request, params httprouter.P
 		return
 	}
 
+	response.SetStatus(http.StatusOK)
 	res.Write(response.Marshal())
 }

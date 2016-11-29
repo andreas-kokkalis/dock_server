@@ -52,5 +52,6 @@ func KillContainer(res http.ResponseWriter, req *http.Request, params httprouter
 		return
 	}
 
+	response.SetStatus(http.StatusOK)
 	res.Write(response.Marshal())
 }
