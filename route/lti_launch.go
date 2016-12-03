@@ -78,14 +78,14 @@ func LTILaunch(res http.ResponseWriter, req *http.Request, params httprouter.Par
 	var sessionExists bool
 	sessionExists, err = session.ExistsRunConfig(userID)
 	if err != nil {
-		t.Execute(res, Resp{Error: "Hello"})
+		t.Execute(res, Resp{Error: er.ServerError})
 	}
 
 	var cfg dc.RunConfig
 	if sessionExists {
 		cfg, err = session.GetRunConfig(userID)
 		if err != nil {
-			// TODO: handle error
+			t.Execute(res, Resp{Error: er.ServerError})
 		}
 		fmt.Printf("exists: %v\n", cfg)
 		// Update the TTL
@@ -112,13 +112,27 @@ func LTILaunch(res http.ResponseWriter, req *http.Request, params httprouter.Par
 		}
 	}
 	// Return HTML template with data
-	t.Execute(res, Resp{Config: cfg})
+	t.Execute(res, getResp(cfg))
+}
+
+func getResp(cfg dc.RunConfig) Resp {
+	return Resp{
+		ContainerID: cfg.ContainerID,
+		Port:        cfg.Port,
+		Username:    cfg.Username,
+		Password:    cfg.Password,
+		URL:         cfg.URL,
+	}
 }
 
 // Resp ...
 type Resp struct {
-	Config dc.RunConfig
-	Error  string
+	ContainerID string `json:"id"`
+	Port        string `json:"port"`
+	Username    string `json:"username"`
+	Password    string `json:"password"`
+	URL         string `json:"url"`
+	Error       string
 }
 
 func newPassword() string {
