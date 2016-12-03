@@ -19,9 +19,9 @@ func GetImageHistory(res http.ResponseWriter, req *http.Request, params httprout
 	// Validate imageID
 	imageID := params.ByName("id")
 	if !vImageID.MatchString(imageID) {
-		//http.Error(res, er.InvalidImageID, http.StatusUnprocessableEntity)
+		http.Error(res, er.InvalidImageID, http.StatusBadRequest)
 		response.AddError(er.InvalidImageID)
-		response.SetStatus(http.StatusUnprocessableEntity)
+		response.SetStatus(http.StatusBadRequest)
 		res.Write(response.Marshal())
 		return
 	}

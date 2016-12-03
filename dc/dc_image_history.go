@@ -18,11 +18,11 @@ func ImageHistory(imageID string) ([]ImgHistory, error) {
 
 	res := []ImgHistory{}
 
-	for i, v := range history {
-		res[i].ID = v.ID
-		res[i].Created = v.Created
-		res[i].CreatedBy = v.CreatedBy
-		res[i].Tags = v.Tags
+	for _, v := range history {
+		res = append(res, ImgHistory{ID: v.ID, Created: v.Created, CreatedBy: v.CreatedBy, Tags: v.Tags, Comment: v.Comment})
+		// Only the first is needed
+		break
 	}
+
 	return res, nil
 }
