@@ -2,6 +2,7 @@ package dc
 
 import (
 	"context"
+	"errors"
 
 	"github.com/docker/docker/api/types"
 )
@@ -18,13 +19,12 @@ func StartContainer(containerID string) error {
 
 	// Check if container is running
 	var isRunning bool
-	isRunning, err = CheckState(containerID, types.ContainerState{Running: true})
+	isRunning, err = CheckState(containerID, "running")
 	if err != nil {
 		return err
 	}
-	if isRunning == false {
-		//XXX: Need to extend this to wait for a container to run
+	if !isRunning {
+		return errors.New("container not started")
 	}
-
 	return nil
 }

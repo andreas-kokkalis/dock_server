@@ -1,18 +1,31 @@
 package dc
 
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+)
 
 // RunContainer does something
-func RunContainer(image, refTag, username, password string) (string, error) {
-	id, port, err := CreateContainer(image, refTag, username, password)
+func RunContainer(imageID, username, password string) (cfg RunConfig, err error) {
+	// Create the container
+	id, port, err := CreateContainer(imageID, username, password)
 	if err != nil {
-		return "", err
+		fmt.Printf("error-create: %v\n", err.Error())
+		return cfg, err
 	}
+	// Start the container
 	err = StartContainer(id)
 	if err != nil {
-		return "", err
+		fmt.Printf("error-start: %v\n", err.Error())
+		return cfg, err
 	}
 
-	url := "https://localhost:" + strconv.Itoa(port)
-	return url, nil
+	cfg = RunConfig{
+		ContainerID: id,
+		Username:    username,
+		Password:    password,
+		Port:        strconv.Itoa(port),
+		URL:         "https://localhost:" + strconv.Itoa(port),
+	}
+	return cfg, nil
 }

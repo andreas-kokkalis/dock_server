@@ -1,5 +1,7 @@
 package dc
 
+const imageRepo = "sspreitzer/shellinabox"
+
 // Ctn minimal container struct
 type Ctn struct {
 	ID     string `json:"Id"`
@@ -22,4 +24,13 @@ type ImgHistory struct {
 	Tags      []string
 	Size      int64
 	Comment   string
+}
+
+// RunConfig for running a container
+type RunConfig struct {
+	ContainerID string `json:"id"`
+	Port        string `json:"port"`
+	Username    string `json:"username"`
+	Password    string `json:"password"`
+	URL         string `json:"url"`
 }

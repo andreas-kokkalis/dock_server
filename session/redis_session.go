@@ -2,35 +2,38 @@ package session
 
 import (
 	"crypto/md5"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"strconv"
 	"time"
 
+	"github.com/andreas-kokkalis/dock-server/dc"
 	"github.com/andreas-kokkalis/dock-server/srv"
 )
 
 const (
-	usrPrefix = "dsx:"
+	usrPrefix = "usr:"
+	userTTL   = time.Hour * 1
 	admPrefix = "adm:"
 	adminTTL  = time.Hour * 24
 )
 
-type userSession struct {
-	ContainerID string `json:"ID"`
-	Port        int    `json:"port"`
+/*
+	============================
+				USER
+	============================
+*/
+
+//  Constructs the user key
+func userKey(userID string) string {
+	return usrPrefix + userID
 }
 
-type adminSession struct {
-	AdminID int `json:"id"`
-}
-
-// UserExists returns true if there is a session for the particular user
-func UserExists(username, password string) (bool, error) {
-	key := usrPrefix + username + ":" + password
-
-	keyExists, err := srv.RCli.Exists(key).Result()
+// ExistsRunConfig returns true if there is a session for the particular user
+func ExistsRunConfig(userID string) (bool, error) {
+	keyExists, err := srv.RCli.Exists(userKey(userID)).Result()
 	if err != nil {
 		return false, err
 	}
@@ -40,28 +43,49 @@ func UserExists(username, password string) (bool, error) {
 	return true, nil
 }
 
-// UserAdd will add the session
-func UserAdd(username, password, containerID string, port int, ttl int) error {
-	key := usrPrefix + username + ":" + password
+// GetRunConfig returns the user session
+func GetRunConfig(userID string) (r dc.RunConfig, err error) {
+	var val string
+	val, err = srv.RCli.Get(userKey(userID)).Result()
+	if err != nil {
+		return r, err
+	}
+	err = json.Unmarshal([]byte(val), &r)
+	if err != nil {
+		return r, err
+	}
+	return r, nil
+}
 
-	exists, err := UserExists(username, password)
+// SetRunConfig will add the session
+func SetRunConfig(userID string, r dc.RunConfig) (err error) {
+	// Marshal to JSON
+	var js []byte
+	js, err = json.Marshal(r)
 	if err != nil {
 		return err
 	}
-	if exists {
-		return errors.New("Key already exists")
-	}
 
-	s := userSession{ContainerID: containerID, Port: port}
-	OK, err2 := srv.RCli.Set(key, s, time.Duration(ttl)).Result()
-	if err2 != nil {
-		return err2
+	// Set key value
+	var OK string
+	OK, err = srv.RCli.Set(userKey(userID), js, userTTL).Result()
+	if err != nil {
+		return err
 	}
 	if OK != "OK" {
-		return errors.New(OK)
+		return errors.New("Not OK")
 	}
-	fmt.Println(OK)
 	return nil
+}
+
+/*
+	============================
+				ADMIN
+	============================
+*/
+
+type adminSession struct {
+	AdminID int `json:"id"`
 }
 
 // GetAdminKey returns the admin session key

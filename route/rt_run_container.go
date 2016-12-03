@@ -14,9 +14,9 @@ type runResponse struct {
 	URL string `json:"url"`
 }
 
+// XXX: I don't need the name. The name of the repo is the same. Only the tag is needed.
+
 type runRequest struct {
-	Name     string `json:"name"`
-	RefTag   string `json:"tag"`
 	Username string `json:"user"`
 	Password string `json:"pwd"`
 }
@@ -34,23 +34,36 @@ func RunContainer(res http.ResponseWriter, req *http.Request, params httprouter.
 	res.Header().Set("Content-Type", "application/json")
 	response := NewResponse()
 
-	// TODO: auth
-
-	decoder := json.NewDecoder(req.Body)
+	// Validate json request body
 	var reqData runRequest
-	err := decoder.Decode(&reqData)
-	// XXX: might not need to get the name as a parameter
-	if err != nil || reqData.Name == "" || reqData.RefTag == "" ||
-		vUsername.MatchString(reqData.Username) == false || vPassword.MatchString(reqData.Password) == false {
-		// http.Error(res, errors.New("Insufficient post arguments").Error(), http.StatusBadRequest)
-		response.AddError(er.InvalidPostData)
-		response.SetStatus(http.StatusUnprocessableEntity)
+	err := json.NewDecoder(req.Body).Decode(&reqData)
+	if err != nil {
+		http.Error(res, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		response.AddError(http.StatusText(http.StatusBadRequest))
+		response.SetStatus(http.StatusBadRequest)
+		res.Write(response.Marshal())
+		return
+	}
+	// Validate imageID
+	imageID := params.ByName("id")
+	if !vImageID.MatchString(imageID) {
+		http.Error(res, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		response.AddError(er.InvalidImageID)
+		response.SetStatus(http.StatusBadRequest)
+		res.Write(response.Marshal())
+		return
+	}
+	// Validate Username and Password
+	if !vUsername.MatchString(reqData.Username) || !vPassword.MatchString(reqData.Password) {
+		http.Error(res, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		response.AddError(er.CredentialsInvalid)
+		response.SetStatus(http.StatusBadRequest)
 		res.Write(response.Marshal())
 		return
 	}
 
 	// Run the container and get the url
-	url, err1 := dc.RunContainer(reqData.Name, reqData.RefTag, reqData.Username, reqData.Password)
+	cfg, err1 := dc.RunContainer(imageID, reqData.Username, reqData.Password)
 	if err1 != nil {
 		// http.Error(res, er.ServerError, http.StatusInternalServerError)
 		response.AddError(err1.Error())
@@ -59,7 +72,6 @@ func RunContainer(res http.ResponseWriter, req *http.Request, params httprouter.
 		return
 	}
 
-	response.SetStatus(http.StatusOK)
-	response.SetData(runResponse{URL: url})
+	response.SetData(runResponse{URL: cfg.URL})
 	res.Write(response.Marshal())
 }

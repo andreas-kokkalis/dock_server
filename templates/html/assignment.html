@@ -1,0 +1,52 @@
+<html>
+<header>
+    <title>Hello</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+</header>
+
+<body>
+
+    <div class="container">
+        {{if .Error }}
+        <div class="alert alert-danger" role="alert">
+            <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+            <span class="sr-only">Error:</span> {{ .Error }}
+        </div>
+        {{end}}
+        {{if .Username}}
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <h3 class="panel-title">Starting</h3>
+            </div>
+            <div class="panel-body">
+                <p>Use the credentials listed below to login to your ssh terminal.</p>
+                <p><strong>Username:</strong> {{ .Username }}</p>
+                <p><strong>Password:</strong> {{ .Password }}</p>
+            </div>
+        </div>
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <h3 class="panel-title">SSH Terminal Emulator</h3>
+            </div>
+            <div class="panel-body">
+                <div class="embed-responsive embed-responsive-16by9">
+                    <iframe class="embed-responsive-item" src="{{ .URL }}"></iframe>
+                </div>
+            </div>
+        </div>
+        <div class="alert alert-info" role="alert">
+            <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+            If this is your first session you might have to visit {{.URL}} in a new tab and accept the SSL certificate.
+        </div>
+        <div>
+            <p>Terminate container: <button type="button" class="btn btn-sm btn-danger" onclick="">Terminate</button>
+        </div>
+        {{end}}
+    </div>
+
+</body>
+
+</html>

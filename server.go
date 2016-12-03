@@ -31,7 +31,7 @@ func main() {
 	// Containers
 	router.GET("/v0/containers", route.GetContainers)
 	router.GET("/v0/containers/:status", route.GetContainers)
-	router.POST("/v0/containers/run", route.RunContainer)
+	router.POST("/v0/containers/run/:id", route.RunContainer)
 	router.POST("/v0/containers/commit/:id", route.CommitContainer)
 	router.DELETE("/v0/containers/kill/:id", route.KillContainer)
 
@@ -42,6 +42,9 @@ func main() {
 
 	// Admin
 	router.POST("/v0/login/", route.AdminLogin)
+
+	// LTILaunch	- id is the imageID
+	router.POST("/v0/lti/launch/:id", route.OAuth(route.LTILaunch))
 
 	// Start the server
 	err := http.ListenAndServeTLS(":8080", "ssl/server.pem", "ssl/server.key", router)

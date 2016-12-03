@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"time"
-
-	"github.com/docker/docker/api/types"
 )
 
 // StopContainer stops a running container
@@ -14,7 +12,7 @@ func StopContainer(containerID string) error {
 
 	// if container is not running return that it was already stopped
 
-	isRunning, err := CheckState(containerID, types.ContainerState{Running: true})
+	isRunning, err := CheckState(containerID, "running")
 	if err != nil {
 		return err
 	}
@@ -27,7 +25,7 @@ func StopContainer(containerID string) error {
 	}
 
 	var isStopped bool
-	isStopped, err = CheckState(containerID, types.ContainerState{Running: false})
+	isStopped, err = CheckState(containerID, "running")
 	if err != nil {
 		return err
 	}

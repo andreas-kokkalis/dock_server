@@ -18,4 +18,6 @@ const (
 	UsernameNotExists = "Username does not exist mismatch"
 	// PasswordMismatch when given password does not match the stored
 	PasswordMismatch = "Password mismatch"
+	// CredentialsInvalid When username and password are invalid
+	CredentialsInvalid = "Invalid username and/or password"
 )

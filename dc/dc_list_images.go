@@ -8,8 +8,6 @@ import (
 	"github.com/docker/docker/api/types"
 )
 
-const imageRepo = "sspreitzer/shellinabox"
-
 // ListImages retrieves the list of docker images from Docker Engine
 // via the Docker Remote API.
 // It only returns the image ID, the repotags
