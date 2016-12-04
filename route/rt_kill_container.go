@@ -1,10 +1,13 @@
 package route
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/andreas-kokkalis/dock-server/dc"
 	"github.com/andreas-kokkalis/dock-server/er"
+	"github.com/andreas-kokkalis/dock-server/session"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -19,39 +22,52 @@ func KillContainer(res http.ResponseWriter, req *http.Request, params httprouter
 	// Validate ContainerID
 	containerID := params.ByName("id")
 	if !vContainerID.MatchString(containerID) {
-		//http.Error(res, er.InvalidContainerID, http.StatusUnprocessableEntity)
-		response.AddError(er.InvalidContainerID)
-		response.SetStatus(http.StatusUnprocessableEntity)
-		res.Write(response.Marshal())
+		response.WriteError(res, http.StatusBadRequest, er.InvalidContainerID)
 		return
 	}
 
-	// TODO: consider pushing the following 3 calls to a dc. backend
-	err := dc.StopContainer(containerID)
+	var userKey string
+	cookie, err := req.Cookie("dock_session")
 	if err != nil {
-		//http.Error(res, er.ServerError, http.StatusInternalServerError)
-		response.AddError(err.Error())
-		response.SetStatus(http.StatusInternalServerError)
-		res.Write(response.Marshal())
+		fmt.Println("Error getting cookie")
+		response.WriteError(res, http.StatusUnauthorized, "Not authorized")
 		return
 	}
-	err = dc.KillContainer(containerID)
-	if err != nil {
-		//http.Error(res, er.ServerError, http.StatusInternalServerError)
-		response.AddError(err.Error())
-		response.SetStatus(http.StatusInternalServerError)
-		res.Write(response.Marshal())
+	userKey = cookie.Value
+	if userKey == "" {
+		fmt.Println("cookie value is empty")
+		response.WriteError(res, http.StatusUnauthorized, "Not authorized")
 		return
 	}
-	err = dc.RemoveContainer(containerID)
+	userID := session.StripUserKey(userKey)
+	var exists bool
+	exists, err = session.ExistsRunConfig(userID)
+	if err != nil || !exists {
+		fmt.Println("session does not exist")
+		response.WriteError(res, http.StatusUnauthorized, "Not authorized")
+		return
+	}
+	var cfg dc.RunConfig
+	cfg, err = session.GetRunConfig(userID)
 	if err != nil {
-		//http.Error(res, er.ServerError, http.StatusInternalServerError)
-		response.AddError(err.Error())
-		response.SetStatus(http.StatusInternalServerError)
-		res.Write(response.Marshal())
+		response.WriteError(res, http.StatusInternalServerError, er.ServerError)
 		return
 	}
 
-	response.SetStatus(http.StatusOK)
+	// XXX: Remove Container performs remove --force. Previous steps are not required.
+	var port int
+	port, err = strconv.Atoi(cfg.Port)
+	if err != nil {
+		response.WriteError(res, http.StatusInternalServerError, er.ServerError)
+		return
+	}
+
+	err = dc.RemoveContainer(containerID, port)
+	if err != nil {
+		fmt.Println(err.Error())
+		response.WriteError(res, http.StatusInternalServerError, er.ServerError)
+		return
+	}
+
 	res.Write(response.Marshal())
 }
