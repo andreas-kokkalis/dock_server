@@ -33,7 +33,7 @@ func AdminLogin(res http.ResponseWriter, req *http.Request, _ httprouter.Params)
 	var data loginRequest
 	err := decoder.Decode(&data)
 	if err != nil {
-		http.Error(res, err.Error(), http.StatusUnprocessableEntity)
+		response.WriteError(res, http.StatusUnprocessableEntity, err.Error())
 		return
 	}
 
@@ -45,22 +45,18 @@ func AdminLogin(res http.ResponseWriter, req *http.Request, _ httprouter.Params)
 	switch {
 	case err == sql.ErrNoRows:
 		// Case when user does not exist in the database
-		response.AddError(er.UsernameNotExists)
-		res.Write(response.Marshal())
+		response.WriteError(res, http.StatusUnauthorized, er.UsernameNotExists)
 		return
 	case err != nil:
 		// Database error
-		http.Error(res, err.Error(), http.StatusInternalServerError)
-		response.AddError(err.Error())
-		res.Write(response.Marshal())
+		response.WriteError(res, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	// Verify that passwords match
 	err = bcrypt.CompareHashAndPassword([]byte(password), []byte(data.Password))
 	if err != nil {
-		response.AddError(er.PasswordMismatch)
-		res.Write(response.Marshal())
+		response.WriteError(res, http.StatusUnauthorized, er.PasswordMismatch)
 		return
 	}
 
@@ -68,18 +64,14 @@ func AdminLogin(res http.ResponseWriter, req *http.Request, _ httprouter.Params)
 	var sessionExists bool
 	sessionExists, err = session.AdminExists(id)
 	if err != nil {
-		http.Error(res, err.Error(), http.StatusInternalServerError)
-		response.AddError(err.Error())
-		res.Write(response.Marshal())
+		response.WriteError(res, http.StatusInternalServerError, err.Error())
 		return
 	}
 	// Case session does not exist
 	if !sessionExists {
 		err = session.AdminAdd(id)
 		if err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
-			response.AddError(err.Error())
-			res.Write(response.Marshal())
+			response.WriteError(res, http.StatusInternalServerError, err.Error())
 			return
 		}
 	}
@@ -87,12 +79,11 @@ func AdminLogin(res http.ResponseWriter, req *http.Request, _ httprouter.Params)
 	cookie := &http.Cookie{
 		Name:    "ses",
 		Value:   session.GetAdminKey(id),
-		Domain:  "KTH",
+		Path:    "/",
 		Expires: time.Now().Add(24 * time.Hour),
 	}
 	http.SetCookie(res, cookie)
 	fmt.Println(cookie)
-
 	response.Data = "SUCCESS"
 	res.Write(response.Marshal())
 	return

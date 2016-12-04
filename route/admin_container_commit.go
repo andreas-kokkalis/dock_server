@@ -10,7 +10,7 @@ import (
 )
 
 type commitContainerRequest struct {
-	Comment string `json:"com"`
+	Comment string `json:"comment"`
 	Author  string `json:"auth"`
 	RefTag  string `json:"tag"`
 }
@@ -25,30 +25,31 @@ func CommitContainer(res http.ResponseWriter, req *http.Request, params httprout
 	res.Header().Set("Content-Type", "application/json")
 	response := NewResponse()
 
-	// Parse post params
+	// Parse containerID
 	containerID := params.ByName("id")
+	if !vContainerID.MatchString(containerID) {
+		response.WriteError(res, http.StatusBadRequest, er.InvalidContainerID)
+		return
+	}
+
+	// Parse post params
 	decoder := json.NewDecoder(req.Body)
-	var reqData commitContainerRequest
-	err := decoder.Decode(&reqData)
-	// Validate post params
-	if err != nil || reqData.Comment == "" || reqData.Author == "" || !vContainerID.MatchString(containerID) || reqData.RefTag == "" {
-		// http.Error(res, er.InvalidPostData, http.StatusUnprocessableEntity)
-		response.AddError(er.InvalidPostData)
-		response.SetStatus(http.StatusUnprocessableEntity)
-		res.Write(response.Marshal())
-		return
-	}
-
-	// Create the new image
-	err = dc.CommitContainer(reqData.Comment, reqData.Author, containerID, reqData.RefTag)
+	var data commitContainerRequest
+	err := decoder.Decode(&data)
 	if err != nil {
-		// http.Error(res, er.ServerError, http.StatusInternalServerError)
-		response.AddError(err.Error())
-		response.SetStatus(http.StatusInternalServerError)
-		res.Write(response.Marshal())
+		response.WriteError(res, http.StatusUnprocessableEntity, err.Error())
 		return
 	}
-
-	response.SetStatus(http.StatusOK)
+	// Validate post params
+	if data.Comment == "" || data.Author == "" || data.RefTag == "" {
+		response.WriteError(res, http.StatusUnprocessableEntity, er.InvalidPostData)
+		return
+	}
+	// Create the new image
+	err = dc.CommitContainer(data.Comment, data.Author, containerID, data.RefTag)
+	if err != nil {
+		response.WriteError(res, http.StatusInternalServerError, err.Error())
+		return
+	}
 	res.Write(response.Marshal())
 }

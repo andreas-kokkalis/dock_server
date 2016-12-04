@@ -18,25 +18,19 @@ func CreateRunURL(res http.ResponseWriter, req *http.Request, params httprouter.
 	// Validate ContainerID
 	imageID := params.ByName("id")
 	if !vImageID.MatchString(imageID) {
-		http.Error(res, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		response.AddError(er.InvalidImageID)
-		response.SetStatus(http.StatusBadRequest)
-		res.Write(response.Marshal())
+		response.WriteError(res, http.StatusBadRequest, er.InvalidImageID)
 		return
 	}
 
 	tag, err := dc.GetTagByID(imageID)
 	if err != nil {
-		http.Error(res, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		response.AddError(er.ServerError)
-		response.SetStatus(http.StatusInternalServerError)
-		res.Write(response.Marshal())
+		response.WriteError(res, http.StatusInternalServerError, err.Error())
+		return
 	}
 	if tag == "" {
-		response.AddError("Image id does not exist")
-		res.Write(response.Marshal())
-	} else {
-		response.SetData("https://localhost:8080/lti/launch/" + imageID)
+		response.WriteError(res, http.StatusFailedDependency, er.ImageNotFound)
+		return
 	}
+	response.SetData("https://localhost:8080/lti/launch/" + imageID)
 	res.Write(response.Marshal())
 }

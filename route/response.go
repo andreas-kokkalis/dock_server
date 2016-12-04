@@ -9,7 +9,7 @@ import (
 type Response struct {
 	Data   interface{} `json:"data,omitempty"`
 	Errors []string    `json:"errors,omitempty"`
-	Status string      `json:"status"`
+	Status string      `json:"status,omitempty"`
 }
 
 // NewResponse returns a new Response struct
@@ -20,6 +20,13 @@ func NewResponse() *Response {
 // AddError adds an error message in the slice
 func (r *Response) AddError(err string) {
 	r.Errors = append(r.Errors, err)
+}
+
+// WriteError writes in http Response the statusCode and the error message in response
+func (r *Response) WriteError(res http.ResponseWriter, statusCode int, err string) {
+	res.WriteHeader(statusCode)
+	r.AddError(err)
+	res.Write(r.Marshal())
 }
 
 // SetStatus will set the http status in the response

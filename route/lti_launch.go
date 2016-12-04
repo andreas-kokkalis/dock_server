@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/andreas-kokkalis/dock-server/dc"
 	"github.com/andreas-kokkalis/dock-server/er"
@@ -34,11 +35,12 @@ func OAuth(handler httprouter.Handle) httprouter.Handle {
 			fmt.Printf("\n%s \n%s \n%s \n%s", key, secret, signatureMethod, user)
 		*/
 
+		// TODO: Add check if user is not a student, return error
+
 		// Provider requires to match the request url with the secret.
 		// Since the request URL depends on imageID it should constuct it from the header
 		path := fmt.Sprintf("https://%s%s", req.Host, req.URL.Path)
 		fmt.Println(path)
-
 		p := lti.NewProvider(oauthSecret, path)
 		p.ConsumerKey = oauthKey
 
@@ -96,7 +98,7 @@ func LTILaunch(res http.ResponseWriter, req *http.Request, params httprouter.Par
 	} else {
 		// SESSION didn'texist
 		// Generate username and password
-		username := newPassword()
+		username := "canvas"
 		password := newPassword()
 		// Run container request
 		cfg, err = dc.RunContainer(imageID, username, password)
@@ -111,6 +113,16 @@ func LTILaunch(res http.ResponseWriter, req *http.Request, params httprouter.Par
 			t.Execute(res, Resp{Error: er.ServerError})
 		}
 	}
+
+	// Whether the session exists or not, write the cookie
+	cookie := &http.Cookie{
+		Name:    "dock_session",
+		Value:   session.GetUserKey(userID),
+		Expires: time.Now().Add(24 * time.Hour),
+	}
+	http.SetCookie(res, cookie)
+	fmt.Println(cookie)
+
 	// Return HTML template with data
 	t.Execute(res, getResp(cfg))
 }

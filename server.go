@@ -28,26 +28,40 @@ func main() {
 
 	// List of Routes
 
-	// Containers
-	router.GET("/v0/containers", route.GetContainers)
-	router.GET("/v0/containers/:status", route.GetContainers)
-	router.POST("/v0/containers/run/:id", route.RunContainer)
-	router.POST("/v0/containers/commit/:id", route.CommitContainer)
-	router.DELETE("/v0/containers/kill/:id", route.KillContainer)
+	/****************
+	* ADMIN ROUTES
+	****************/
+	// Login to Panel
+	router.POST("/v0/admin/login", route.AdminLogin)
+	// Container actions
+	router.GET("/v0/admin/containers/list", route.GetContainers)
+	router.GET("/v0/admin/containers/list/:status", route.GetContainers)
+	router.POST("/v0/admin/containers/run/:id", route.RunContainer)
+	router.POST("/v0/admin/containers/commit/:id", route.CommitContainer)
+	router.GET("/v0/admin/containers/kill/:id", route.KillContainer)
+	// Image actions
+	router.GET("/v0/admin/images", route.ListImages)
+	router.DELETE("/v0/admin/images/:id", route.RemoveImage)
+	router.GET("/v0/admin/images/history/:id", route.GetImageHistory)
 
-	// Images
-	router.GET("/v0/images", route.ListImages)
-	router.GET("/v0/images/history/:id", route.GetImageHistory)
-	router.DELETE("/v0/images/:id", route.RemoveImage)
-
-	// Admin
-	router.POST("/v0/login/", route.AdminLogin)
-
+	/****************
+	* USER ROUTES
+	****************/
 	// LTILaunch	- id is the imageID
 	router.POST("/v0/lti/launch/:id", route.OAuth(route.LTILaunch))
 
+	// c := cors.New(cors.Options{
+	// 	AllowCredentials: true,
+	// })
+	// handler := c.Handler(router)
+	router.ServeFiles("/ui/*filepath", http.Dir("./public/"))
+
+	// router.Handle("/", http.FileServer(http.Dir("./public/")))
+
 	// Start the server
+	// err := http.ListenAndServe(":8080", router)
 	err := http.ListenAndServeTLS(":8080", "ssl/server.pem", "ssl/server.key", router)
+
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}

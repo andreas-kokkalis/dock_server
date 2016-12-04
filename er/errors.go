@@ -20,4 +20,6 @@ const (
 	PasswordMismatch = "Password mismatch"
 	// CredentialsInvalid When username and password are invalid
 	CredentialsInvalid = "Invalid username and/or password"
+	// ImageNotFound .
+	ImageNotFound = "Image could not be found"
 )

@@ -13,22 +13,12 @@ func ListImages(res http.ResponseWriter, req *http.Request, _ httprouter.Params)
 	res.Header().Set("Content-Type", "application/json")
 	response := NewResponse()
 
-	// TODO: change "*" to the config
-	// res.Header().Set("Access-Control-Allow-Origin", "*")
-
-	// TODO: auth
-
 	// Get the list of images
 	images, err := dc.ListImages()
 	if err != nil {
-		// http.Error(res, er.ServerError, http.StatusInternalServerError)
-		response.AddError(err.Error())
-		response.SetStatus(http.StatusInternalServerError)
-		res.Write(response.Marshal())
+		response.WriteError(res, http.StatusInternalServerError, err.Error())
 		return
 	}
-
-	response.SetStatus(http.StatusOK)
 	response.SetData(images)
 	res.Write(response.Marshal())
 }

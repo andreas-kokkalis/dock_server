@@ -26,14 +26,27 @@ const (
 	============================
 */
 
-//  Constructs the user key
-func userKey(userID string) string {
+// GetUserKey constructs the user key
+func GetUserKey(userID string) string {
 	return usrPrefix + userID
+}
+
+func StripUserKey(key string) string {
+	return key[4:]
+}
+
+// DeleteRunConfig deletes the user session
+func DeleteRunConfig(userID string) error {
+	_, err := srv.RCli.Del(GetUserKey(userID)).Result()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // ExistsRunConfig returns true if there is a session for the particular user
 func ExistsRunConfig(userID string) (bool, error) {
-	keyExists, err := srv.RCli.Exists(userKey(userID)).Result()
+	keyExists, err := srv.RCli.Exists(GetUserKey(userID)).Result()
 	if err != nil {
 		return false, err
 	}
@@ -46,7 +59,7 @@ func ExistsRunConfig(userID string) (bool, error) {
 // GetRunConfig returns the user session
 func GetRunConfig(userID string) (r dc.RunConfig, err error) {
 	var val string
-	val, err = srv.RCli.Get(userKey(userID)).Result()
+	val, err = srv.RCli.Get(GetUserKey(userID)).Result()
 	if err != nil {
 		return r, err
 	}
@@ -68,7 +81,7 @@ func SetRunConfig(userID string, r dc.RunConfig) (err error) {
 
 	// Set key value
 	var OK string
-	OK, err = srv.RCli.Set(userKey(userID), js, userTTL).Result()
+	OK, err = srv.RCli.Set(GetUserKey(userID), js, userTTL).Result()
 	if err != nil {
 		return err
 	}

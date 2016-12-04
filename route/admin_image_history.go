@@ -19,24 +19,16 @@ func GetImageHistory(res http.ResponseWriter, req *http.Request, params httprout
 	// Validate imageID
 	imageID := params.ByName("id")
 	if !vImageID.MatchString(imageID) {
-		http.Error(res, er.InvalidImageID, http.StatusBadRequest)
-		response.AddError(er.InvalidImageID)
-		response.SetStatus(http.StatusBadRequest)
-		res.Write(response.Marshal())
+		response.WriteError(res, http.StatusBadRequest, er.InvalidImageID)
 		return
 	}
 
 	// Retrieve image history
 	history, err := dc.ImageHistory(imageID)
 	if err != nil {
-		//http.Error(res, er.ServerError, http.StatusInternalServerError)
-		response.AddError(err.Error())
-		response.SetStatus(http.StatusInternalServerError)
-		res.Write(response.Marshal())
+		response.WriteError(res, http.StatusInternalServerError, err.Error())
 		return
 	}
-
-	response.SetStatus(http.StatusOK)
 	response.SetData(history)
 	res.Write(response.Marshal())
 }
