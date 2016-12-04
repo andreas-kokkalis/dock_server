@@ -41,6 +41,7 @@ func GetFreeResource(res *Resources) (int, error) {
 	res.lock.Lock()
 
 	for _, v := range res.ports {
+		fmt.Printf("Looking for a free port: %d used: %v\n", v.port, v.isUsed)
 		if !v.isUsed {
 			port = v.port
 			v.isUsed = true
@@ -62,6 +63,7 @@ func FreeResource(res *Resources, port int) {
 			return
 		}
 	}
+	res.lock.Unlock()
 }
 
 // ReservePorts is not concurrent safe
