@@ -60,16 +60,17 @@ func AdminLogin(res http.ResponseWriter, req *http.Request, _ httprouter.Params)
 		return
 	}
 
-	// Case when user exists. Check if there is an existing session
+	// Check whether the session exists or not.
 	var sessionExists bool
-	sessionExists, err = session.AdminExists(id)
+	key := session.CreateAdminKey(id)
+	sessionExists, err = session.ExistsAdminSession(key)
 	if err != nil {
 		response.WriteError(res, http.StatusInternalServerError, err.Error())
 		return
 	}
 	// Case session does not exist
 	if !sessionExists {
-		err = session.AdminAdd(id)
+		err = session.SetAdminSession(key)
 		if err != nil {
 			response.WriteError(res, http.StatusInternalServerError, err.Error())
 			return
@@ -78,7 +79,7 @@ func AdminLogin(res http.ResponseWriter, req *http.Request, _ httprouter.Params)
 	// Whether the session exists or not, write the cookie
 	cookie := &http.Cookie{
 		Name:    "ses",
-		Value:   session.GetAdminKey(id),
+		Value:   key,
 		Path:    "/",
 		Expires: time.Now().Add(24 * time.Hour),
 	}

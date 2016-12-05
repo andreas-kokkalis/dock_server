@@ -20,19 +20,18 @@ const (
 	adminTTL  = time.Hour * 24
 )
 
-/*
-	============================
+// StripKey removes the prefix
+func StripKey(key string) string {
+	return key[4:]
+}
+
+/* ============================
 				USER
-	============================
-*/
+   ============================ */
 
 // GetUserKey constructs the user key
 func GetUserKey(userID string) string {
 	return usrPrefix + userID
-}
-
-func StripUserKey(key string) string {
-	return key[4:]
 }
 
 // DeleteRunConfig deletes the user session
@@ -97,23 +96,19 @@ func SetRunConfig(userID string, r dc.RunConfig) (err error) {
 	============================
 */
 
-type adminSession struct {
-	AdminID int `json:"id"`
-}
-
-// GetAdminKey returns the admin session key
-func GetAdminKey(adminID int) string {
+// CreateAdminKey returns the admin session key
+func CreateAdminKey(adminID int) string {
 	h := md5.New()
 	io.WriteString(h, strconv.Itoa(adminID))
 	io.WriteString(h, "key")
 	s := fmt.Sprintf("%x", h.Sum(nil))
+	fmt.Println(admPrefix + s)
 	return admPrefix + s
-
 }
 
-// AdminExists checks if a session exists for that particular adminID
-func AdminExists(adminID int) (bool, error) {
-	exists, err := srv.RCli.Exists(GetAdminKey(adminID)).Result()
+// ExistsAdminSession checks if a session exists for that particular adminID
+func ExistsAdminSession(key string) (bool, error) {
+	exists, err := srv.RCli.Exists(key).Result()
 	if err != nil {
 		return false, err
 	}
@@ -123,13 +118,18 @@ func AdminExists(adminID int) (bool, error) {
 	return true, nil
 }
 
-// AdminAdd will add a key for that admin
-func AdminAdd(adminID int) error {
-	key := GetAdminKey(adminID)
-	err := srv.RCli.Set(key, adminID, 0).Err()
+// SetAdminSession will add a key for that admin
+func SetAdminSession(key string) error {
+	err := srv.RCli.Set(key, key, 0).Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
-	time.Sleep(1000)
-	_, err = srv.RCli.Exists(GetAdminKey(adminID)).Result()
+// DeleteAdminSession will add a key for that admin
+func DeleteAdminSession(key string) error {
+	_, err := srv.RCli.Del(key).Result()
 	if err != nil {
 		return err
 	}

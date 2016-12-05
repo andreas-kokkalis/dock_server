@@ -41,7 +41,7 @@ func KillContainer(res http.ResponseWriter, req *http.Request, params httprouter
 		return
 	}
 	// Check if session exists in Redis
-	userID := session.StripUserKey(cookieVal)
+	userID := session.StripKey(cookieVal)
 	var exists bool
 	exists, err = session.ExistsRunConfig(userID)
 	if err != nil || !exists {

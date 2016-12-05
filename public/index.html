@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+
+    <title>Signin</title>
+
+    <!-- Custom styles for this template -->
+    <link href="css/app.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+</head>
+
+<body>
+
+    <div class="container">
+        <div id="error-panel">
+        <form class="form-signin">
+            <h2 class="form-signin-heading">Please sign in</h2>
+            <label for="userName" class="sr-only">Username</label>
+            <input type="text" id="userName" class="form-control" placeholder="Username" required autofocus>
+            <label for="inputPassword" class="sr-only">Password</label>
+            <input type="password" id="Password" class="form-control" placeholder="Password" required>
+            <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+        </form>
+
+    </div>
+    <!-- /container -->
+
+    <script type="text/javascript">
+        // cookie exists
+        $(document).ready(function() {
+            if (typeof $.cookie("ses") !== 'undefined') {
+                window.location.replace("/ui/images.html");
+            }
+        });
+        jQuery('.form-signin').submit(function(e) {
+            e.preventDefault()
+            $.ajax({
+                url: "/v0/admin/login",
+                type: 'post',
+                dataType: 'json',
+                data: JSON.stringify({
+                    username: $("#userName").val(),
+                    password: $("#Password").val(),
+                }),
+                contentType: "application/json",
+                success: function(data) {
+                    window.location.replace("/ui/images.html");
+                },
+                error: function(response) {
+                    // undefined when there is a json response
+                    if (typeof response.responseJSON !== "undefined") {
+                        console.log(response.responseJSON.errors)
+                        $.each(response.responseJSON.errors, function(k, v) {
+                            $("#error-panel").append(
+                                '<div class="alert alert-danger" role="alert">' +
+                                '<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>' +
+                                '<span class="sr-only">Error:</span> ' + v + '</div>')
+                        })
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+
+    <title>Image List</title>
+
+    <!-- Custom styles for this template -->
+    <link href="css/app.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <nav class="navbar navbar-default">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <div class="navbar-brand">Admin Panel</div>
+                </div>
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="active"><a id="logout-button" href="/admin/logout">Logout</a></li>
+                </ul>
+            </div>
+            <!--/.container-fluid -->
+        </nav>
+        <div id="error-panel">
+
+        </div>
+        <div class="panel panel-default">
+            <!-- Default panel contents -->
+            <div class="panel-heading"><h1>List of Images</h1></div>
+            <div class="panel-body">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ImageID</th>
+                            <th>Name</th>
+                        </tr>
+                    </thead>
+                    <tbody id="boo">
+                        <tr class="img-row">
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+    <!-- /container -->
+    <script type="text/javascript" src="/ui/scripts/api_error.js"></script>
+    <script type="text/javascript" src="/ui/scripts/url_params.js"></script>
+    <script type="text/javascript" src="/ui/scripts/logout.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $.ajax({
+                url: "/v0/admin/images",
+                contentType: "application/json",
+                success: function(response) {
+                    console.log("success", response)
+                    $.each(response.data, function(k, v) {
+                        console.log(k, v)
+                        $("#boo").append('<tr onclick=\'toImageHistory("' + v.Id + '")\' role="button"><td>' + v.Id + '</td><td>' + v.RepoTags + '</td></tr>')
+                    });
+                },
+                error: function(response) {
+                    handleError(response)
+                }
+            });
+        });
+
+        function toImageHistory(id) {
+            window.location.href = "/ui/image-history.html?id=" + id;
+        }
+    </script>
+
+</body>
+
+</html>
