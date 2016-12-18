@@ -2,10 +2,13 @@ package route
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/andreas-kokkalis/dock-server/dc"
 	"github.com/andreas-kokkalis/dock-server/er"
+	"github.com/andreas-kokkalis/dock-server/session"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -31,7 +34,6 @@ func CommitContainer(res http.ResponseWriter, req *http.Request, params httprout
 		response.WriteError(res, http.StatusBadRequest, er.InvalidContainerID)
 		return
 	}
-
 	// Parse post params
 	decoder := json.NewDecoder(req.Body)
 	var data commitContainerRequest
@@ -49,6 +51,32 @@ func CommitContainer(res http.ResponseWriter, req *http.Request, params httprout
 	err = dc.CommitContainer(data.Comment, data.Author, containerID, data.RefTag)
 	if err != nil {
 		response.WriteError(res, http.StatusInternalServerError, err.Error())
+		return
+	}
+	// Get the cookie to get the admin key
+	cookie, err := req.Cookie("ses")
+	var cfg dc.RunConfig
+	cfg, err = session.GetAdminRunConfig(cookie.Value)
+	if err != nil {
+		response.WriteError(res, http.StatusInternalServerError, er.ServerError)
+		return
+	}
+	if cfg.ContainerID == "" {
+		response.WriteError(res, http.StatusBadRequest, er.ContainerAlreadyKilled)
+		return
+	}
+	// Kill containerID - // XXX: issues with deleting container
+	port, _ := strconv.Atoi(cfg.Port)
+	err = dc.RemoveContainer(containerID, port)
+	if err != nil {
+		fmt.Println(err.Error())
+		response.WriteError(res, http.StatusInternalServerError, er.ServerError)
+		return
+	}
+	// Remove Redis key
+	err = session.DeleteAdminRunConfig(cookie.Value)
+	if err != nil {
+		response.WriteError(res, http.StatusInternalServerError, er.ServerError)
 		return
 	}
 	res.Write(response.Marshal())

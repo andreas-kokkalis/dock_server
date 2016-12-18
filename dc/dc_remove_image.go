@@ -11,8 +11,10 @@ import (
 func RemoveImage(imageID string) error {
 
 	options := types.ImageRemoveOptions{}
-	imgDelete, err := Cli.ImageRemove(context.Background(), imageID, options)
+	tag, err := GetTagByID(imageID)
+	imgDelete, err := Cli.ImageRemove(context.Background(), imageRepo+":"+tag, options)
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 	// TODO: figure out what to do with the imgDelete

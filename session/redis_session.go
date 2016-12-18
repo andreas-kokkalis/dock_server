@@ -14,10 +14,11 @@ import (
 )
 
 const (
-	usrPrefix = "usr:"
-	userTTL   = time.Hour * 1
-	admPrefix = "adm:"
-	adminTTL  = time.Hour * 24
+	usrPrefix    = "usr:"
+	userTTL      = time.Hour * 1
+	admPrefix    = "adm:"
+	admRunPrefix = "run:"
+	adminTTL     = time.Hour * 24
 )
 
 // StripKey removes the prefix
@@ -132,6 +133,71 @@ func DeleteAdminSession(key string) error {
 	_, err := srv.RCli.Del(key).Result()
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+/* ===========================================
+	Admin Run Container Session
+==============================================*/
+
+// GetAdminRunKey constructs the user key
+func GetAdminRunKey(key string) string {
+	return admRunPrefix + key
+}
+
+// DeleteAdminRunConfig deletes the user session
+func DeleteAdminRunConfig(key string) error {
+	_, err := srv.RCli.Del(GetAdminRunKey(key)).Result()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// ExistsAdminRunConfig returns true if there is a session for the particular user
+func ExistsAdminRunConfig(key string) (bool, error) {
+	keyExists, err := srv.RCli.Exists(GetAdminRunKey(key)).Result()
+	if err != nil {
+		return false, err
+	}
+	if !keyExists {
+		return false, nil
+	}
+	return true, nil
+}
+
+// GetAdminRunConfig returns the user session
+func GetAdminRunConfig(key string) (r dc.RunConfig, err error) {
+	var val string
+	val, err = srv.RCli.Get(GetAdminRunKey(key)).Result()
+	if err != nil {
+		return r, err
+	}
+	err = json.Unmarshal([]byte(val), &r)
+	if err != nil {
+		return r, err
+	}
+	return r, nil
+}
+
+// SetAdminRunConfig will add the session
+func SetAdminRunConfig(key string, r dc.RunConfig) (err error) {
+	// Marshal to JSON
+	var js []byte
+	js, err = json.Marshal(r)
+	if err != nil {
+		return err
+	}
+
+	// Set key value
+	var OK string
+	OK, err = srv.RCli.Set(GetAdminRunKey(key), js, userTTL).Result()
+	if err != nil {
+		return err
+	}
+	if OK != "OK" {
+		return errors.New("Not OK")
 	}
 	return nil
 }

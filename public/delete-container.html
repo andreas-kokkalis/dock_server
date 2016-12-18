@@ -8,7 +8,7 @@
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
     <meta name="description" content="">
 
-    <title>Image History</title>
+    <title>Delete Container</title>
 
     <!-- Custom styles for this template -->
     <link href="css/app.css" rel="stylesheet">
@@ -20,7 +20,6 @@
 </head>
 
 <body>
-
     <div class="container">
         <nav class="navbar navbar-default">
             <div class="container-fluid">
@@ -33,20 +32,18 @@
             </div>
             <!--/.container-fluid -->
         </nav>
-        <div id="error-panel">
-
-        </div>
-        <div class="panel panel-default">
+        <div id="error-panel"></div>
+        <div id="success-panel"></div>
+        <div id="info-panel"></div>
+        <div class="panel panel-default" id="shell-panel">
             <!-- Default panel contents -->
             <div class="panel-heading">
-                <h1>Image History</h1></div>
+                <h2>Delete container</h2></div>
             <div class="panel-body">
-                History of image <span id="image-id"></span>
+                <p>Are you sure you want to delete the container?</p>
+                <button class="btn btn-danger" onclick=deleteContainer()>Delete Container</button>
             </div>
-            <ul id="boo" class="list-group"></ul>
-            <div id="image-action"></div>
         </div>
-
     </div>
     <!-- /container -->
 
@@ -54,45 +51,23 @@
     <script type="text/javascript" src="/ui/scripts/url_params.js"></script>
     <script type="text/javascript" src="/ui/scripts/logout.js"></script>
     <script type="text/javascript">
-        $(document).ready(function() {
-            var id = getUrlParameter('id');
-            console.log(id)
+        function deleteContainer() {
             $.ajax({
-                url: "/v0/admin/images/history/" + id,
+                url: "/v0/admin/containers/kill/" + getUrlParameter('id'),
+                type: 'post',
                 contentType: "application/json",
                 success: function(response) {
-                    // console.log(response)
-                    $.each(response.data, function(k, v) {
-                        console.log(k, v)
-                        $("#boo").append(
-                                '<li class="list-group-item"><span style="padding-right:5px;font-weight:bold;">Image ID</span>' + v.Id + '</li>' +
-                                '<li class="list-group-item"><span style="padding-right:5px;font-weight:bold;">Repository</span>' + v.Tags[0] + '</li>' +
-                                '<li class="list-group-item"><span style="padding-right:5px;font-weight:bold;">Comment</span>' + v.Comment + '</li>'
-                            )
-                            // Append the imageID
-                        $("#image-id").append(id);
-
-                        // Append the buttons for create and destroy
-                        $("#image-action").append(
-                            '<div style="padding:7px;">' +
-                            '<button class="btn btn-primary" onclick=\'toRunContainer("' + id + '")\'>Run Container</button>' +
-                            '<button class="btn btn-danger pull-right" onclick=\'toDeleteImage("' + id + '")\'>Delete Image</button>' +
-                            '</div>'
-                        );
-                    });
+                    console.log(response)
+                    $("#success-panel").append(
+                        '<div class="alert alert-success" role="alert">' +
+                        '<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true" style="padding-right:5px"></span>Container was successfully deleted.' +
+                        '</div>'
+                    );
                 },
                 error: function(response) {
                     handleError(response)
                 }
             });
-        });
-
-        function toRunContainer(id) {
-            window.location.href = "/ui/run-container.html?id=" + id;
-        }
-
-        function toDeleteImage(id) {
-            window.location.href = "/ui/delete-image.html?id=" + id;
         }
     </script>
 

@@ -25,7 +25,7 @@
         <nav class="navbar navbar-default">
             <div class="container-fluid">
                 <div class="navbar-header">
-                    <div class="navbar-brand">Admin Panel</div>
+                    <div class="navbar-brand"><a href="/ui/index.html">Admin Panel</a></div>
                 </div>
                 <ul class="nav navbar-nav navbar-right">
                     <li class="active"><a id="logout-button" href="/admin/logout">Logout</a></li>
@@ -69,7 +69,11 @@
                     console.log("success", response)
                     $.each(response.data, function(k, v) {
                         console.log(k, v)
-                        $("#boo").append('<tr onclick=\'toImageHistory("' + v.Id + '")\' role="button"><td>' + v.Id + '</td><td>' + v.RepoTags + '</td></tr>')
+                        $("#boo").append(
+                            '<tr onclick=\'toImageHistory("' + v.Id + '")\' role="button">'+
+                                '<td>' + v.Id + '</td>'+
+                                '<td>' + v.RepoTags + '</td>'+
+                            '</tr>')
                     });
                 },
                 error: function(response) {

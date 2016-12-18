@@ -11,13 +11,11 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-// KillContainer terminates and removes a containerID
+// AdminKillContainer terminates and removes a containerID
 // DELETE /v0/containers/kill/abc33412adqw
-func KillContainer(res http.ResponseWriter, req *http.Request, params httprouter.Params) {
+func AdminKillContainer(res http.ResponseWriter, req *http.Request, params httprouter.Params) {
 	res.Header().Set("Content-Type", "application/json")
 	response := NewResponse()
-
-	// TODO: auth
 
 	// Validate ContainerID
 	containerID := params.ByName("id")
@@ -25,59 +23,31 @@ func KillContainer(res http.ResponseWriter, req *http.Request, params httprouter
 		response.WriteError(res, http.StatusBadRequest, er.InvalidContainerID)
 		return
 	}
-	// Get session cookie
-	var cookieVal string
-	cookie, err := req.Cookie("dock_session")
-	if err != nil {
-		fmt.Println("Error getting cookie")
-		response.WriteError(res, http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
-		return
-	}
-	// Get cookie value
-	cookieVal = cookie.Value
-	if cookieVal == "" {
-		fmt.Println("cookie value is empty")
-		response.WriteError(res, http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
-		return
-	}
-	// Check if session exists in Redis
-	userID := session.StripKey(cookieVal)
-	var exists bool
-	exists, err = session.ExistsRunConfig(userID)
-	if err != nil || !exists {
-		fmt.Println("session does not exist")
-		response.WriteError(res, http.StatusUnauthorized, "Not authorized")
-		return
-	}
-	// Get session from Redis
+	// Get the cookie to get the admin key
+	cookie, err := req.Cookie("ses")
 	var cfg dc.RunConfig
-	cfg, err = session.GetRunConfig(userID)
+	cfg, err = session.GetAdminRunConfig(cookie.Value)
 	if err != nil {
-		response.WriteError(res, http.StatusInternalServerError, er.ServerError)
+		response.WriteError(res, http.StatusInternalServerError, er.ContainerAlreadyKilled)
 		return
 	}
-	// Prepare the port to user in Remove container call
-	var port int
-	port, err = strconv.Atoi(cfg.Port)
-	if err != nil {
-		response.WriteError(res, http.StatusInternalServerError, er.ServerError)
-		return
-	}
-	// XXX: issues with deleting container
+	// Kill containerID - 	// XXX: issues with deleting container
+	port, _ := strconv.Atoi(cfg.Port)
 	err = dc.RemoveContainer(containerID, port)
 	if err != nil {
 		fmt.Println(err.Error())
-		response.WriteError(res, http.StatusInternalServerError, er.ServerError)
+		response.WriteError(res, http.StatusInternalServerError, err.Error())
 		return
 	}
-
-	// Delete the user session
-	err = session.DeleteRunConfig(userID)
+	// Remove Redis key
+	err = session.DeleteAdminRunConfig(cookie.Value)
 	if err != nil {
-		fmt.Println(err.Error())
-		response.WriteError(res, http.StatusInternalServerError, er.ServerError)
+		response.WriteError(res, http.StatusInternalServerError, err.Error())
 		return
 	}
-
-	res.Write(response.Marshal())
+	// response.SetData("Container deleted")
+	fmt.Println("Returning successfully")
+	response.WriteError(res, http.StatusOK, "There is no error")
+	fmt.Println("I wrote the response error and I will try to return")
+	return
 }

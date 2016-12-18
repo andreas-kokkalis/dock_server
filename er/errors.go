@@ -22,4 +22,6 @@ const (
 	CredentialsInvalid = "Invalid username and/or password"
 	// ImageNotFound .
 	ImageNotFound = "Image could not be found"
+	// ContainerAlreadyKilled when the container is not running
+	ContainerAlreadyKilled = "Container did not exist."
 )

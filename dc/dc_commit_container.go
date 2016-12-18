@@ -11,7 +11,7 @@ import (
 func CommitContainer(comment, author, containerID, refTag string) error {
 
 	// TODO: on options, can add a slice of string with the list of changes for this commit
-	options := types.ContainerCommitOptions{Comment: comment, Author: author, Reference: refTag}
+	options := types.ContainerCommitOptions{Comment: comment, Author: author, Reference: imageRepo + ":" + refTag}
 	response, err := Cli.ContainerCommit(context.Background(), containerID, options)
 	if err != nil {
 		return err

@@ -26,7 +26,7 @@ func RemoveImage(res http.ResponseWriter, req *http.Request, params httprouter.P
 	// Remove Image
 	err := dc.RemoveImage(imageID)
 	if err != nil {
-		response.WriteError(res, http.StatusUnprocessableEntity, er.InvalidImageID)
+		response.WriteError(res, http.StatusInternalServerError, err.Error())
 		return
 	}
 

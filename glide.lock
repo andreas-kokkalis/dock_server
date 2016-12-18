@@ -1,13 +1,15 @@
 hash: bcf4d3ce7f9b353950496e2ebb1195bef336d26472553439e20034e5e74ee165
-updated: 2016-11-12T15:33:32.410310154+01:00
+updated: 2016-11-28T18:15:35.071016931+01:00
 imports:
+- name: github.com/Davmuz/gqt
+  version: 86d013d2716a610ee34557a8e40cd736e08d69f1
 - name: github.com/docker/distribution
-  version: d22e09a6686c32be8c17b684b639da4b90efe320
+  version: a6bf3dd064f15598166bca2d66a9962a9555139e
   subpackages:
   - digest
   - reference
 - name: github.com/docker/docker
-  version: 75fd88ba8938f120ce1f2a21b19cf13c12071b16
+  version: 1f9b3ef9e9c74c2905780ac5347d018646a20022
   subpackages:
   - api/types
   - api/types/blkiodev
@@ -35,10 +37,14 @@ imports:
   version: 8a7beacffa3009a9ac66bad506b18ffdd110cf97
 - name: github.com/julienschmidt/httprouter
   version: 8c199fb6259ffc1af525cc3ad52ee60ba8359669
+- name: github.com/lib/pq
+  version: d8eeeb8bae8896dd8e1b7e514ab0d396c4f12a1b
+  subpackages:
+  - oid
 - name: github.com/Microsoft/go-winio
-  version: 562bb09f6612d9a4e91597184709d1cdba95af93
+  version: 24a3e3d3fc7451805e09d11e11e95d9a0a4f205e
 - name: github.com/opencontainers/runc
-  version: 188312013fb75d64b627a94e1defd0fff952371b
+  version: a6e649f5835b7ebf354a73ff3a80f3223e3cb5de
   subpackages:
   - libcontainer/user
 - name: github.com/pkg/errors
@@ -47,6 +53,11 @@ imports:
   version: 55eb11d21d2a31a3cc93838241d04800f52e823d
   subpackages:
   - formatters/logstash
+- name: golang.org/x/crypto
+  version: c10c31b5e94b6f7a0283272dc2bb27163dcea24b
+  subpackages:
+  - bcrypt
+  - blowfish
 - name: golang.org/x/net
   version: 4876518f9e71663000c348837735820161a42df7
   subpackages:
@@ -57,4 +68,14 @@ imports:
   version: b699b7032584f0953262cb2788a0ca19bb494703
   subpackages:
   - windows
+- name: gopkg.in/bsm/ratelimit.v1
+  version: db14e161995a5177acef654cb0dd785e8ee8bc22
+- name: gopkg.in/redis.v5
+  version: c9856861674f102a5f51104c36401a3cf691739c
+  subpackages:
+  - internal
+  - internal/consistenthash
+  - internal/hashtag
+  - internal/pool
+  - internal/proto
 testImports: []
