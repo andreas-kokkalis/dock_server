@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/andreas-kokkalis/dock-server/conf"
+
 	"github.com/docker/docker/api/types"
 )
 
@@ -41,9 +43,28 @@ func ListImages() ([]Img, error) {
 	for _, image := range images {
 		fmt.Println(image.RepoTags[0])
 		s := image.RepoTags[0]
-		if s[0:strings.LastIndex(s, ":")] == imageRepo {
+		if s[0:strings.LastIndex(s, ":")] == conf.GetVal("dc.imagerepo.name") {
 			imageList = append(imageList, Img{ID: image.ID[7:19], RepoTags: image.RepoTags})
 		}
 	}
 	return imageList, nil
+}
+
+// GetRepositories returns the lsit of the dc repositories and tags
+func GetRepositories() (imageList string) {
+	images, err := Cli.ImageList(context.Background(), types.ImageListOptions{})
+	if err != nil {
+		return imageList
+	}
+
+	// Extract imageID, RepoTags for specific type of images
+
+	for _, image := range images {
+		fmt.Println(image.RepoTags[0])
+		s := image.RepoTags[0]
+		if s[0:strings.LastIndex(s, ":")] == conf.GetVal("dc.imagerepo.name") {
+			imageList = imageList + " " + image.RepoTags[0]
+		}
+	}
+	return imageList
 }

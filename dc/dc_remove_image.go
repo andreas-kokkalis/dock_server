@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/andreas-kokkalis/dock-server/conf"
 	"github.com/docker/docker/api/types"
 )
 
@@ -12,7 +13,7 @@ func RemoveImage(imageID string) error {
 
 	options := types.ImageRemoveOptions{}
 	tag, err := GetTagByID(imageID)
-	imgDelete, err := Cli.ImageRemove(context.Background(), imageRepo+":"+tag, options)
+	imgDelete, err := Cli.ImageRemove(context.Background(), conf.GetVal("dc.imagerepo.name")+":"+tag, options)
 	if err != nil {
 		fmt.Println(err)
 		return err

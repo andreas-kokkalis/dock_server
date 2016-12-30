@@ -1,7 +1,5 @@
 package dc
 
-const imageRepo = "sspreitzer/shellinabox"
-
 // Ctn minimal container struct
 type Ctn struct {
 	ID     string `json:"Id"`

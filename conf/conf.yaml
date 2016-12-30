@@ -1,0 +1,12 @@
+##############################################
+# configuration for the docker consumer (dc) #
+##############################################
+
+# name of image repository used by dc
+dc.imagerepo.name: "dc"
+# docker host location
+dc.docker.api.host: "unix:///var/run/docker.sock"
+# docker remote api version
+dc.docker.api.version: "1.24"
+
+# configuration for the port mappings

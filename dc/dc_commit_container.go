@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/andreas-kokkalis/dock-server/conf"
 	"github.com/docker/docker/api/types"
 )
 
@@ -11,7 +12,7 @@ import (
 func CommitContainer(comment, author, containerID, refTag string) error {
 
 	// TODO: on options, can add a slice of string with the list of changes for this commit
-	options := types.ContainerCommitOptions{Comment: comment, Author: author, Reference: imageRepo + ":" + refTag}
+	options := types.ContainerCommitOptions{Comment: comment, Author: author, Reference: conf.GetVal("dc.imagerepo.name") + ":" + refTag}
 	response, err := Cli.ContainerCommit(context.Background(), containerID, options)
 	if err != nil {
 		return err

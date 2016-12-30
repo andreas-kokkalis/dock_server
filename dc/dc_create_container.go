@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/andreas-kokkalis/dock-server/conf"
+
 	"github.com/andreas-kokkalis/dock-server/srv"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
@@ -28,7 +30,7 @@ func CreateContainer(imageID, username, password string) (containerID string, po
 	var natPort nat.Port = "4200/tcp"
 	exposedPorts := map[nat.Port]struct{}{natPort: {}}
 	// Define configuration required to create a container
-	img := imageRepo + ":" + refTag
+	img := conf.GetVal("dc.imagerepo.name") + ":" + refTag
 	containerConfig := container.Config{Env: envVars, ExposedPorts: exposedPorts, Image: img}
 	// Get a non utilized host port, to avoid collision
 	port, err = srv.GetFreeResource(srv.PortResources)

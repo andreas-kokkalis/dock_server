@@ -3,31 +3,26 @@ package dc
 import (
 	"os"
 
+	"github.com/andreas-kokkalis/dock-server/conf"
 	"github.com/docker/docker/client"
 )
-
-// DefaultAPIVersion is the version of the Remote Docker API
-const DefaultAPIVersion string = "1.24"
-
-// DefaultDockerHost is the connection string for Docker host
-const DefaultDockerHost string = "unix:///var/run/docker.sock"
 
 // Cli the global docker api client
 var Cli *client.Client
 
 // ClientInit initializes a new client API variable that is globally
 // accessible when invoking this package.
-func ClientInit(APIVersion string, DockerHost string) {
+func ClientInit(apiVersion string, dockerHost string) {
 
-	if APIVersion == "" {
-		os.Setenv("DOCKER_API_VERSION", DefaultAPIVersion)
+	if apiVersion == "" {
+		os.Setenv("DOCKER_API_VERSION", conf.GetVal("dc.docker.api.host"))
 	} else {
-		os.Setenv("DOCKER_API_VERSION", APIVersion)
+		os.Setenv("DOCKER_API_VERSION", apiVersion)
 	}
-	if DockerHost == "" {
-		os.Setenv("DOCKER_HOST", DefaultDockerHost)
+	if dockerHost == "" {
+		os.Setenv("DOCKER_HOST", conf.GetVal("dc.docker.api.version"))
 	} else {
-		os.Setenv("DOCKER_HOST", DefaultDockerHost)
+		os.Setenv("DOCKER_HOST", dockerHost)
 	}
 
 	cli, err := client.NewEnvClient()
