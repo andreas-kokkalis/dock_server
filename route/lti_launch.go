@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/andreas-kokkalis/dock-server/dc"
-	"github.com/andreas-kokkalis/dock-server/er"
+	"github.com/andreas-kokkalis/dock-server/route/er"
 	"github.com/andreas-kokkalis/dock-server/session"
 	"github.com/jordic/lti"
 	"github.com/julienschmidt/httprouter"

@@ -9,7 +9,7 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/andreas-kokkalis/dock-server/er"
+	"github.com/andreas-kokkalis/dock-server/route/er"
 	"github.com/andreas-kokkalis/dock-server/session"
 	"github.com/andreas-kokkalis/dock-server/srv"
 	"github.com/julienschmidt/httprouter"

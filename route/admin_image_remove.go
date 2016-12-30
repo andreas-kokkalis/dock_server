@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/andreas-kokkalis/dock-server/dc"
-	"github.com/andreas-kokkalis/dock-server/er"
+	"github.com/andreas-kokkalis/dock-server/route/er"
 	"github.com/julienschmidt/httprouter"
 )
 
