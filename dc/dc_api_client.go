@@ -12,7 +12,7 @@ var Cli *client.Client
 
 // ClientInit initializes a new client API variable that is globally
 // accessible when invoking this package.
-func ClientInit(apiVersion string, dockerHost string) {
+func APIClientInit(apiVersion string, dockerHost string) {
 
 	if apiVersion == "" {
 		os.Setenv("DOCKER_API_VERSION", conf.GetVal("dc.docker.api.host"))

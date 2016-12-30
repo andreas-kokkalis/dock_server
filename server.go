@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/andreas-kokkalis/dock-server/conf"
 	"github.com/andreas-kokkalis/dock-server/dc"
 	"github.com/andreas-kokkalis/dock-server/route"
 	"github.com/andreas-kokkalis/dock-server/srv"
@@ -12,10 +13,19 @@ import (
 )
 
 func main() {
+	// Load static configuration strings from conf/conf.yaml
+	conf.Init()
 
-	dc.ClientInit("", "")
-	srv.InitPortMappings(100)
+	// Initialize the Docker API Client
+	dc.APIClientInit(conf.GetVal("dc.docker.api.version"), conf.GetVal("dc.docker.api.host"))
+
+	// Initialize the port mappings
+	dc.InitPortMappings(200)
+
+	// Initialize Redis storage
 	srv.InitRedisClient()
+
+	// Initialize Postgres storage
 	srv.InitPostgres()
 
 	// Create Schema and insert data if mode is set to dev
@@ -24,9 +34,8 @@ func main() {
 		srv.MigrateData()
 	}
 
+	// Initialize the  httprouter
 	router := httprouter.New()
-
-	// List of Routes
 
 	/****************
 	* ADMIN ROUTES
@@ -58,7 +67,7 @@ func main() {
 	router.ServeFiles("/ui/*filepath", http.Dir("./public/"))
 
 	// Start the server
-	err := http.ListenAndServeTLS(":8080", "ssl/server.pem", "ssl/server.key", router)
+	err := http.ListenAndServeTLS(":8080", "conf/ssl/server.pem", "conf/ssl/server.key", router)
 
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
