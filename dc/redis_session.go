@@ -20,8 +20,8 @@ const (
 	adminTTL     = time.Hour * 24
 )
 
-// StripKey removes the prefix
-func StripKey(key string) string {
+// StripSessionKeyPrefix removes the prefix
+func StripSessionKeyPrefix(key string) string {
 	return key[4:]
 }
 
@@ -29,30 +29,30 @@ func StripKey(key string) string {
 				USER
    ============================ */
 
-// GetUserKey constructs the user key
-func GetUserKey(userID string) string {
+// GetUserRunKey constructs the user key
+func GetUserRunKey(userID string) string {
 	return usrPrefix + userID
 }
 
-// DeleteRunConfig deletes the user session
-func DeleteRunConfig(userID string) error {
+// DeleteUserRunConfig deletes the user session
+func DeleteUserRunConfig(userID string) error {
 
-	r, err := GetRunConfig(GetUserKey(userID))
+	r, err := GetUserRunConfig(GetUserRunKey(userID))
 	if err != nil {
 		// TODO: parse error
 	}
 	delPort(r.Port)
 
-	_, err = srv.RCli.Del(GetUserKey(userID)).Result()
+	_, err = srv.RCli.Del(GetUserRunKey(userID)).Result()
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// ExistsRunConfig returns true if there is a session for the particular user
-func ExistsRunConfig(userID string) (bool, error) {
-	keyExists, err := srv.RCli.Exists(GetUserKey(userID)).Result()
+// ExistsUserRunConfig returns true if there is a session for the particular user
+func ExistsUserRunConfig(userID string) (bool, error) {
+	keyExists, err := srv.RCli.Exists(GetUserRunKey(userID)).Result()
 	if err != nil {
 		return false, err
 	}
@@ -62,30 +62,10 @@ func ExistsRunConfig(userID string) (bool, error) {
 	return true, nil
 }
 
-func setPort(port string, TTL time.Duration) {
-	_, err := srv.RCli.Set("port:"+port, true, TTL).Result()
-	if err != nil {
-		//TODO: do not ignore this error.
-	}
-}
-
-func delPort(port string) {
-	_, err := srv.RCli.Del("port:" + port).Result()
-	if err != nil {
-		//TODO: do not ignore this error.
-	}
-}
-
-// ExistsPort is a used by the periodicCheck function to determine whether a running container should be killed, if the corresponding port key has expired.
-func ExistsPort(port int) bool {
-	exists, _ := srv.RCli.Exists("port:" + strconv.Itoa(port)).Result()
-	return exists
-}
-
-// GetRunConfig returns the user session
-func GetRunConfig(userID string) (r RunConfig, err error) {
+// GetUserRunConfig returns the user session
+func GetUserRunConfig(userID string) (r RunConfig, err error) {
 	var val string
-	val, err = srv.RCli.Get(GetUserKey(userID)).Result()
+	val, err = srv.RCli.Get(GetUserRunKey(userID)).Result()
 	if err != nil {
 		return r, err
 	}
@@ -96,8 +76,8 @@ func GetRunConfig(userID string) (r RunConfig, err error) {
 	return r, nil
 }
 
-// SetRunConfig will add the session
-func SetRunConfig(userID string, r RunConfig) (err error) {
+// SetUserRunConfig will add the session
+func SetUserRunConfig(userID string, r RunConfig) (err error) {
 	// Marshal to JSON
 	var js []byte
 	js, err = json.Marshal(r)
@@ -107,7 +87,7 @@ func SetRunConfig(userID string, r RunConfig) (err error) {
 
 	// Set key value
 	var OK string
-	OK, err = srv.RCli.Set(GetUserKey(userID), js, userTTL).Result()
+	OK, err = srv.RCli.Set(GetUserRunKey(userID), js, userTTL).Result()
 	if err != nil {
 		return err
 	}
@@ -168,8 +148,8 @@ func DeleteAdminSession(key string) error {
 	Admin Run Container Session
 ==============================================*/
 
-// GetAdminRunKey constructs the user key
-func GetAdminRunKey(key string) string {
+// GetAdminSessionRunKey constructs the admin run key
+func GetAdminSessionRunKey(key string) string {
 	return admRunPrefix + key
 }
 
@@ -180,7 +160,7 @@ func DeleteAdminRunConfig(key string) error {
 		// TODO: parse error
 	}
 	delPort(r.Port)
-	_, err = srv.RCli.Del(GetAdminRunKey(key)).Result()
+	_, err = srv.RCli.Del(GetAdminSessionRunKey(key)).Result()
 	if err != nil {
 		return err
 	}
@@ -189,7 +169,7 @@ func DeleteAdminRunConfig(key string) error {
 
 // ExistsAdminRunConfig returns true if there is a session for the particular user
 func ExistsAdminRunConfig(key string) (bool, error) {
-	keyExists, err := srv.RCli.Exists(GetAdminRunKey(key)).Result()
+	keyExists, err := srv.RCli.Exists(GetAdminSessionRunKey(key)).Result()
 	if err != nil {
 		return false, err
 	}
@@ -202,7 +182,7 @@ func ExistsAdminRunConfig(key string) (bool, error) {
 // GetAdminRunConfig returns the user session
 func GetAdminRunConfig(key string) (r RunConfig, err error) {
 	var val string
-	val, err = srv.RCli.Get(GetAdminRunKey(key)).Result()
+	val, err = srv.RCli.Get(GetAdminSessionRunKey(key)).Result()
 	if err != nil {
 		return r, err
 	}
@@ -224,7 +204,7 @@ func SetAdminRunConfig(key string, r RunConfig) (err error) {
 
 	// Set key value
 	var OK string
-	OK, err = srv.RCli.Set(GetAdminRunKey(key), js, userTTL).Result()
+	OK, err = srv.RCli.Set(GetAdminSessionRunKey(key), js, userTTL).Result()
 	if err != nil {
 		return err
 	}
@@ -233,4 +213,26 @@ func SetAdminRunConfig(key string, r RunConfig) (err error) {
 	}
 	setPort(r.Port, userTTL)
 	return nil
+}
+
+// Functions for adding additional port keys
+func setPort(port string, TTL time.Duration) {
+	_, err := srv.RCli.Set("port:"+port, true, TTL).Result()
+	if err != nil {
+		//TODO: do not ignore this error.
+	}
+}
+
+func delPort(port string) {
+	_, err := srv.RCli.Del("port:" + port).Result()
+	if err != nil {
+		//TODO: do not ignore this error.
+	}
+}
+
+// ExistsPort is a used by PeriodicChecker function to determine whether a running container should be killed, if the corresponding port key has expired.
+func ExistsPort(port int) bool {
+	exists, _ := srv.RCli.Exists("port:" + strconv.Itoa(port)).Result()
+	// TODO: YOLO error handling
+	return exists
 }

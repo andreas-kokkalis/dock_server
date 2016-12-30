@@ -40,9 +40,9 @@ func KillContainer(res http.ResponseWriter, req *http.Request, params httprouter
 		return
 	}
 	// Check if session exists in Redis
-	userID := dc.StripKey(cookieVal)
+	userID := dc.StripSessionKeyPrefix(cookieVal)
 	var exists bool
-	exists, err = dc.ExistsRunConfig(userID)
+	exists, err = dc.ExistsUserRunConfig(userID)
 	if err != nil || !exists {
 		fmt.Println("session does not exist")
 		response.WriteError(res, http.StatusUnauthorized, "Not authorized")
@@ -50,7 +50,7 @@ func KillContainer(res http.ResponseWriter, req *http.Request, params httprouter
 	}
 	// Get session from Redis
 	var cfg dc.RunConfig
-	cfg, err = dc.GetRunConfig(userID)
+	cfg, err = dc.GetUserRunConfig(userID)
 	if err != nil {
 		response.WriteError(res, http.StatusInternalServerError, er.ServerError)
 		return
@@ -71,7 +71,7 @@ func KillContainer(res http.ResponseWriter, req *http.Request, params httprouter
 	}
 
 	// Delete the user session
-	err = dc.DeleteRunConfig(userID)
+	err = dc.DeleteUserRunConfig(userID)
 	if err != nil {
 		fmt.Println(err.Error())
 		response.WriteError(res, http.StatusInternalServerError, er.ServerError)

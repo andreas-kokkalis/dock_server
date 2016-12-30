@@ -77,20 +77,20 @@ func LTILaunch(res http.ResponseWriter, req *http.Request, params httprouter.Par
 	// extract Canvas userID and store is as session key
 	userID := req.PostFormValue("user_id")
 	var sessionExists bool
-	sessionExists, err = dc.ExistsRunConfig(userID)
+	sessionExists, err = dc.ExistsUserRunConfig(userID)
 	if err != nil {
 		t.Execute(res, Resp{Error: er.ServerError})
 	}
 
 	var cfg dc.RunConfig
 	if sessionExists {
-		cfg, err = dc.GetRunConfig(userID)
+		cfg, err = dc.GetUserRunConfig(userID)
 		if err != nil {
 			t.Execute(res, Resp{Error: er.ServerError})
 		}
 		fmt.Printf("exists: %v\n", cfg)
 		// Update the TTL
-		err = dc.SetRunConfig(userID, cfg)
+		err = dc.SetUserRunConfig(userID, cfg)
 		if err != nil {
 			t.Execute(res, Resp{Error: er.ServerError})
 		}
@@ -107,7 +107,7 @@ func LTILaunch(res http.ResponseWriter, req *http.Request, params httprouter.Par
 		}
 		fmt.Printf("not exists: %v\n", cfg)
 		// Set session
-		err = dc.SetRunConfig(userID, cfg)
+		err = dc.SetUserRunConfig(userID, cfg)
 		if err != nil {
 			t.Execute(res, Resp{Error: er.ServerError})
 		}
@@ -116,7 +116,7 @@ func LTILaunch(res http.ResponseWriter, req *http.Request, params httprouter.Par
 	// Whether the session exists or not, write the cookie
 	cookie := &http.Cookie{
 		Name:    "dock_session",
-		Value:   dc.GetUserKey(userID),
+		Value:   dc.GetUserRunKey(userID),
 		Expires: time.Now().Add(24 * time.Hour),
 	}
 	http.SetCookie(res, cookie)
