@@ -7,7 +7,6 @@ import (
 
 	"github.com/andreas-kokkalis/dock-server/dc"
 	"github.com/andreas-kokkalis/dock-server/route/er"
-	"github.com/andreas-kokkalis/dock-server/session"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -26,7 +25,7 @@ func AdminKillContainer(res http.ResponseWriter, req *http.Request, params httpr
 	// Get the cookie to get the admin key
 	cookie, err := req.Cookie("ses")
 	var cfg dc.RunConfig
-	cfg, err = session.GetAdminRunConfig(cookie.Value)
+	cfg, err = dc.GetAdminRunConfig(cookie.Value)
 	if err != nil {
 		response.WriteError(res, http.StatusInternalServerError, er.ContainerAlreadyKilled)
 		return
@@ -40,7 +39,7 @@ func AdminKillContainer(res http.ResponseWriter, req *http.Request, params httpr
 		return
 	}
 	// Remove Redis key
-	err = session.DeleteAdminRunConfig(cookie.Value)
+	err = dc.DeleteAdminRunConfig(cookie.Value)
 	if err != nil {
 		response.WriteError(res, http.StatusInternalServerError, err.Error())
 		return

@@ -7,7 +7,6 @@ import (
 
 	"github.com/andreas-kokkalis/dock-server/conf"
 
-	"github.com/andreas-kokkalis/dock-server/srv"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
@@ -33,7 +32,7 @@ func CreateContainer(imageID, username, password string) (containerID string, po
 	img := conf.GetVal("dc.imagerepo.name") + ":" + refTag
 	containerConfig := container.Config{Env: envVars, ExposedPorts: exposedPorts, Image: img}
 	// Get a non utilized host port, to avoid collision
-	port, err = srv.GetFreeResource(srv.PortResources)
+	port, err = ContainerPorts.Reserve()
 	if err != nil {
 		fmt.Println(err)
 		return "", -1, err
@@ -42,7 +41,7 @@ func CreateContainer(imageID, username, password string) (containerID string, po
 	// --- Host configuration
 	// Prepare portBindings containerPort -> Host port. are part of PortMap
 	portBindings := []nat.PortBinding{nat.PortBinding{HostPort: strconv.Itoa(port)}}
-	srv.PrintUsed(srv.PortResources) // Debug Logging
+	ContainerPorts.PrintUsed() // Debug Logging
 	// PortMap is member of container.HostConfig
 	portMap := map[nat.Port][]nat.PortBinding{natPort: portBindings}
 	hostConfig := container.HostConfig{PortBindings: portMap}
@@ -50,7 +49,7 @@ func CreateContainer(imageID, username, password string) (containerID string, po
 	// Send the request to create the container
 	body, err := Cli.ContainerCreate(context.Background(), &containerConfig, &hostConfig, &network.NetworkingConfig{}, "")
 	if err != nil {
-		srv.FreeResource(srv.PortResources, port)
+		ContainerPorts.Remove(port)
 		fmt.Println(err)
 		return "", -1, err
 	}

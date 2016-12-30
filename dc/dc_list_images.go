@@ -51,19 +51,18 @@ func ListImages() ([]Img, error) {
 }
 
 // GetRepositories returns the lsit of the dc repositories and tags
-func GetRepositories() (imageList string) {
+func GetRepositories() (imageList []string) {
 	images, err := Cli.ImageList(context.Background(), types.ImageListOptions{})
 	if err != nil {
 		return imageList
 	}
 
-	// Extract imageID, RepoTags for specific type of images
-
+	// The repositories
 	for _, image := range images {
-		fmt.Println(image.RepoTags[0])
+		// fmt.Printf("%+v\n\n", image.RepoTags)
 		s := image.RepoTags[0]
 		if s[0:strings.LastIndex(s, ":")] == conf.GetVal("dc.imagerepo.name") {
-			imageList = imageList + " " + image.RepoTags[0]
+			imageList = append(imageList, image.RepoTags[0])
 		}
 	}
 	return imageList

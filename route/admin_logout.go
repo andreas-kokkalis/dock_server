@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/andreas-kokkalis/dock-server/session"
+	"github.com/andreas-kokkalis/dock-server/dc"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -22,7 +22,7 @@ func AdminLogout(res http.ResponseWriter, req *http.Request, _ httprouter.Params
 	}
 
 	// Check if session exists in Redis. If it doesn't exist sent Unauthorized. Frontend will redirect to login page.
-	err = session.DeleteAdminSession(cookie.Value)
+	err = dc.DeleteAdminSession(cookie.Value)
 	if err != nil {
 		http.Error(res, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return

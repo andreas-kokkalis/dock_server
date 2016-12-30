@@ -9,8 +9,8 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/andreas-kokkalis/dock-server/dc"
 	"github.com/andreas-kokkalis/dock-server/route/er"
-	"github.com/andreas-kokkalis/dock-server/session"
 	"github.com/andreas-kokkalis/dock-server/srv"
 	"github.com/julienschmidt/httprouter"
 )
@@ -62,15 +62,15 @@ func AdminLogin(res http.ResponseWriter, req *http.Request, _ httprouter.Params)
 
 	// Check whether the session exists or not.
 	var sessionExists bool
-	key := session.CreateAdminKey(id)
-	sessionExists, err = session.ExistsAdminSession(key)
+	key := dc.CreateAdminKey(id)
+	sessionExists, err = dc.ExistsAdminSession(key)
 	if err != nil {
 		response.WriteError(res, http.StatusInternalServerError, err.Error())
 		return
 	}
 	// Case session does not exist
 	if !sessionExists {
-		err = session.SetAdminSession(key)
+		err = dc.SetAdminSession(key)
 		if err != nil {
 			response.WriteError(res, http.StatusInternalServerError, err.Error())
 			return

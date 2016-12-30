@@ -3,7 +3,7 @@ package route
 import (
 	"net/http"
 
-	"github.com/andreas-kokkalis/dock-server/session"
+	"github.com/andreas-kokkalis/dock-server/dc"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -26,7 +26,7 @@ func AuthAdmin(handler httprouter.Handle) httprouter.Handle {
 
 		// Check if session exists in Redis. If it doesn't exist sent Unauthorized. Frontend will redirect to login page.
 		exists := false
-		exists, err = session.ExistsAdminSession(cookie.Value)
+		exists, err = dc.ExistsAdminSession(cookie.Value)
 		if err != nil || !exists {
 			http.Error(res, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return

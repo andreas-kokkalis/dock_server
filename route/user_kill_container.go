@@ -7,7 +7,6 @@ import (
 
 	"github.com/andreas-kokkalis/dock-server/dc"
 	"github.com/andreas-kokkalis/dock-server/route/er"
-	"github.com/andreas-kokkalis/dock-server/session"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -41,9 +40,9 @@ func KillContainer(res http.ResponseWriter, req *http.Request, params httprouter
 		return
 	}
 	// Check if session exists in Redis
-	userID := session.StripKey(cookieVal)
+	userID := dc.StripKey(cookieVal)
 	var exists bool
-	exists, err = session.ExistsRunConfig(userID)
+	exists, err = dc.ExistsRunConfig(userID)
 	if err != nil || !exists {
 		fmt.Println("session does not exist")
 		response.WriteError(res, http.StatusUnauthorized, "Not authorized")
@@ -51,7 +50,7 @@ func KillContainer(res http.ResponseWriter, req *http.Request, params httprouter
 	}
 	// Get session from Redis
 	var cfg dc.RunConfig
-	cfg, err = session.GetRunConfig(userID)
+	cfg, err = dc.GetRunConfig(userID)
 	if err != nil {
 		response.WriteError(res, http.StatusInternalServerError, er.ServerError)
 		return
@@ -72,7 +71,7 @@ func KillContainer(res http.ResponseWriter, req *http.Request, params httprouter
 	}
 
 	// Delete the user session
-	err = session.DeleteRunConfig(userID)
+	err = dc.DeleteRunConfig(userID)
 	if err != nil {
 		fmt.Println(err.Error())
 		response.WriteError(res, http.StatusInternalServerError, er.ServerError)

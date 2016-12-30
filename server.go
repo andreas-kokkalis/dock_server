@@ -20,7 +20,7 @@ func main() {
 	dc.APIClientInit(conf.GetVal("dc.docker.api.version"), conf.GetVal("dc.docker.api.host"))
 
 	// Initialize the port mappings
-	dc.InitPortMappings(200)
+	dc.ContainerPortsInitialize(200)
 
 	// Initialize Redis storage
 	srv.InitRedisClient()
@@ -33,6 +33,8 @@ func main() {
 	if mode == "dev" {
 		srv.MigrateData()
 	}
+
+	go dc.PeriodicChecker()
 
 	// Initialize the  httprouter
 	router := httprouter.New()

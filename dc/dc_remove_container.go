@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/andreas-kokkalis/dock-server/srv"
 	"github.com/docker/docker/api/types"
 )
 
@@ -30,7 +29,7 @@ func RemoveContainer(containerID string, port int) (err error) {
 	}
 
 	// After the container is killed free the port resource
-	srv.FreeResource(srv.PortResources, port)
+	ContainerPorts.Remove(port)
 	// rm -f the container
 	options := types.ContainerRemoveOptions{Force: true}
 	err = Cli.ContainerRemove(context.Background(), containerID, options)

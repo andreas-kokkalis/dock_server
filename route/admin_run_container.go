@@ -6,7 +6,6 @@ import (
 
 	"github.com/andreas-kokkalis/dock-server/dc"
 	"github.com/andreas-kokkalis/dock-server/route/er"
-	"github.com/andreas-kokkalis/dock-server/session"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -37,7 +36,7 @@ func AdminRunContainer(res http.ResponseWriter, req *http.Request, params httpro
 
 	cookie, _ := req.Cookie("ses")
 	fmt.Println(cookie.Value)
-	sessionExists, err := session.ExistsAdminRunConfig(cookie.Value)
+	sessionExists, err := dc.ExistsAdminRunConfig(cookie.Value)
 	if err != nil {
 		response.WriteError(res, http.StatusInternalServerError, er.ServerError)
 		return
@@ -46,14 +45,14 @@ func AdminRunContainer(res http.ResponseWriter, req *http.Request, params httpro
 	username := "admin"
 	password := "password"
 	if sessionExists {
-		cfg, err = session.GetAdminRunConfig(cookie.Value)
+		cfg, err = dc.GetAdminRunConfig(cookie.Value)
 		if err != nil {
 			response.WriteError(res, http.StatusInternalServerError, er.ServerError)
 			return
 		}
 		fmt.Printf("exists: %v\n", cfg)
 		// Update the TTL
-		err = session.SetAdminRunConfig(cookie.Value, cfg)
+		err = dc.SetAdminRunConfig(cookie.Value, cfg)
 		if err != nil {
 			response.WriteError(res, http.StatusInternalServerError, er.ServerError)
 			return
@@ -69,7 +68,7 @@ func AdminRunContainer(res http.ResponseWriter, req *http.Request, params httpro
 			return
 		}
 
-		err = session.SetAdminRunConfig(cookie.Value, cfg)
+		err = dc.SetAdminRunConfig(cookie.Value, cfg)
 		if err != nil {
 			response.WriteError(res, http.StatusInternalServerError, er.ServerError)
 			return

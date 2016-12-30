@@ -11,7 +11,6 @@ import (
 
 	"github.com/andreas-kokkalis/dock-server/dc"
 	"github.com/andreas-kokkalis/dock-server/route/er"
-	"github.com/andreas-kokkalis/dock-server/session"
 	"github.com/jordic/lti"
 	"github.com/julienschmidt/httprouter"
 )
@@ -78,20 +77,20 @@ func LTILaunch(res http.ResponseWriter, req *http.Request, params httprouter.Par
 	// extract Canvas userID and store is as session key
 	userID := req.PostFormValue("user_id")
 	var sessionExists bool
-	sessionExists, err = session.ExistsRunConfig(userID)
+	sessionExists, err = dc.ExistsRunConfig(userID)
 	if err != nil {
 		t.Execute(res, Resp{Error: er.ServerError})
 	}
 
 	var cfg dc.RunConfig
 	if sessionExists {
-		cfg, err = session.GetRunConfig(userID)
+		cfg, err = dc.GetRunConfig(userID)
 		if err != nil {
 			t.Execute(res, Resp{Error: er.ServerError})
 		}
 		fmt.Printf("exists: %v\n", cfg)
 		// Update the TTL
-		err = session.SetRunConfig(userID, cfg)
+		err = dc.SetRunConfig(userID, cfg)
 		if err != nil {
 			t.Execute(res, Resp{Error: er.ServerError})
 		}
@@ -108,7 +107,7 @@ func LTILaunch(res http.ResponseWriter, req *http.Request, params httprouter.Par
 		}
 		fmt.Printf("not exists: %v\n", cfg)
 		// Set session
-		err = session.SetRunConfig(userID, cfg)
+		err = dc.SetRunConfig(userID, cfg)
 		if err != nil {
 			t.Execute(res, Resp{Error: er.ServerError})
 		}
@@ -117,7 +116,7 @@ func LTILaunch(res http.ResponseWriter, req *http.Request, params httprouter.Par
 	// Whether the session exists or not, write the cookie
 	cookie := &http.Cookie{
 		Name:    "dock_session",
-		Value:   session.GetUserKey(userID),
+		Value:   dc.GetUserKey(userID),
 		Expires: time.Now().Add(24 * time.Hour),
 	}
 	http.SetCookie(res, cookie)
