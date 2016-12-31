@@ -34,11 +34,6 @@ func ContainerPortsInitialize(numPorts int) {
 	}
 }
 
-type portResource struct {
-	port   int
-	isUsed bool
-}
-
 type portResources struct {
 	portsAvailable map[int]bool
 	lock           sync.Mutex
