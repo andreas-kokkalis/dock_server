@@ -11,12 +11,11 @@
     <title>Image History</title>
 
     <!-- Custom styles for this template -->
-    <link href="css/app.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-
+    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <script type="text/javascript" src="scripts/jquery.min.js"></script>
+    <script type="text/javascript" src="scripts/jquery.cookie.min.js"></script>
+    <script type="text/javascript" src="scripts/bootstrap.min.js"></script>
 </head>
 
 <body>
@@ -38,13 +37,11 @@
         </div>
         <div class="panel panel-default">
             <!-- Default panel contents -->
-            <div class="panel-heading">
-                <h1>Image History</h1></div>
+            <div class="panel-heading"><h2>Image History</h2></div>
             <div class="panel-body">
-                History of image <span id="image-id"></span>
+                <ul id="boo" class="list-group"></ul>
+                <div id="image-action"></div>
             </div>
-            <ul id="boo" class="list-group"></ul>
-            <div id="image-action"></div>
         </div>
 
     </div>
@@ -66,8 +63,9 @@
                         console.log(k, v)
                         $("#boo").append(
                                 '<li class="list-group-item"><span style="padding-right:5px;font-weight:bold;">Image ID</span>' + v.Id + '</li>' +
-                                '<li class="list-group-item"><span style="padding-right:5px;font-weight:bold;">Repository</span>' + v.Tags[0] + '</li>' +
-                                '<li class="list-group-item"><span style="padding-right:5px;font-weight:bold;">Comment</span>' + v.Comment + '</li>'
+                                '<li class="list-group-item"><span style="padding-right:5px;font-weight:bold;">Repository</span>' + v.RepoTags[0] + '</li>' +
+                                '<li class="list-group-item"><span style="padding-right:5px;font-weight:bold;">Comment</span>' + v.Comment + '</li>' +
+                                '<li class="list-group-item"><span style="padding-right:5px;font-weight:bold;">Created At</span>' + v.CreatedAt + '</li>'
                             )
                             // Append the imageID
                         $("#image-id").append(id);

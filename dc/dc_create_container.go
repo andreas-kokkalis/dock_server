@@ -54,5 +54,5 @@ func CreateContainer(imageID, username, password string) (containerID string, po
 		return "", -1, err
 	}
 	// fmt.Println(body)
-	return body.ID, port, nil
+	return body.ID[:12], port, nil
 }

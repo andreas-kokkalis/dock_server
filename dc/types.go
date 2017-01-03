@@ -1,5 +1,7 @@
 package dc
 
+import "time"
+
 // Ctn minimal container struct
 type Ctn struct {
 	ID     string `json:"Id"`
@@ -10,18 +12,19 @@ type Ctn struct {
 
 // Img minimal image struct
 type Img struct {
-	ID       string   `json:"Id"`
-	RepoTags []string `json:"RepoTags"`
+	ID        string    `json:"Id"`
+	RepoTags  []string  `json:"RepoTags"`
+	CreatedAt time.Time `json:"CreatedAt"`
 }
 
 // ImgHistory is identical to docker types.ImgHistory
 type ImgHistory struct {
-	ID        string `json:"Id"`
-	Created   int64
-	CreatedBy string
-	Tags      []string
-	Size      int64
-	Comment   string
+	ID        string    `json:"Id"`
+	CreatedAt time.Time `json:"CreatedAt"`
+	CreatedBy string    `json:"CreatedBy"`
+	RepoTags  []string  `json:"RepoTags"`
+	Size      int64     `json:"Size"`
+	Comment   string    `json:"Comment"`
 }
 
 // RunConfig for running a container

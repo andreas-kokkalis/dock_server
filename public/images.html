@@ -11,11 +11,11 @@
     <title>Image List</title>
 
     <!-- Custom styles for this template -->
-    <link href="css/app.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <script type="text/javascript" src="scripts/jquery.min.js"></script>
+    <script type="text/javascript" src="scripts/jquery.cookie.min.js"></script>
+    <script type="text/javascript" src="scripts/bootstrap.min.js"></script>
 </head>
 
 <body>
@@ -38,16 +38,17 @@
         </div>
         <div class="panel panel-default">
             <!-- Default panel contents -->
-            <div class="panel-heading"><h1>List of Images</h1></div>
+            <div class="panel-heading"><h2>List of Images</h2></div>
             <div class="panel-body">
                 <table class="table table-hover">
                     <thead>
                         <tr>
                             <th>ImageID</th>
                             <th>Name</th>
+                            <th>Created At</th>
                         </tr>
                     </thead>
-                    <tbody id="boo">
+                    <tbody id="image-list">
                         <tr class="img-row">
                         </tr>
                     </tbody>
@@ -68,11 +69,11 @@
                 success: function(response) {
                     console.log("success", response)
                     $.each(response.data, function(k, v) {
-                        console.log(k, v)
-                        $("#boo").append(
+                        $("#image-list").append(
                             '<tr onclick=\'toImageHistory("' + v.Id + '")\' role="button">'+
                                 '<td>' + v.Id + '</td>'+
                                 '<td>' + v.RepoTags + '</td>'+
+                                '<td>' + v.CreatedAt + '</td>'+
                             '</tr>')
                     });
                 },

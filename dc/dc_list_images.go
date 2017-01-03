@@ -2,8 +2,9 @@ package dc
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"strings"
+	"time"
 
 	"github.com/andreas-kokkalis/dock-server/conf"
 
@@ -41,10 +42,11 @@ func ListImages() ([]Img, error) {
 
 	// Extract imageID, RepoTags for specific type of images
 	for _, image := range images {
-		fmt.Println(image.RepoTags[0])
+		// fmt.Println(image.RepoTags[0])
 		s := image.RepoTags[0]
 		if s[0:strings.LastIndex(s, ":")] == conf.GetVal("dc.imagerepo.name") {
-			imageList = append(imageList, Img{ID: image.ID[7:19], RepoTags: image.RepoTags})
+			log.Printf("[List-Images]: %+v\n", image)
+			imageList = append(imageList, Img{ID: image.ID[7:19], RepoTags: image.RepoTags, CreatedAt: time.Unix(image.Created, 0)})
 		}
 	}
 	return imageList, nil

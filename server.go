@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/andreas-kokkalis/dock-server/conf"
 	"github.com/andreas-kokkalis/dock-server/dc"
@@ -50,11 +51,12 @@ func main() {
 	router.GET("/v0/admin/containers/list/:status", route.AuthAdmin(route.GetContainers))
 	router.POST("/v0/admin/containers/run/:id", route.AuthAdmin(route.AdminRunContainer))
 	router.POST("/v0/admin/containers/commit/:id", route.AuthAdmin(route.CommitContainer))
-	router.POST("/v0/admin/containers/kill/:id", route.AuthAdmin(route.AdminKillContainer))
+	router.DELETE("/v0/admin/containers/kill/:id", route.AdminKillContainer)
 	// Image actions
 	router.GET("/v0/admin/images", route.AuthAdmin(route.ListImages))
 	router.GET("/v0/admin/images/history/:id", route.AuthAdmin(route.GetImageHistory))
 	router.DELETE("/v0/admin/images/delete/:id", route.AuthAdmin(route.RemoveImage))
+	router.GET("/v0/admin/ping", route.AuthAdmin(route.Ping))
 
 	/****************
 	* USER ROUTES
@@ -69,7 +71,13 @@ func main() {
 	router.ServeFiles("/ui/*filepath", http.Dir("./public/"))
 
 	// Start the server
-	err := http.ListenAndServeTLS(":8080", "conf/ssl/server.pem", "conf/ssl/server.key", router)
+	myServer := &http.Server{
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		Addr:         ":8080",
+		Handler:      router,
+	}
+	err := myServer.ListenAndServeTLS("conf/ssl/server.pem", "conf/ssl/server.key")
 
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)

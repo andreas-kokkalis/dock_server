@@ -25,7 +25,7 @@ func RunContainer(imageID, username, password string) (cfg RunConfig, err error)
 		Username:    username,
 		Password:    password,
 		Port:        strconv.Itoa(port),
-		URL:         "https://localhost:" + strconv.Itoa(port),
+		URL:         "https://127.0.0.1:" + strconv.Itoa(port),
 	}
 	return cfg, nil
 }
