@@ -2,7 +2,7 @@ package dc
 
 import (
 	"context"
-	"fmt"
+	"log"
 
 	"github.com/docker/docker/api/types"
 )
@@ -35,8 +35,7 @@ func RemoveContainer(containerID string, port int) (err error) {
 	options := types.ContainerRemoveOptions{Force: true}
 	err = Cli.ContainerRemove(context.Background(), containerID, options)
 	if err != nil {
-		fmt.Println("attempted to remove the container")
-		fmt.Println(err.Error())
+		log.Printf("[RemoveContainer]: An error occured while removing container %s\n\tError: %v\n", containerID, err.Error())
 		return err
 	}
 	return err

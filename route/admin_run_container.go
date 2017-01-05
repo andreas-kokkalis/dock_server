@@ -42,7 +42,7 @@ func AdminRunContainer(res http.ResponseWriter, req *http.Request, params httpro
 		return
 	}
 	var cfg dc.RunConfig
-	username := "admin"
+	username := "guest"
 	password := "password"
 	if sessionExists {
 		cfg, err = dc.GetAdminRunConfig(cookie.Value)

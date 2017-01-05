@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"strconv"
 	"time"
 
@@ -14,7 +15,7 @@ import (
 
 const (
 	usrPrefix    = "usr:"
-	userTTL      = time.Hour * 1
+	userTTL      = time.Hour * 5
 	admPrefix    = "adm:"
 	admRunPrefix = "run:"
 	adminTTL     = time.Hour * 24
@@ -94,7 +95,7 @@ func SetUserRunConfig(userID string, r RunConfig) (err error) {
 	if OK != "OK" {
 		return errors.New("Not OK")
 	}
-	setPort(r.Port, userTTL)
+	setPort(r.Port, GetUserRunKey(userID), userTTL)
 	return nil
 }
 
@@ -211,16 +212,17 @@ func SetAdminRunConfig(key string, r RunConfig) (err error) {
 	if OK != "OK" {
 		return errors.New("Not OK")
 	}
-	setPort(r.Port, userTTL)
+	setPort(r.Port, GetAdminSessionRunKey(key), userTTL)
 	return nil
 }
 
 // Functions for adding additional port keys
-func setPort(port string, TTL time.Duration) {
-	_, err := srv.RCli.Set("port:"+port, true, TTL).Result()
+func setPort(port string, value string, TTL time.Duration) {
+	_, err := srv.RCli.Set("port:"+port, value, TTL).Result()
 	if err != nil {
 		//TODO: do not ignore this error.
 	}
+	log.Printf("[RedisSession]: Added configuration for port: %s\n", port)
 }
 
 func delPort(port string) {
@@ -228,11 +230,21 @@ func delPort(port string) {
 	if err != nil {
 		//TODO: do not ignore this error.
 	}
+	log.Printf("[RedisSession]: Removed configuration for port: %s\n", port)
+}
+
+// RemoveIncosistentRedisKeys is used when a container is
+func RemoveIncosistentRedisKeys(port string) {
+	val, _ := srv.RCli.Get("port:" + port).Result()
+	if val != "" {
+		delPort(port)
+		srv.RCli.Del(val).Result()
+	}
 }
 
 // ExistsPort is a used by PeriodicChecker function to determine whether a running container should be killed, if the corresponding port key has expired.
-func ExistsPort(port int) bool {
-	exists, _ := srv.RCli.Exists("port:" + strconv.Itoa(port)).Result()
+func ExistsPort(port string) bool {
+	exists, _ := srv.RCli.Exists("port:" + port).Result()
 	// TODO: YOLO error handling
 	return exists
 }

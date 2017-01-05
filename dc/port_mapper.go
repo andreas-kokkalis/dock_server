@@ -3,7 +3,8 @@ package dc
 import (
 	"context"
 	"errors"
-	"fmt"
+	"log"
+	"strconv"
 	"sync"
 	"time"
 
@@ -30,7 +31,7 @@ func ContainerPortsInitialize(numPorts int) {
 	// Lock ContainerPorts and start creating the portResource slice
 	ContainerPorts.portsAvailable = make(map[int]bool)
 	for i := 0; i < numPorts; i++ {
-		ContainerPorts.portsAvailable[startPort+i] = false
+		ContainerPorts.portsAvailable[startPort+i] = true
 	}
 }
 
@@ -39,32 +40,23 @@ type portResources struct {
 	lock           sync.Mutex
 }
 
+// Remove is used by dc_remove_container.go and dc_create_container.go to remove unused ports
 func (res *portResources) Remove(port int) {
 	res.lock.Lock()
-	delete(res.portsAvailable, port)
-	fmt.Printf("Removed port %d\n", port)
-	fmt.Printf("[PortMapper]: removed unused port : %d\n", port)
+
+	res.portsAvailable[port] = true
+	log.Printf("[PortMapper]: removed unused port : %d\n", port)
 
 	res.lock.Unlock()
 }
 
-func (res *portResources) fixup(ports map[int]string) {
-	res.lock.Lock()
-	for port := range res.portsAvailable {
-		if _, exists := ports[port]; exists {
-			res.portsAvailable[port] = true
-		} else {
-			res.portsAvailable[port] = false
-		}
-	}
-	res.lock.Unlock()
-}
-
+// Reserve is used by dc_create_container.go to reserve an available port
 func (res *portResources) Reserve() (port int, err error) {
 	res.lock.Lock()
-	for port, isUsed := range res.portsAvailable {
-		if isUsed == false {
-			res.portsAvailable[port] = true
+
+	for port, isAvailable := range res.portsAvailable {
+		if isAvailable == true {
+			res.portsAvailable[port] = false
 			res.lock.Unlock()
 			return port, nil
 		}
@@ -73,17 +65,47 @@ func (res *portResources) Reserve() (port int, err error) {
 	return port, errors.New("No available port to return")
 }
 
+func (res *portResources) fixup(ports map[int]string) {
+	res.lock.Lock()
+
+	for port := range res.portsAvailable {
+		if _, exists := ports[port]; exists {
+			// Reserve port in memory
+			res.portsAvailable[port] = false
+		} else {
+			// Make port available in memory
+			res.portsAvailable[port] = true
+			// Remove trailing redis configuration
+			RemoveIncosistentRedisKeys(strconv.Itoa(port))
+		}
+	}
+
+	// No ports were used by containers, make sure that none is in memory
+	if len(ports) == 0 {
+		for port := range res.portsAvailable {
+			// Make port available in memory
+			res.portsAvailable[port] = true
+			// Remove trailing redis configuration
+			RemoveIncosistentRedisKeys(strconv.Itoa(port))
+		}
+	}
+
+	res.lock.Unlock()
+}
+
+/*
 // PrintUsed will print the used ports, duh
 func (res *portResources) PrintUsed() {
 	res.lock.Lock()
 	for port, isUsed := range res.portsAvailable {
 		if isUsed {
-			fmt.Printf("[PortMapper]: Port: %d is used.\n", port)
+			log.Printf("[PortMapper]: Port: %d is used.\n", port)
 		}
 	}
 	res.lock.Unlock()
 	return
 }
+*/
 
 // PeriodicChecker checks every X seconds for inconsistencies
 // First it gets all used ports by running containers, and syncs the concurrent ports map
@@ -98,11 +120,16 @@ func PeriodicChecker() {
 			continue
 		}
 
+		// Check for containers that have crashed / stopped etc.
+		// Remove the PortsAvailable
+		// Remove their redis keys
 		ContainerPorts.fixup(ports)
+
+		// Check for expired redis keys
 		for port, containerID := range ports {
-			if !ExistsPort(port) {
+			if !ExistsPort(strconv.Itoa(port)) {
 				RemoveContainer(containerID, port)
-				fmt.Printf("[PortMapper]: removing expired container with ID: %s\n", containerID)
+				log.Printf("[PortMapper]: removing expired container with ID: %s and port: %d\n", containerID, port)
 			}
 		}
 	}
@@ -128,9 +155,9 @@ func GetContainerPorts() (ports map[int]string, err error) {
 	// Extract containerID, ImageName, and Status
 	ports = make(map[int]string)
 	for _, container := range containers {
-		fmt.Printf("%+v\n", container.Ports[0].PublicPort)
+		log.Printf("[PortMapper]: port %v is in use by contaienr %v\n", container.Ports[0].PublicPort, container.ID[:12])
 		// containerList[i] = Ctn{ID: container.ID[:10], Image: container.Image, Status: container.Status, State: container.State}
-		ports[int(container.Ports[0].PublicPort)] = container.ID[:10]
+		ports[int(container.Ports[0].PublicPort)] = container.ID[:12]
 	}
 	return ports, nil
 }

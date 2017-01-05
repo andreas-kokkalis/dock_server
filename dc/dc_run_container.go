@@ -1,22 +1,22 @@
 package dc
 
 import (
-	"fmt"
+	"log"
 	"strconv"
 )
 
 // RunContainer does something
 func RunContainer(imageID, username, password string) (cfg RunConfig, err error) {
 	// Create the container
-	id, port, err := CreateContainer(imageID, username, password)
+	id, port, err := CreateContainer(imageID, password)
 	if err != nil {
-		fmt.Printf("error-create: %v\n", err.Error())
+		log.Printf("[RunContainer]: Error while creating: %v\n", err.Error())
 		return cfg, err
 	}
 	// Start the container
 	err = StartContainer(id)
 	if err != nil {
-		fmt.Printf("error-start: %v\n", err.Error())
+		log.Printf("[RunContainer]: Error while starting: %v\n", err.Error())
 		return cfg, err
 	}
 

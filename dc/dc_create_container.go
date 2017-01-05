@@ -2,7 +2,8 @@ package dc
 
 import (
 	"context"
-	"fmt"
+	"errors"
+	"log"
 	"strconv"
 
 	"github.com/andreas-kokkalis/dock-server/conf"
@@ -15,9 +16,9 @@ import (
 // CreateContainer creates a container based on
 // imageName and reference Tag,
 // and returns the containerID
-func CreateContainer(imageID, username, password string) (containerID string, port int, err error) {
+func CreateContainer(imageID, password string) (containerID string, port int, err error) {
 	// Set environment variables for shellinabox container
-	envVars := []string{"SIAB_PASSWORD=" + password, "SIAB_USER=" + username, "SIAB_SUDO=true"}
+	envVars := []string{"SIAB_PASSWORD=" + password, "SIAB_SUDO=true"}
 	// Get the imageTag
 	refTag, err := GetTagByID(imageID)
 	if err != nil {
@@ -34,14 +35,18 @@ func CreateContainer(imageID, username, password string) (containerID string, po
 	// Get a non utilized host port, to avoid collision
 	port, err = ContainerPorts.Reserve()
 	if err != nil {
-		fmt.Println(err)
+		log.Printf("[CreateContainer]: %v", err.Error())
 		return "", -1, err
+	}
+	if port == -1 {
+		log.Printf("[CreateContainer]: No ports were available to reserve.\n")
+		return "", -1, errors.New("There are no resources available in the system.")
 	}
 
 	// --- Host configuration
 	// Prepare portBindings containerPort -> Host port. are part of PortMap
 	portBindings := []nat.PortBinding{nat.PortBinding{HostPort: strconv.Itoa(port)}}
-	ContainerPorts.PrintUsed() // Debug Logging
+	// ContainerPorts.PrintUsed() // Debug Logging
 	// PortMap is member of container.HostConfig
 	portMap := map[nat.Port][]nat.PortBinding{natPort: portBindings}
 	hostConfig := container.HostConfig{PortBindings: portMap}
@@ -50,9 +55,10 @@ func CreateContainer(imageID, username, password string) (containerID string, po
 	body, err := Cli.ContainerCreate(context.Background(), &containerConfig, &hostConfig, &network.NetworkingConfig{}, "")
 	if err != nil {
 		ContainerPorts.Remove(port)
-		fmt.Println(err)
+		log.Printf("[CreateContainer]: %v", err.Error())
 		return "", -1, err
 	}
-	// fmt.Println(body)
+
+	// Return only the first 12 digits from the sha256 identifier of the container
 	return body.ID[:12], port, nil
 }

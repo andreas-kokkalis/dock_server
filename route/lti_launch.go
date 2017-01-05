@@ -24,20 +24,12 @@ const (
 func OAuth(handler httprouter.Handle) httprouter.Handle {
 	return func(res http.ResponseWriter, req *http.Request, params httprouter.Params) {
 
-		/*
-			err := req.ParseForm()
-			if err != nil { // Handle error here via logging and then return }
-			key := req.PostFormValue("oauth_consumer_key")
-			secret := req.PostFormValue("oauth_signature")
-			signatureMethod := req.PostFormValue("oauth_signature_method")
-			user := req.PostFormValue("user_id")
-			fmt.Printf("\n%s \n%s \n%s \n%s", key, secret, signatureMethod, user)
-		*/
-
 		// TODO: Add check if user is not a student, return error
 
-		// Provider requires to match the request url with the secret.
-		// Since the request URL depends on imageID it should constuct it from the header
+		// OAuth authentication of the TP requires to match the
+		// request URL with the expected path. Since image IDs
+		// change all the time, the path is constructed using
+		// the imageID as extracted from the HTTP Header.
 		path := fmt.Sprintf("https://%s%s", req.Host, req.URL.Path)
 		fmt.Println(path)
 		p := lti.NewProvider(oauthSecret, path)
@@ -46,6 +38,7 @@ func OAuth(handler httprouter.Handle) httprouter.Handle {
 		ok, err := p.IsValid(req)
 		if !ok {
 			fmt.Fprintf(res, "Invalid request...")
+			return
 		}
 		if err != nil {
 			log.Printf("Invalid request %s", err)
@@ -62,6 +55,10 @@ func OAuth(handler httprouter.Handle) httprouter.Handle {
 //	-- true: return current session
 //  -- false: run container and return new session
 func LTILaunch(res http.ResponseWriter, req *http.Request, params httprouter.Params) {
+
+	fmt.Printf("Header: %+v\n", req.Header)
+	fmt.Printf("Body:  %+v\n", req.Body)
+
 	t, _ := template.ParseFiles("templates/html/assignment.html")
 	// Validate imageID
 	imageID := params.ByName("id")
@@ -97,8 +94,10 @@ func LTILaunch(res http.ResponseWriter, req *http.Request, params httprouter.Par
 	} else {
 		// SESSION didn'texist
 		// Generate username and password
-		username := "canvas"
-		password := newPassword()
+		username := "guest"
+		// username := "canvas"
+		password := "password"
+		// password := newPassword()
 		// Run container request
 		cfg, err = dc.RunContainer(imageID, username, password)
 		if err != nil {

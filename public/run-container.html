@@ -40,7 +40,7 @@
         <div class="panel panel-default" id="shell-panel">
             <!-- Default panel contents -->
             <div class="panel-heading">
-                <h1>Run container</h1></div>
+                <h3>Run container</h3></div>
             <div class="panel-body">
                 <div id="container-run-frame"></div>
             </div>
@@ -66,7 +66,7 @@
                     console.log(response)
                     $("#info-panel").append(
                         '<div class="alert alert-info" role="alert">' +
-                        '<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true" style="padding-right:5px"></span>If this is your first session you might have to visit ' + response.data.url +
+                        '<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true" style="padding-right:5px"></span>If this is your first session you might have to visit <a href="' + response.data.url + '" target="_blank">' + response.data.url + '</a>' +
                         ' in a new tab and accept the SSL certificate.' +
                         '</div>'
                     );
