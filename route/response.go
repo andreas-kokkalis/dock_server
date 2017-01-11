@@ -30,8 +30,9 @@ func (r *Response) WriteError(res http.ResponseWriter, statusCode int, err strin
 }
 
 // SetStatus will set the http status in the response
-func (r *Response) SetStatus(statusCode int) {
+func (r *Response) SetStatus(statusCode int, res http.ResponseWriter) {
 	r.Status = http.StatusText(statusCode)
+	res.WriteHeader(statusCode)
 }
 
 // SetData will set the http status in the response

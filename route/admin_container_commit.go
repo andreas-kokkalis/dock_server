@@ -3,6 +3,7 @@ package route
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -78,5 +79,8 @@ func CommitContainer(res http.ResponseWriter, req *http.Request, params httprout
 		response.WriteError(res, http.StatusInternalServerError, er.ServerError)
 		return
 	}
+	log.Printf("[RT-CommitContainer]: attempting to write the response")
+	response.SetData("A new image has been successfully created.")
+	response.SetStatus(http.StatusOK, res)
 	res.Write(response.Marshal())
 }

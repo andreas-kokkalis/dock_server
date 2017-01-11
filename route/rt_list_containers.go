@@ -22,7 +22,7 @@ func GetContainers(res http.ResponseWriter, req *http.Request, params httprouter
 	if vContainerState.MatchString(status) == false {
 		// http.Error(res, er.InvalidContainerState, http.StatusUnprocessableEntity)
 		response.AddError(er.InvalidContainerState)
-		response.SetStatus(http.StatusUnprocessableEntity)
+		response.SetStatus(http.StatusUnprocessableEntity, res)
 		res.Write(response.Marshal())
 		return
 	}
@@ -32,12 +32,12 @@ func GetContainers(res http.ResponseWriter, req *http.Request, params httprouter
 	if err != nil {
 		// http.Error(res, er.ServerError, http.StatusInternalServerError)
 		response.AddError(err.Error())
-		response.SetStatus(http.StatusInternalServerError)
+		response.SetStatus(http.StatusInternalServerError, res)
 		res.Write(response.Marshal())
 		return
 	}
 
-	response.SetStatus(http.StatusOK)
+	response.SetStatus(http.StatusOK, res)
 	response.SetData(containers)
 	res.Write(response.Marshal())
 }

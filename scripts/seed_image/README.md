@@ -1,3 +1,5 @@
+This is the GitHub repository [https://github.com/sspreitzer/docker-shellinabox](https://github.com/sspreitzer/docker-shellinabox)
+
 # Table Of Contents
 
  - [Introduction](#introduction)

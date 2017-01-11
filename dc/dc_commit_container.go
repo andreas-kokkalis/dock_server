@@ -3,6 +3,7 @@ package dc
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/andreas-kokkalis/dock-server/conf"
 	"github.com/docker/docker/api/types"
@@ -18,7 +19,8 @@ func CommitContainer(comment, author, containerID, refTag string) error {
 		return err
 	}
 	// TODO: figure out what to do with the response
-	fmt.Println(response)
+	fmt.Printf("%+v\n", response)
+	log.Printf("[CommitContainer]: Committed container with ID:%s\n", containerID)
 	//sha256:baa8ace946df92b5fb1722538d73531503485535604863e34e174a5d284a601b
 
 	return nil
