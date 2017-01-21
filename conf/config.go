@@ -8,15 +8,18 @@ import (
 
 var v *viper.Viper
 
-// Init the config
-func Init() {
+// InitConf initializes the viper configuration manager
+func InitConf(path string) (err error) {
 	v = viper.GetViper()
 	v.SetConfigType("yaml")
 	v.SetConfigName("conf")
-	v.AddConfigPath("./conf")
-	if err := v.ReadInConfig(); err != nil {
-		log.Fatal(err)
+	v.AddConfigPath(path)
+
+	err = v.ReadInConfig()
+	if err != nil {
+		log.Printf("[InitConf]: could read configuration file.\n")
 	}
+	return err
 }
 
 // GetVal returns a string conf

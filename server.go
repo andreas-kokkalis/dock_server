@@ -15,7 +15,10 @@ import (
 
 func main() {
 	// Load static configuration strings from conf/conf.yaml
-	conf.Init()
+	err := conf.InitConf("./conf")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Initialize the Docker API Client
 	dc.APIClientInit(conf.GetVal("dc.docker.api.version"), conf.GetVal("dc.docker.api.host"))
@@ -77,7 +80,7 @@ func main() {
 		Addr:         ":8080",
 		Handler:      router,
 	}
-	err := myServer.ListenAndServeTLS("conf/ssl/server.pem", "conf/ssl/server.key")
+	err = myServer.ListenAndServeTLS("conf/ssl/server.pem", "conf/ssl/server.key")
 
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
