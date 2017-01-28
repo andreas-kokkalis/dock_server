@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/andreas-kokkalis/dock-server/srv"
+	"github.com/andreas-kokkalis/dock-server/db"
 )
 
 const (
@@ -44,7 +44,7 @@ func DeleteUserRunConfig(userID string) error {
 	}
 	delPort(r.Port)
 
-	_, err = srv.RCli.Del(GetUserRunKey(userID)).Result()
+	_, err = db.RCli.Del(GetUserRunKey(userID)).Result()
 	if err != nil {
 		return err
 	}
@@ -53,7 +53,7 @@ func DeleteUserRunConfig(userID string) error {
 
 // ExistsUserRunConfig returns true if there is a session for the particular user
 func ExistsUserRunConfig(userID string) (bool, error) {
-	keyExists, err := srv.RCli.Exists(GetUserRunKey(userID)).Result()
+	keyExists, err := db.RCli.Exists(GetUserRunKey(userID)).Result()
 	if err != nil {
 		return false, err
 	}
@@ -66,7 +66,7 @@ func ExistsUserRunConfig(userID string) (bool, error) {
 // GetUserRunConfig returns the user session
 func GetUserRunConfig(userID string) (r RunConfig, err error) {
 	var val string
-	val, err = srv.RCli.Get(GetUserRunKey(userID)).Result()
+	val, err = db.RCli.Get(GetUserRunKey(userID)).Result()
 	if err != nil {
 		return r, err
 	}
@@ -88,7 +88,7 @@ func SetUserRunConfig(userID string, r RunConfig) (err error) {
 
 	// Set key value
 	var OK string
-	OK, err = srv.RCli.Set(GetUserRunKey(userID), js, userTTL).Result()
+	OK, err = db.RCli.Set(GetUserRunKey(userID), js, userTTL).Result()
 	if err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func CreateAdminKey(adminID int) string {
 
 // ExistsAdminSession checks if a session exists for that particular adminID
 func ExistsAdminSession(key string) (bool, error) {
-	exists, err := srv.RCli.Exists(key).Result()
+	exists, err := db.RCli.Exists(key).Result()
 	if err != nil {
 		return false, err
 	}
@@ -129,7 +129,7 @@ func ExistsAdminSession(key string) (bool, error) {
 
 // SetAdminSession will add a key for that admin
 func SetAdminSession(key string) error {
-	err := srv.RCli.Set(key, key, 0).Err()
+	err := db.RCli.Set(key, key, 0).Err()
 	if err != nil {
 		return err
 	}
@@ -138,7 +138,7 @@ func SetAdminSession(key string) error {
 
 // DeleteAdminSession will add a key for that admin
 func DeleteAdminSession(key string) error {
-	_, err := srv.RCli.Del(key).Result()
+	_, err := db.RCli.Del(key).Result()
 	if err != nil {
 		return err
 	}
@@ -161,7 +161,7 @@ func DeleteAdminRunConfig(key string) error {
 		// TODO: parse error
 	}
 	delPort(r.Port)
-	_, err = srv.RCli.Del(GetAdminSessionRunKey(key)).Result()
+	_, err = db.RCli.Del(GetAdminSessionRunKey(key)).Result()
 	if err != nil {
 		return err
 	}
@@ -170,7 +170,7 @@ func DeleteAdminRunConfig(key string) error {
 
 // ExistsAdminRunConfig returns true if there is a session for the particular user
 func ExistsAdminRunConfig(key string) (bool, error) {
-	keyExists, err := srv.RCli.Exists(GetAdminSessionRunKey(key)).Result()
+	keyExists, err := db.RCli.Exists(GetAdminSessionRunKey(key)).Result()
 	if err != nil {
 		return false, err
 	}
@@ -183,7 +183,7 @@ func ExistsAdminRunConfig(key string) (bool, error) {
 // GetAdminRunConfig returns the user session
 func GetAdminRunConfig(key string) (r RunConfig, err error) {
 	var val string
-	val, err = srv.RCli.Get(GetAdminSessionRunKey(key)).Result()
+	val, err = db.RCli.Get(GetAdminSessionRunKey(key)).Result()
 	if err != nil {
 		return r, err
 	}
@@ -205,7 +205,7 @@ func SetAdminRunConfig(key string, r RunConfig) (err error) {
 
 	// Set key value
 	var OK string
-	OK, err = srv.RCli.Set(GetAdminSessionRunKey(key), js, userTTL).Result()
+	OK, err = db.RCli.Set(GetAdminSessionRunKey(key), js, userTTL).Result()
 	if err != nil {
 		return err
 	}
@@ -218,7 +218,7 @@ func SetAdminRunConfig(key string, r RunConfig) (err error) {
 
 // Functions for adding additional port keys
 func setPort(port string, value string, TTL time.Duration) {
-	_, err := srv.RCli.Set("port:"+port, value, TTL).Result()
+	_, err := db.RCli.Set("port:"+port, value, TTL).Result()
 	if err != nil {
 		//TODO: do not ignore this error.
 	}
@@ -226,7 +226,7 @@ func setPort(port string, value string, TTL time.Duration) {
 }
 
 func delPort(port string) {
-	_, err := srv.RCli.Del("port:" + port).Result()
+	_, err := db.RCli.Del("port:" + port).Result()
 	if err != nil {
 		//TODO: do not ignore this error.
 	}
@@ -235,16 +235,16 @@ func delPort(port string) {
 
 // RemoveIncosistentRedisKeys is used when a container is
 func RemoveIncosistentRedisKeys(port string) {
-	val, _ := srv.RCli.Get("port:" + port).Result()
+	val, _ := db.RCli.Get("port:" + port).Result()
 	if val != "" {
 		delPort(port)
-		srv.RCli.Del(val).Result()
+		db.RCli.Del(val).Result()
 	}
 }
 
 // ExistsPort is a used by PeriodicChecker function to determine whether a running container should be killed, if the corresponding port key has expired.
 func ExistsPort(port string) bool {
-	exists, _ := srv.RCli.Exists("port:" + port).Result()
+	exists, _ := db.RCli.Exists("port:" + port).Result()
 	// TODO: YOLO error handling
 	return exists
 }

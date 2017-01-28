@@ -9,9 +9,9 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/andreas-kokkalis/dock-server/db"
 	"github.com/andreas-kokkalis/dock-server/dc"
 	"github.com/andreas-kokkalis/dock-server/route/er"
-	"github.com/andreas-kokkalis/dock-server/srv"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -40,7 +40,7 @@ func AdminLogin(res http.ResponseWriter, req *http.Request, _ httprouter.Params)
 	// Query the database and check if user exists
 	var id int
 	var password string
-	row := srv.PG.QueryRow("SELECT id, password FROM admins WHERE username = $1", data.Username)
+	row := db.PG.QueryRow("SELECT id, password FROM admins WHERE username = $1", data.Username)
 	err = row.Scan(&id, &password)
 	switch {
 	case err == sql.ErrNoRows:

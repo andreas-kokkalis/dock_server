@@ -3,42 +3,17 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
 	"time"
 
-	"github.com/andreas-kokkalis/dock-server/conf"
-	"github.com/andreas-kokkalis/dock-server/dc"
 	"github.com/andreas-kokkalis/dock-server/route"
 	"github.com/andreas-kokkalis/dock-server/srv"
 	"github.com/julienschmidt/httprouter"
 )
 
 func main() {
-	// Load static configuration strings from conf/conf.yaml
-	err := conf.InitConf("./conf")
-	if err != nil {
-		log.Fatal(err)
-	}
 
-	// Initialize the Docker API Client
-	dc.APIClientInit(conf.GetVal("dc.docker.api.version"), conf.GetVal("dc.docker.api.host"))
-
-	// Initialize the port mappings
-	dc.ContainerPortsInitialize(200)
-
-	// Initialize Redis storage
-	srv.InitRedisClient()
-
-	// Initialize Postgres storage
-	srv.InitPostgres()
-
-	// Create Schema and insert data if mode is set to dev
-	mode := os.Getenv("MODE")
-	if mode == "dev" {
-		srv.MigrateData()
-	}
-
-	go dc.PeriodicChecker()
+	// Initialize all connections and dependencies
+	srv.InitDep()
 
 	// Initialize the  httprouter
 	router := httprouter.New()
@@ -80,8 +55,7 @@ func main() {
 		Addr:         ":8080",
 		Handler:      router,
 	}
-	err = myServer.ListenAndServeTLS("conf/ssl/server.pem", "conf/ssl/server.key")
-
+	err := myServer.ListenAndServeTLS("conf/ssl/server.pem", "conf/ssl/server.key")
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
