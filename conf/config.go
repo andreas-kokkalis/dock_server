@@ -1,10 +1,6 @@
 package conf
 
-import (
-	"log"
-
-	"github.com/spf13/viper"
-)
+import "github.com/spf13/viper"
 
 var v *viper.Viper
 
@@ -16,9 +12,6 @@ func InitConf(path string) (err error) {
 	v.AddConfigPath(path)
 
 	err = v.ReadInConfig()
-	if err != nil {
-		log.Printf("[InitConf]: could read configuration file.\n")
-	}
 	return err
 }
 

@@ -1,16 +1,16 @@
 package conf
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 func TestInit(t *testing.T) {
-	err := InitConf("./conf")
-	if err == nil {
-		t.Errorf("Expected Error, got nil")
-	}
-	err = InitConf("./")
-	if err != nil {
-		t.Errorf("Expected nil error, got %s", err.Error())
-	}
+	t.Parallel()
+	name := "correct path"
+	err := InitConf("./")
+	assert.NoError(t, err, name)
 }
 
 type confVals struct {
@@ -24,6 +24,7 @@ var vals = []confVals{
 }
 
 func TestGetVal(t *testing.T) {
+	t.Parallel()
 	InitConf("./")
 	for _, test := range vals {
 		val := GetVal(test.key)

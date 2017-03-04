@@ -10,9 +10,9 @@ import (
 )
 
 // InitDep initializes connections with the viper, docker api client, portMapper, redis and postgres
-func InitDep() {
+func InitDep(path string) {
 	// Load static configuration strings from conf/conf.yaml
-	err := conf.InitConf("./conf")
+	err := conf.InitConf(path)
 	if err != nil {
 		log.Fatal(err)
 	}

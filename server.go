@@ -13,7 +13,7 @@ import (
 func main() {
 
 	// Initialize all connections and dependencies
-	srv.InitDep()
+	srv.InitDep("./conf")
 
 	// Initialize the  httprouter
 	router := httprouter.New()
