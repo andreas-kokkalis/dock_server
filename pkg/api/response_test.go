@@ -1,12 +1,15 @@
 package api
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewResponse(t *testing.T) {
+	t.Parallel()
 	assert := assert.New(t)
 	res := NewResponse()
 	assert.Equal(nil, res.Data, "It should be nil")
@@ -15,6 +18,7 @@ func TestNewResponse(t *testing.T) {
 }
 
 func TestAddError(t *testing.T) {
+	t.Parallel()
 	res := NewResponse()
 
 	expected := "This is an error"
@@ -24,6 +28,7 @@ func TestAddError(t *testing.T) {
 }
 
 func TestSetData(t *testing.T) {
+	t.Parallel()
 	res := NewResponse()
 
 	expected := "test data"
@@ -33,6 +38,7 @@ func TestSetData(t *testing.T) {
 }
 
 func TestMarshal(t *testing.T) {
+	t.Parallel()
 	res := NewResponse()
 	res.SetData("test data")
 
@@ -42,23 +48,27 @@ func TestMarshal(t *testing.T) {
 	assert.Equal(t, expected, response, "It should be equal")
 }
 
-/*
 func TestSetStatus(t *testing.T) {
+	t.Parallel()
 	res := NewResponse()
-	var rw http.ResponseWriter
-
-	res.SetStatus(http.StatusInternalServerError, rw)
-	if res.Status != http.StatusText(http.StatusInternalServerError) {
-		t.Errorf("Expected: %v Got: %v", http.StatusInternalServerError, res.Status)
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		res.SetStatus(http.StatusInternalServerError, w)
 	}
+	req := httptest.NewRequest("GET", "/foo", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
 }
-*/
-/*
+
 func TestWriteError(t *testing.T) {
+	t.Parallel()
 	res := NewResponse()
-	var rw http.ResponseWriter
-	res.WriteError(rw, http.StatusInternalServerError, errors.New("new error").Error())
-
-
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		res.WriteError(w, http.StatusInternalServerError, "Error")
+	}
+	req := httptest.NewRequest("GET", "/foo", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Equal(t, "Error", res.Errors[0])
 }
-*/
