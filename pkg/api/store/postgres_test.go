@@ -53,3 +53,23 @@ func TestQuery(t *testing.T) {
 	assert.Equal(id, 1, testName)
 	assert.NoError(mock.ExpectationsWereMet(), testName)
 }
+
+func TestQueryRow(t *testing.T) {
+	t.Parallel()
+	assert := assert.New(t)
+
+	// Mock the SQL connection
+	conn, mock, _ := sqlmock.New()
+	mock.MatchExpectationsInOrder(true)
+	db := &DB{conn: conn}
+	defer func() { _ = db.conn.Close() }()
+
+	rows := sqlmock.NewRows([]string{"name"}).AddRow("Docker")
+	mock.ExpectQuery("SELECT (.*) FROM (.*) WHERE id = (.*)").WillReturnRows(rows)
+	r := db.QueryRow("SELECT name FROM test WHERE id = $1", 1)
+	testName := "rows.Scan()"
+	var name string
+	err := r.Scan(&name)
+	assert.NoError(err, testName)
+	assert.Equal("Docker", name, testName)
+}

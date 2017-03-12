@@ -44,17 +44,17 @@ func (r RedisMock) WithGet(value string, err error) RedisMock {
 }
 
 // WithSet ...
-func (r RedisMock) WithSet(value string, err error) RedisMock {
+func (r RedisMock) WithSet(response string, err error) RedisMock {
 	r.SetFn = func(key string, value string, duration time.Duration) (string, error) {
-		return value, err
+		return response, err
 	}
 	return r
 }
 
 // WithDel ...
-func (r RedisMock) WithDel(value int64, err error) RedisMock {
+func (r RedisMock) WithDel(status int64, err error) RedisMock {
 	r.DelFn = func(key string) (int64, error) {
-		return value, err
+		return status, err
 	}
 	return r
 }
