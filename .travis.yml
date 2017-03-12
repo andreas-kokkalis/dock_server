@@ -20,5 +20,4 @@ before_script:
 script:
   - go test -v $(go list ./... | grep -v /vendor/) ; test ${PIPESTATUS[0]} -eq 0
   - $HOME/gopath/bin/goveralls -service=travis-ci
-  - gometalinter --vendor --disable=gocyclo --disable=gas --dupl-threshold=70 --checkstyle --deadline=85s --json ./... ; test ${PIPESTATUS[0]} -eq 0
-
+  - gometalinter --vendor --disable=gocyclo --disable=gas --dupl-threshold=70 --checkstyle --deadline=120s --json ./... ; test ${PIPESTATUS[0]} -eq 0

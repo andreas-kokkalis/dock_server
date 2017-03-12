@@ -22,6 +22,7 @@ func TestNewRepo(t *testing.T) {
 	assert.NotNil(t, r)
 }
 
+/*
 func TestImageList(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
@@ -70,3 +71,4 @@ func TestContainerCheckState(t *testing.T) {
 	// Run a container
 	// Check state
 }
+*/
