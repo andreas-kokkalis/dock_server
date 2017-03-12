@@ -20,13 +20,13 @@ func TestNewDB(t *testing.T) {
 	testName := "Valid driver"
 	db, err := NewDB("postgres", c.GetPGConnectionString())
 	assert.Error(err, testName)
-	assert.NotNil(db.Conn, testName)
-	assert.Error(db.Conn.Ping(), testName)
+	assert.NotNil(db.conn, testName)
+	assert.Error(db.conn.Ping(), testName)
 
 	testName = "Invalid driver"
 	db, err = NewDB("", "")
 	assert.Error(err, testName)
-	assert.Nil(db.Conn, testName)
+	assert.Nil(db.conn, testName)
 }
 
 func TestQuery(t *testing.T) {
@@ -36,8 +36,8 @@ func TestQuery(t *testing.T) {
 	// Mock the SQL connection
 	conn, mock, _ := sqlmock.New()
 	mock.MatchExpectationsInOrder(true)
-	db := &DB{Conn: conn}
-	defer func() { _ = db.Conn.Close() }()
+	db := &DB{conn: conn}
+	defer func() { _ = db.conn.Close() }()
 
 	testName := "Query()"
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)

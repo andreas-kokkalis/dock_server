@@ -8,8 +8,10 @@ import (
 	"time"
 
 	"github.com/andreas-kokkalis/dock-server/pkg/api/auth"
+	"github.com/andreas-kokkalis/dock-server/pkg/api/container"
 	"github.com/andreas-kokkalis/dock-server/pkg/api/docker"
 	"github.com/andreas-kokkalis/dock-server/pkg/api/image"
+	"github.com/andreas-kokkalis/dock-server/pkg/api/lti"
 	"github.com/andreas-kokkalis/dock-server/pkg/api/store"
 	"github.com/andreas-kokkalis/dock-server/pkg/config"
 	"github.com/caarlos0/env"
@@ -62,7 +64,10 @@ func main() {
 	// Initialize Redis repository
 	redisRepository := store.NewRedisRepo(redis)
 
+	// Initialize PortMapper
+	mapper := docker.NewPortMapper(redisRepository, c.GetAPIPorts())
 	// Initialize Docker Remote API Client
+
 	var dockerClient *docker.DockerCli
 	dockerClient, err = docker.NewAPIClient(c.GetDockerConfig())
 	if err != nil {
@@ -71,8 +76,6 @@ func main() {
 	// Initialize docker repository
 	dockerRepository := docker.NewRepo(dockerClient, c.GetDockerConfig())
 
-	// Initialize PortMapper
-	mapper := docker.NewPortMapper(redisRepository, c.GetAPIPorts())
 	// Start a goroute that will run the PeriodicChecker
 	go docker.PeriodicChecker(dockerRepository, mapper, redisRepository)
 
@@ -90,21 +93,17 @@ func main() {
 	router.GET("/v0/admin/images/history/:id", auth.AuthAdmin(authService, image.GetImageHistory(imageService)))
 	router.DELETE("/v0/admin/images/delete/:id", auth.AuthAdmin(authService, image.RemoveImage(imageService)))
 
-	/****************
-	* ADMIN ROUTES
-	****************/
-	// // Container actions
-	// router.GET("/v0/admin/containers/list", route.AuthAdmin(route.GetContainers))
-	// router.GET("/v0/admin/containers/list/:status", route.AuthAdmin(route.GetContainers))
-	// router.POST("/v0/admin/containers/run/:id", route.AuthAdmin(route.AdminRunContainer))
-	// router.POST("/v0/admin/containers/commit/:id", route.AuthAdmin(route.CommitContainer))
-	// router.DELETE("/v0/admin/containers/kill/:id", route.AdminKillContainer)
-	// // Image actions
-	/****************
-	* USER ROUTES
-	****************/
-	// LTILaunch	- id is the imageID
-	// router.POST("/v0/lti/launch/:id", route.OAuth(route.LTILaunch))
+	// Container service
+	containerService := container.NewService(db, redisRepository, dockerRepository, mapper)
+	router.POST("/v0/admin/containers/run/:id", auth.AuthAdmin(authService, container.AdminRunContainer(containerService)))
+	router.DELETE("/v0/admin/containers/kill/:id", auth.AuthAdmin(authService, container.AdminKillContainer(containerService)))
+	router.POST("/v0/admin/containers/commit/:id", auth.AuthAdmin(authService, container.CommitContainer(containerService)))
+	router.GET("/v0/admin/containers/list", auth.AuthAdmin(authService, container.GetContainers(containerService)))
+	router.GET("/v0/admin/containers/list/:status", auth.AuthAdmin(authService, container.GetContainers(containerService)))
+
+	// LTI service
+	ltiService := lti.NewService(db, redisRepository, dockerRepository, mapper)
+	router.POST("/v0/lti/launch/:id", auth.OAuth(authService, lti.LTILaunch(ltiService)))
 
 	/****************
 	* ADMIN FRONTEND

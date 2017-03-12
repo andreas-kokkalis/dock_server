@@ -10,7 +10,7 @@ import (
 
 // DB ...
 type DB struct {
-	Conn *sql.DB
+	conn *sql.DB
 }
 
 // NewDB ...
@@ -27,12 +27,14 @@ func NewDB(driver string, connectionString string) (*DB, error) {
 
 // Query executes an sql query and returns *sql.Rows
 func (db *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
-	rows, err := db.Conn.Query(query, args...)
+	rows, err := db.conn.Query(query, args...)
 	return rows, err
 }
 
 // QueryRow executes an asql query and returns a single row
 func (db *DB) QueryRow(query string, args ...interface{}) *sql.Row {
 	// TODO: there is a problem with row returned.
-	return db.Conn.QueryRow(query, args)
+	var row *sql.Row
+	row = db.conn.QueryRow(query, args...)
+	return row
 }

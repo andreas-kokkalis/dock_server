@@ -14,6 +14,7 @@ import (
 	"github.com/andreas-kokkalis/dock-server/pkg/api"
 	"github.com/andreas-kokkalis/dock-server/pkg/api/docker"
 	"github.com/andreas-kokkalis/dock-server/pkg/api/store"
+	"github.com/jordic/lti"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -86,7 +87,7 @@ func AdminLogin(s Service) httprouter.Handle {
 		// Query the database and check if user exists
 		var id int
 		var password string
-		row := s.db.Conn.QueryRow("SELECT id, password FROM admins WHERE username = $1", data.Username)
+		row := s.db.QueryRow("SELECT id, password FROM admins WHERE username = $1", string(data.Username))
 		err = row.Scan(&id, &password)
 		switch {
 		case err == sql.ErrNoRows:
@@ -168,5 +169,38 @@ func AdminLogout(s Service) httprouter.Handle {
 			Expires: time.Now(),
 		}
 		http.SetCookie(res, cookie)
+	}
+}
+
+const (
+	oauthKey    = "oauth_key"
+	oauthSecret = "oauth_secret"
+)
+
+// OAuth stuff
+func OAuth(s Service, handler httprouter.Handle) httprouter.Handle {
+	return func(res http.ResponseWriter, req *http.Request, params httprouter.Params) {
+
+		// TODO: Add check if user is not a student, return error
+
+		// OAuth authentication of the TP requires to match the
+		// request URL with the expected path. Since image IDs
+		// change all the time, the path is constructed using
+		// the imageID as extracted from the HTTP Header.
+		path := fmt.Sprintf("https://%s%s", req.Host, req.URL.Path)
+		fmt.Println(path)
+		p := lti.NewProvider(oauthSecret, path)
+		p.ConsumerKey = oauthKey
+
+		ok, err := p.IsValid(req)
+		if !ok {
+			fmt.Fprintf(res, "Invalid request...")
+			return
+		}
+		if err != nil {
+			log.Printf("Invalid request %s", err)
+			return
+		}
+		handler(res, req, params)
 	}
 }

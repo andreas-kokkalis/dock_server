@@ -5,12 +5,16 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/andreas-kokkalis/dock-server/pkg/api"
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/network"
+	"github.com/docker/go-connections/nat"
 )
 
 // Repo ...
@@ -113,17 +117,41 @@ func (d *Repo) ContainerRemove(containerID string, port int) (err error) {
 	return err
 }
 
-/*
-// ContainerCreate creates a container based on
+// RunContainer does something
+func (d *Repo) RunContainer(imageID, username, password string, port int) (cfg api.RunConfig, err error) {
+	// Create the container
+	id /*, port*/, err := d.CreateContainer(imageID, password, port)
+	if err != nil {
+		log.Printf("[RunContainer]: Error while creating: %v\n", err.Error())
+		return cfg, err
+	}
+	// Start the container
+	err = d.StartContainer(id)
+	if err != nil {
+		log.Printf("[RunContainer]: Error while starting: %v\n", err.Error())
+		return cfg, err
+	}
+
+	cfg = api.RunConfig{
+		ContainerID: id,
+		Username:    username,
+		Password:    password,
+		Port:        strconv.Itoa(port),
+		URL:         "https://127.0.0.1:" + strconv.Itoa(port),
+	}
+	return cfg, nil
+}
+
+// CreateContainer creates a container based on
 // imageName and reference Tag,
 // and returns the containerID
-func (d *Repo) ContainerCreate(imageID, password string) (containerID string, port int, err error) {
+func (d *Repo) CreateContainer(imageID, password string, port int) (containerID string /*, port int*/, err error) {
 	// Set environment variables for shellinabox container
 	envVars := []string{"SIAB_PASSWORD=" + password, "SIAB_SUDO=true"}
 	// Get the imageTag
 	refTag, err := d.GetTagByID(imageID)
 	if err != nil {
-		return containerID, port, err
+		return containerID /*, port*/, err
 	}
 
 	// --- Container configuration
@@ -131,18 +159,21 @@ func (d *Repo) ContainerCreate(imageID, password string) (containerID string, po
 	var natPort nat.Port = "4200/tcp"
 	exposedPorts := map[nat.Port]struct{}{natPort: {}}
 	// Define configuration required to create a container
-	img := conf.GetVal("dc.imagerepo.name") + ":" + refTag
+	img := d.imageRepo + ":" + refTag
 	containerConfig := container.Config{Env: envVars, ExposedPorts: exposedPorts, Image: img}
-	// Get a non utilized host port, to avoid collision
-	port, err = ContainerPorts.Reserve()
-	if err != nil {
-		log.Printf("[CreateContainer]: %v", err.Error())
-		return "", -1, err
-	}
-	if port == -1 {
-		log.Printf("[CreateContainer]: No ports were available to reserve.\n")
-		return "", -1, errors.New("there are no resources available in the system.")
-	}
+
+	/*
+		// Get a non utilized host port, to avoid collision
+		port, err = ContainerPorts.Reserve()
+		if err != nil {
+			log.Printf("[CreateContainer]: %v", err.Error())
+			return "", -1, err
+		}
+		if port == -1 {
+			log.Printf("[CreateContainer]: No ports were available to reserve.\n")
+			return "", -1, errors.New("there are no resources available in the system")
+		}
+	*/
 
 	// --- Host configuration
 	// Prepare portBindings containerPort -> Host port. are part of PortMap
@@ -155,15 +186,80 @@ func (d *Repo) ContainerCreate(imageID, password string) (containerID string, po
 	// Send the request to create the container
 	body, err := d.docker.Cli.ContainerCreate(context.Background(), &containerConfig, &hostConfig, &network.NetworkingConfig{}, "")
 	if err != nil {
-		ContainerPorts.Remove(port)
+		// ContainerPorts.Remove(port)
 		log.Printf("[CreateContainer]: %v", err.Error())
-		return "", -1, err
+		return "" /*, -1*/, err
 	}
 
 	// Return only the first 12 digits from the sha256 identifier of the container
-	return body.ID[:12], port, nil
+	return body.ID[:12] /*, port*/, nil
 }
-*/
+
+// StartContainer sends a request to start a container
+func (d *Repo) StartContainer(containerID string) error {
+
+	// Start container
+	err := d.docker.Cli.ContainerStart(context.Background(), containerID, types.ContainerStartOptions{})
+	if err != nil {
+		// No need to validate if port number is -1, since error is returned in that case
+		return err
+	}
+
+	// Check if container is running
+	var isRunning bool
+	isRunning, err = d.ContainerCheckState(containerID, "running")
+	if err != nil {
+		return err
+	}
+	if !isRunning {
+		return errors.New("container not started")
+	}
+	return nil
+}
+
+// CommitContainer creates a new image from a running container
+func (d *Repo) CommitContainer(comment, author, containerID, refTag string) error {
+
+	// TODO: on options, can add a slice of string with the list of changes for this commit
+	options := types.ContainerCommitOptions{Comment: comment, Author: author, Reference: d.imageRepo + ":" + refTag}
+	response, err := d.docker.Cli.ContainerCommit(context.Background(), containerID, options)
+	if err != nil {
+		return err
+	}
+	// TODO: figure out what to do with the response
+	fmt.Printf("%+v\n", response)
+	log.Printf("[CommitContainer]: Committed container with ID:%s\n", containerID)
+	//sha256:baa8ace946df92b5fb1722538d73531503485535604863e34e174a5d284a601b
+
+	return nil
+}
+
+// GetContainers returns the list of containers. Use
+// type.ContainerListOptions to filter for state such as
+// status=(created,	restarting, running, paused, exited, dead)
+func (d *Repo) GetContainers(status string) ([]api.Ctn, error) {
+	var containerList []api.Ctn
+
+	// If containers are filtered by status, prepare the ContainerListOptions
+	var containerListOptions types.ContainerListOptions
+	if status != "" {
+		filterArgs := filters.NewArgs()
+		filterArgs.Add("status", status)
+		containerListOptions = types.ContainerListOptions{Filters: filterArgs}
+
+	}
+	containers, err := d.docker.Cli.ContainerList(context.Background(), containerListOptions)
+	if err != nil {
+		return containerList, err
+	}
+
+	// Extract containerID, ImageName, and Status
+	containerList = make([]api.Ctn, len(containers))
+	for i, container := range containers {
+		containerList[i] = api.Ctn{ID: container.ID[:10], Image: container.Image, Status: container.Status, State: container.State}
+	}
+	return containerList, nil
+}
 
 /*
 	Functionality for Images

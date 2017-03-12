@@ -98,3 +98,34 @@ func RemoveImage(s Service) httprouter.Handle {
 		res.Write(response.Marshal())
 	}
 }
+
+/*
+// CreateRunURL will create a LTI basic launch URL and return the configuration
+func CreateRunURL(s Service) httprouter.Handle {
+	return func(res http.ResponseWriter, req *http.Request, params httprouter.Params) {
+		res.Header().Set("Content-Type", "application/json")
+		response := api.NewResponse()
+
+		// TODO: auth
+
+		// Validate ContainerID
+		imageID := params.ByName("id")
+		if !api.VImageID.MatchString(imageID) {
+			response.WriteError(res, http.StatusBadRequest, api.ErrInvalidImageID)
+			return
+		}
+
+		tag, err := s.docker.GetTagByID(imageID)
+		if err != nil {
+			response.WriteError(res, http.StatusInternalServerError, err.Error())
+			return
+		}
+		if tag == "" {
+			response.WriteError(res, http.StatusFailedDependency, er.ImageNotFound)
+			return
+		}
+		response.SetData("https://localhost:8080/lti/launch/" + imageID)
+		res.Write(response.Marshal())
+	}
+}
+*/
