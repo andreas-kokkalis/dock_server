@@ -1,0 +1,22 @@
+Tests:
+	Functional:
+		- postgres layer:
+			- tests [x]
+		- docker layer:
+			- docker:
+				- mock: [ ]
+				- tests: [ ]
+			- docker-repo
+				- tests [ ]
+		- redis layer:
+			- redis:
+				- mock [x]
+				- tests [x]
+			- redis_repo:
+				- tests [x]
+		- port mapper
+			- tests [ ]
+
+	Integration:
+		- api routes:
+			- tests []

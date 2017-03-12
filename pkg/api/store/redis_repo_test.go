@@ -3,7 +3,7 @@ package store
 import (
 	"testing"
 
-	"github.com/andreas-kokkalis/dock-server/pkg/api/store/mock"
+	"github.com/andreas-kokkalis/dock_server/pkg/api/store/mock"
 	"github.com/stretchr/testify/assert"
 )
 

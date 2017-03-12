@@ -3,7 +3,7 @@ package docker
 import (
 	"testing"
 
-	"github.com/andreas-kokkalis/dock-server/pkg/config"
+	"github.com/andreas-kokkalis/dock_server/pkg/config"
 	"github.com/stretchr/testify/assert"
 )
 

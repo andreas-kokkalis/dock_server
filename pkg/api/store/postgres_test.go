@@ -5,7 +5,7 @@ import (
 
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 
-	"github.com/andreas-kokkalis/dock-server/pkg/config"
+	"github.com/andreas-kokkalis/dock_server/pkg/config"
 	"github.com/stretchr/testify/assert"
 )
 

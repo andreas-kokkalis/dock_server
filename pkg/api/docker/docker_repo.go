@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andreas-kokkalis/dock-server/pkg/api"
+	"github.com/andreas-kokkalis/dock_server/pkg/api"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"

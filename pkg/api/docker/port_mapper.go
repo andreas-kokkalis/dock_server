@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/andreas-kokkalis/dock-server/pkg/api/store"
+	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
 )
 
 const startPort int = 4200

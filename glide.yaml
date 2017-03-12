@@ -1,4 +1,4 @@
-package: github.com/andreas-kokkalis/dock-server
+package: github.com/andreas-kokkalis/dock_server
 import:
 - package: github.com/Davmuz/gqt
 - package: github.com/caarlos0/env

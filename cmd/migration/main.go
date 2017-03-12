@@ -6,8 +6,8 @@ import (
 	"regexp"
 
 	"github.com/Davmuz/gqt"
-	"github.com/andreas-kokkalis/dock-server/pkg/api/store"
-	"github.com/andreas-kokkalis/dock-server/pkg/config"
+	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
+	"github.com/andreas-kokkalis/dock_server/pkg/config"
 	"github.com/caarlos0/env"
 )
 

@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/andreas-kokkalis/dock-server/pkg/api"
-	"github.com/andreas-kokkalis/dock-server/pkg/api/docker"
-	"github.com/andreas-kokkalis/dock-server/pkg/api/store"
+	"github.com/andreas-kokkalis/dock_server/pkg/api"
+	"github.com/andreas-kokkalis/dock_server/pkg/api/docker"
+	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
 	"github.com/julienschmidt/httprouter"
 )
 
