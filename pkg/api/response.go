@@ -27,7 +27,7 @@ func (r *Response) AddError(err string) {
 func (r *Response) WriteError(res http.ResponseWriter, statusCode int, err string) {
 	res.WriteHeader(statusCode)
 	r.AddError(err)
-	res.Write(r.Marshal())
+	_, _ = res.Write(r.Marshal())
 	log.Println(err)
 }
 

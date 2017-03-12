@@ -6,7 +6,6 @@ import (
 	"github.com/andreas-kokkalis/dock-server/pkg/api"
 	"github.com/andreas-kokkalis/dock-server/pkg/api/docker"
 	"github.com/andreas-kokkalis/dock-server/pkg/api/store"
-	"github.com/andreas-kokkalis/dock_server/route/er"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -36,7 +35,7 @@ func ListImages(s Service) httprouter.Handle {
 			return
 		}
 		response.SetData(images)
-		res.Write(response.Marshal())
+		_, _ = res.Write(response.Marshal())
 	}
 }
 
@@ -63,7 +62,7 @@ func GetImageHistory(s Service) httprouter.Handle {
 			return
 		}
 		response.SetData(history)
-		res.Write(response.Marshal())
+		_, _ = res.Write(response.Marshal())
 	}
 }
 
@@ -77,7 +76,7 @@ func RemoveImage(s Service) httprouter.Handle {
 		// Validate imageID
 		imageID := params.ByName("id")
 		if !api.VImageID.MatchString(imageID) {
-			response.WriteError(res, http.StatusUnprocessableEntity, er.InvalidImageID)
+			response.WriteError(res, http.StatusUnprocessableEntity, api.ErrInvalidImageID)
 			return
 		}
 
@@ -95,7 +94,7 @@ func RemoveImage(s Service) httprouter.Handle {
 			return
 		}
 
-		res.Write(response.Marshal())
+		_, _ = res.Write(response.Marshal())
 	}
 }
 

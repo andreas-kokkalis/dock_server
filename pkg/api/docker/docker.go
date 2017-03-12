@@ -6,18 +6,18 @@ import (
 	"github.com/docker/docker/client"
 )
 
-// DockerCli ...
-type DockerCli struct {
+// APIClient ...
+type APIClient struct {
 	Cli *client.Client
 }
 
 // NewAPIClient initializes a new Docker API client.
-func NewAPIClient(dockerConfig map[string]string) (*DockerCli, error) {
+func NewAPIClient(dockerConfig map[string]string) (*APIClient, error) {
 
-	docker := &DockerCli{}
+	docker := &APIClient{}
 
-	os.Setenv("DOCKER_API_VERSION", dockerConfig["version"])
-	os.Setenv("DOCKER_HOST", dockerConfig["host"])
+	_ = os.Setenv("DOCKER_API_VERSION", dockerConfig["version"])
+	_ = os.Setenv("DOCKER_HOST", dockerConfig["host"])
 
 	cli, err := client.NewEnvClient()
 	if err != nil {

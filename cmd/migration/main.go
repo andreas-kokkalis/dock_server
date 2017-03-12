@@ -50,7 +50,7 @@ func main() {
 
 func migrateData(db *store.DB) {
 	// Create database schema
-	gqt.Add("templates/pgsql", "*.pgsql")
+	_ = gqt.Add("templates/pgsql", "*.pgsql")
 	_, err := db.Query(gqt.Get("createSchema"))
 	if err != nil {
 		log.Fatal(err)

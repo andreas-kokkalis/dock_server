@@ -19,12 +19,12 @@ import (
 
 // Repo ...
 type Repo struct {
-	docker    *DockerCli
+	docker    *APIClient
 	imageRepo string
 }
 
 // NewRepo returns a new docker repo
-func NewRepo(docker *DockerCli, dockerConfig map[string]string) *Repo {
+func NewRepo(docker *APIClient, dockerConfig map[string]string) *Repo {
 	return &Repo{docker, dockerConfig["repo"]}
 }
 

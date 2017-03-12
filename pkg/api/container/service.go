@@ -11,7 +11,6 @@ import (
 	"github.com/andreas-kokkalis/dock-server/pkg/api"
 	"github.com/andreas-kokkalis/dock-server/pkg/api/docker"
 	"github.com/andreas-kokkalis/dock-server/pkg/api/store"
-	"github.com/andreas-kokkalis/dock_server/route/er"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -28,10 +27,12 @@ func NewService(db *store.DB, redis *store.RedisRepo, docker *docker.Repo, mappe
 	return Service{db, redis, docker, mapper}
 }
 
+/*
 type runRequest struct {
 	Username string `json:"user"`
 	Password string `json:"pwd"`
 }
+*/
 
 type runResponse struct {
 	URL         string `json:"url"`
@@ -103,12 +104,12 @@ func AdminRunContainer(s Service) httprouter.Handle {
 			if err != nil {
 				// XXX: not sure if this is needed here, cause there was no error creating the cotnainer
 				// s.mapper.Remove(port)
-				response.WriteError(res, http.StatusInternalServerError, er.ServerError)
+				response.WriteError(res, http.StatusInternalServerError, api.ErrServerError)
 				return
 			}
 		}
 		response.SetData(runResponse{URL: cfg.URL, Username: username, Password: password, ContainerID: cfg.ContainerID})
-		res.Write(response.Marshal())
+		_, _ = res.Write(response.Marshal())
 	}
 }
 
@@ -234,7 +235,7 @@ func CommitContainer(s Service) httprouter.Handle {
 		}
 		// Validate post params
 		if data.Comment == "" || data.Author == "" || data.RefTag == "" {
-			response.WriteError(res, http.StatusUnprocessableEntity, er.InvalidPostData)
+			response.WriteError(res, http.StatusUnprocessableEntity, api.ErrInvalidPostData)
 			return
 		}
 		// Create the new image
@@ -274,7 +275,7 @@ func CommitContainer(s Service) httprouter.Handle {
 		log.Printf("[RT-CommitContainer]: attempting to write the response")
 		response.SetData("A new image has been successfully created.")
 		response.SetStatus(http.StatusOK, res)
-		res.Write(response.Marshal())
+		_, _ = res.Write(response.Marshal())
 	}
 }
 
@@ -292,7 +293,7 @@ func GetContainers(s Service) httprouter.Handle {
 			// http.Error(res, er.InvalidContainerState, http.StatusUnprocessableEntity)
 			response.AddError(api.ErrInvalidContainerState)
 			response.SetStatus(http.StatusUnprocessableEntity, res)
-			res.Write(response.Marshal())
+			_, _ = res.Write(response.Marshal())
 			return
 		}
 
@@ -302,12 +303,12 @@ func GetContainers(s Service) httprouter.Handle {
 			// http.Error(res, er.ServerError, http.StatusInternalServerError)
 			response.AddError(err.Error())
 			response.SetStatus(http.StatusInternalServerError, res)
-			res.Write(response.Marshal())
+			_, _ = res.Write(response.Marshal())
 			return
 		}
 
 		response.SetStatus(http.StatusOK, res)
 		response.SetData(containers)
-		res.Write(response.Marshal())
+		_, _ = res.Write(response.Marshal())
 	}
 }

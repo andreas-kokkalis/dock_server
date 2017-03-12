@@ -1,10 +1,8 @@
 package lti
 
 import (
-	"crypto/rand"
 	"fmt"
 	"html/template"
-	"io"
 	"log"
 	"net/http"
 	"time"
@@ -28,13 +26,13 @@ func NewService(db *store.DB, redis *store.RedisRepo, docker *docker.Repo, mappe
 	return Service{db, redis, docker, mapper}
 }
 
-// LTILaunch launches a url by imageID
+// Launch launches a url by imageID
 // validate imageID
 // extract user session
 // check if container is running for that session
 //	-- true: return current session
 //  -- false: run container and return new session
-func LTILaunch(s Service) httprouter.Handle {
+func Launch(s Service) httprouter.Handle {
 	return func(res http.ResponseWriter, req *http.Request, params httprouter.Params) {
 
 		fmt.Printf("Header: %+v\n", req.Header)
@@ -44,33 +42,33 @@ func LTILaunch(s Service) httprouter.Handle {
 		// Validate imageID
 		imageID := params.ByName("id")
 		if !api.VImageID.MatchString(imageID) {
-			t.Execute(res, Resp{Error: "Invalid URL. Contact the administrator"})
+			_ = t.Execute(res, Resp{Error: "Invalid URL. Contact the administrator"})
 		}
 
 		// Parse LTI Post params
 		err := req.ParseForm()
 		if err != nil {
-			t.Execute(res, Resp{Error: "Invalid URL. Contact the administrator"})
+			_ = t.Execute(res, Resp{Error: "Invalid URL. Contact the administrator"})
 		}
 		// extract Canvas userID and store is as session key
 		userID := req.PostFormValue("user_id")
 		var sessionExists bool
 		sessionExists, err = s.redis.ExistsUserRunConfig(userID)
 		if err != nil {
-			t.Execute(res, Resp{Error: api.ErrServerError})
+			_ = t.Execute(res, Resp{Error: api.ErrServerError})
 		}
 
 		var cfg api.RunConfig
 		if sessionExists {
 			cfg, err = s.redis.GetUserRunConfig(userID)
 			if err != nil {
-				t.Execute(res, Resp{Error: api.ErrServerError})
+				_ = t.Execute(res, Resp{Error: api.ErrServerError})
 			}
 			fmt.Printf("exists: %v\n", cfg)
 			// Update the TTL
 			err = s.redis.SetUserRunConfig(userID, cfg)
 			if err != nil {
-				t.Execute(res, Resp{Error: api.ErrServerError})
+				_ = t.Execute(res, Resp{Error: api.ErrServerError})
 			}
 		} else {
 			// SESSION didn'texist
@@ -84,17 +82,17 @@ func LTILaunch(s Service) httprouter.Handle {
 			port, err = s.mapper.Reserve()
 			if err != nil {
 				log.Printf("[CreateContainer]: %v", err.Error())
-				t.Execute(res, Resp{Error: api.ErrServerError})
+				_ = t.Execute(res, Resp{Error: api.ErrServerError})
 			}
 			if port == -1 {
 				log.Printf("[CreateContainer]: No ports were available to reserve.\n")
-				t.Execute(res, Resp{Error: "there are no resources available in the system"})
+				_ = t.Execute(res, Resp{Error: "there are no resources available in the system"})
 			}
 			cfg, err = s.docker.RunContainer(imageID, username, password, port)
 			if err != nil {
 				fmt.Println(err.Error())
 				s.mapper.Remove(port)
-				t.Execute(res, Resp{Error: api.ErrServerError})
+				_ = t.Execute(res, Resp{Error: api.ErrServerError})
 			}
 			fmt.Printf("not exists: %v\n", cfg)
 			// Set session
@@ -102,7 +100,7 @@ func LTILaunch(s Service) httprouter.Handle {
 			if err != nil {
 				// XXX: container is running
 				// s.mapper.Remove(port)
-				t.Execute(res, Resp{Error: api.ErrServerError})
+				_ = t.Execute(res, Resp{Error: api.ErrServerError})
 			}
 		}
 
@@ -116,7 +114,7 @@ func LTILaunch(s Service) httprouter.Handle {
 		fmt.Println(cookie)
 
 		// Return HTML template with data
-		t.Execute(res, getResp(cfg))
+		_ = t.Execute(res, getResp(cfg))
 	}
 }
 
@@ -138,31 +136,6 @@ type Resp struct {
 	Password    string `json:"password"`
 	URL         string `json:"url"`
 	Error       string
-}
-
-func newPassword() string {
-	chars := []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
-	length := 6
-	newPword := make([]byte, length)
-	randomData := make([]byte, length+(length/4)) // storage for random bytes.
-	clen := byte(len(chars))
-	maxrb := byte(256 - (256 % len(chars)))
-	i := 0
-	for {
-		if _, err := io.ReadFull(rand.Reader, randomData); err != nil {
-			panic(err)
-		}
-		for _, c := range randomData {
-			if c >= maxrb {
-				continue
-			}
-			newPword[i] = chars[c%clen]
-			i++
-			if i == length {
-				return string(newPword)
-			}
-		}
-	}
 }
 
 /*

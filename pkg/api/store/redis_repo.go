@@ -55,10 +55,7 @@ func (r *RedisRepo) DeleteUserRunConfig(userID string) error {
 	r.delPort(runConfig.Port)
 
 	_, err = r.redis.Del(r.GetUserRunKey(userID))
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // ExistsUserRunConfig returns true if there is a session for the particular user
@@ -81,10 +78,7 @@ func (r *RedisRepo) GetUserRunConfig(userID string) (runConfig api.RunConfig, er
 		return runConfig, err
 	}
 	err = json.Unmarshal([]byte(val), &runConfig)
-	if err != nil {
-		return runConfig, err
-	}
-	return runConfig, nil
+	return runConfig, err
 }
 
 // SetUserRunConfig will add the session
@@ -118,8 +112,8 @@ func (r *RedisRepo) SetUserRunConfig(userID string, runConfig api.RunConfig) (er
 // CreateAdminKey returns the admin session key
 func (r *RedisRepo) CreateAdminKey(adminID int) string {
 	h := md5.New()
-	io.WriteString(h, strconv.Itoa(adminID))
-	io.WriteString(h, "key")
+	_, _ = io.WriteString(h, strconv.Itoa(adminID))
+	_, _ = io.WriteString(h, "key")
 	s := fmt.Sprintf("%x", h.Sum(nil))
 	fmt.Println(admPrefix + s)
 	return admPrefix + s
@@ -140,19 +134,13 @@ func (r *RedisRepo) ExistsAdminSession(key string) (bool, error) {
 // SetAdminSession will add a key for that admin
 func (r *RedisRepo) SetAdminSession(key string) error {
 	_, err := r.redis.Set(key, key, 0)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // DeleteAdminSession will add a key for that admin
 func (r *RedisRepo) DeleteAdminSession(key string) error {
 	_, err := r.redis.Del(key)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 /* ===========================================
@@ -172,10 +160,7 @@ func (r *RedisRepo) DeleteAdminRunConfig(key string) error {
 	}
 	r.delPort(runConfig.Port)
 	_, err = r.redis.Del(r.GetAdminSessionRunKey(key))
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // ExistsAdminRunConfig returns true if there is a session for the particular user
@@ -198,10 +183,7 @@ func (r *RedisRepo) GetAdminRunConfig(key string) (runConfig api.RunConfig, err 
 		return runConfig, err
 	}
 	err = json.Unmarshal([]byte(val), &runConfig)
-	if err != nil {
-		return runConfig, err
-	}
-	return runConfig, nil
+	return runConfig, err
 }
 
 // SetAdminRunConfig will add the session
@@ -215,7 +197,7 @@ func (r *RedisRepo) SetAdminRunConfig(key string, runConfig api.RunConfig) (err 
 
 	// Set key value
 	var OK string
-	OK, err = r.redis.Set(r.GetAdminSessionRunKey(key), string(js), userTTL)
+	OK, err = r.redis.Set(r.GetAdminSessionRunKey(key), string(js), adminTTL)
 	if err != nil {
 		return err
 	}
@@ -248,7 +230,7 @@ func (r *RedisRepo) RemoveIncosistentRedisKeys(port string) {
 	val, _ := r.redis.Get("port:" + port)
 	if val != "" {
 		r.delPort(port)
-		r.redis.Del(val)
+		_, _ = r.redis.Del(val)
 	}
 }
 

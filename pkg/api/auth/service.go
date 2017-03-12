@@ -32,8 +32,8 @@ func NewService(db *store.DB, redis *store.RedisRepo, docker *docker.Repo) Servi
 
 var vAdminCookieVal = regexp.MustCompile(`^(adm:[a-f0-9]{32})$`)
 
-// AuthAdmin performs validation before invoking the route
-func AuthAdmin(s Service, handler httprouter.Handle) httprouter.Handle {
+// SessionAuth performs validation before invoking the route
+func SessionAuth(s Service, handler httprouter.Handle) httprouter.Handle {
 	return func(res http.ResponseWriter, req *http.Request, params httprouter.Params) {
 
 		// Get session cookie
@@ -45,7 +45,7 @@ func AuthAdmin(s Service, handler httprouter.Handle) httprouter.Handle {
 		// Validate Cookie value
 		if !vAdminCookieVal.Match([]byte(cookie.Value)) {
 			http.Error(res, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-			res.Write([]byte("Not authorized"))
+			_, _ = res.Write([]byte("Not authorized"))
 			return
 		}
 
@@ -87,7 +87,7 @@ func AdminLogin(s Service) httprouter.Handle {
 		// Query the database and check if user exists
 		var id int
 		var password string
-		row := s.db.QueryRow("SELECT id, password FROM admins WHERE username = $1", string(data.Username))
+		row := s.db.QueryRow("SELECT id, password FROM admins WHERE username = $1", data.Username)
 		err = row.Scan(&id, &password)
 		switch {
 		case err == sql.ErrNoRows:
@@ -137,7 +137,7 @@ func AdminLogin(s Service) httprouter.Handle {
 		http.SetCookie(res, cookie)
 		fmt.Println(cookie)
 		response.Data = "SUCCESS"
-		res.Write(response.Marshal())
+		_, _ = res.Write(response.Marshal())
 		return
 	}
 }

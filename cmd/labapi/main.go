@@ -68,7 +68,7 @@ func main() {
 	mapper := docker.NewPortMapper(redisRepository, c.GetAPIPorts())
 	// Initialize Docker Remote API Client
 
-	var dockerClient *docker.DockerCli
+	var dockerClient *docker.APIClient
 	dockerClient, err = docker.NewAPIClient(c.GetDockerConfig())
 	if err != nil {
 		log.Fatal(err)
@@ -89,21 +89,21 @@ func main() {
 
 	// Image service
 	imageService := image.NewService(db, redisRepository, dockerRepository)
-	router.GET("/v0/admin/images", auth.AuthAdmin(authService, image.ListImages(imageService)))
-	router.GET("/v0/admin/images/history/:id", auth.AuthAdmin(authService, image.GetImageHistory(imageService)))
-	router.DELETE("/v0/admin/images/delete/:id", auth.AuthAdmin(authService, image.RemoveImage(imageService)))
+	router.GET("/v0/admin/images", auth.SessionAuth(authService, image.ListImages(imageService)))
+	router.GET("/v0/admin/images/history/:id", auth.SessionAuth(authService, image.GetImageHistory(imageService)))
+	router.DELETE("/v0/admin/images/delete/:id", auth.SessionAuth(authService, image.RemoveImage(imageService)))
 
 	// Container service
 	containerService := container.NewService(db, redisRepository, dockerRepository, mapper)
-	router.POST("/v0/admin/containers/run/:id", auth.AuthAdmin(authService, container.AdminRunContainer(containerService)))
-	router.DELETE("/v0/admin/containers/kill/:id", auth.AuthAdmin(authService, container.AdminKillContainer(containerService)))
-	router.POST("/v0/admin/containers/commit/:id", auth.AuthAdmin(authService, container.CommitContainer(containerService)))
-	router.GET("/v0/admin/containers/list", auth.AuthAdmin(authService, container.GetContainers(containerService)))
-	router.GET("/v0/admin/containers/list/:status", auth.AuthAdmin(authService, container.GetContainers(containerService)))
+	router.POST("/v0/admin/containers/run/:id", auth.SessionAuth(authService, container.AdminRunContainer(containerService)))
+	router.DELETE("/v0/admin/containers/kill/:id", auth.SessionAuth(authService, container.AdminKillContainer(containerService)))
+	router.POST("/v0/admin/containers/commit/:id", auth.SessionAuth(authService, container.CommitContainer(containerService)))
+	router.GET("/v0/admin/containers/list", auth.SessionAuth(authService, container.GetContainers(containerService)))
+	router.GET("/v0/admin/containers/list/:status", auth.SessionAuth(authService, container.GetContainers(containerService)))
 
 	// LTI service
 	ltiService := lti.NewService(db, redisRepository, dockerRepository, mapper)
-	router.POST("/v0/lti/launch/:id", auth.OAuth(authService, lti.LTILaunch(ltiService)))
+	router.POST("/v0/lti/launch/:id", auth.OAuth(authService, lti.Launch(ltiService)))
 
 	/****************
 	* ADMIN FRONTEND

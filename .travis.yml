@@ -1,4 +1,24 @@
+sudo: required
 language: go
-
 go:
-	  - 1.7.x
+  - 1.8
+go_import_path: github.com/andreas-kokkalis/dock_server
+cache:
+  directories:
+    - $HOME/.glide/cache
+before_install:
+  - go get github.com/mattn/goveralls
+install:
+  - go get -v -u github.com/stretchr/testify/assert
+  - curl https://glide.sh/get | sh
+  - go get -u -v github.com/alecthomas/gometalinter
+  - gometalinter --install
+before_script:
+  - glide install
+  - rm -rf vendor/github.com/docker/docker/vendor
+  - go install -v github.com/andreas-kokkalis/dock_server/cmd...
+script:
+  - go test -v $(go list ./... | grep -v /vendor/) ; test ${PIPESTATUS[0]} -eq 0
+  - $HOME/gopath/bin/goveralls -service=travis-ci
+  - gometalinter --vendor --disable=gocyclo --disable=gas --dupl-threshold=70 --checkstyle --deadline=85s --json ./... ; test ${PIPESTATUS[0]} -eq 0
+

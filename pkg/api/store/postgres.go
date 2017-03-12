@@ -20,7 +20,7 @@ func NewDB(driver string, connectionString string) (*DB, error) {
 		return &DB{conn}, err
 	}
 	err = conn.Ping()
-	gqt.Add("templates/sql", "*.sql")
+	_ = gqt.Add("templates/sql", "*.sql")
 	return &DB{conn}, err
 
 }

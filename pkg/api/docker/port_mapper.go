@@ -57,7 +57,7 @@ func (pm *PortMapper) Reserve() (port int, err error) {
 	pm.ports.lock.Lock()
 
 	for port, isAvailable := range pm.ports.portsAvailable {
-		if isAvailable == true {
+		if isAvailable {
 			pm.ports.portsAvailable[port] = false
 			pm.ports.lock.Unlock()
 			return port, nil

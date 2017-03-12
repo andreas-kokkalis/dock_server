@@ -1,6 +1,6 @@
 package image
 
-var configDir = "../../../conf/"
+// var configDir = "../../../conf/"
 
 /*
 func TestListImages(t *testing.T) {

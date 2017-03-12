@@ -1,15 +1,34 @@
 package: github.com/andreas-kokkalis/dock-server
 import:
+- package: github.com/Davmuz/gqt
+- package: github.com/caarlos0/env
+  version: ^2.1.0
 - package: github.com/docker/docker
-  version: ^1.13.0-rc1
+  version: 1.13.0-rc1
   subpackages:
   - api/types
   - api/types/container
+  - api/types/filters
   - api/types/network
   - client
 - package: github.com/docker/go-connections
   version: ^0.2.1
   subpackages:
   - nat
+- package: github.com/jordic/lti
 - package: github.com/julienschmidt/httprouter
   version: ^1.1.0
+- package: github.com/lib/pq
+- package: github.com/spf13/viper
+- package: golang.org/x/crypto
+  subpackages:
+  - bcrypt
+- package: gopkg.in/redis.v5
+  version: ^5.2.9
+testImport:
+- package: github.com/stretchr/testify
+  version: ^1.1.4
+  subpackages:
+  - assert
+- package: gopkg.in/DATA-DOG/go-sqlmock.v1
+  version: ^1.2.0

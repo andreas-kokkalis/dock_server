@@ -16,11 +16,11 @@ type confVals struct {
 	key, val string
 }
 
-var vals = []confVals{
-	{"dc.imagerepo.name", "dc"},
-	{"dc.docker.api.host", "unix:///var/run/docker.sock"},
-	{"dc.docker.api.version", "1.24"},
-}
+// var vals = []confVals{
+// 	{"dc.imagerepo.name", "dc"},
+// 	{"dc.docker.api.host", "unix:///var/run/docker.sock"},
+// 	{"dc.docker.api.version", "1.24"},
+// }
 
 // XXX: New Version
 
