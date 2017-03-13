@@ -83,7 +83,7 @@ func main() {
 	router := httprouter.New()
 
 	// Auth Service
-	authService := auth.NewService(db, redisRepository, dockerRepository)
+	authService := auth.NewService(db, redisRepository)
 	router.GET("/v0/admin/logout", auth.AdminLogout(authService))
 	router.POST("/v0/admin/login", auth.AdminLogin(authService))
 

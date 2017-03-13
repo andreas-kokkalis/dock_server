@@ -12,7 +12,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/andreas-kokkalis/dock_server/pkg/api"
-	"github.com/andreas-kokkalis/dock_server/pkg/api/docker"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
 	"github.com/jordic/lti"
 	"github.com/julienschmidt/httprouter"
@@ -20,14 +19,13 @@ import (
 
 // Service for image
 type Service struct {
-	db     *store.DB
-	redis  *store.RedisRepo
-	docker *docker.Repo
+	db    *store.DB
+	redis *store.RedisRepo
 }
 
 // NewService creates a new Image Service
-func NewService(db *store.DB, redis *store.RedisRepo, docker *docker.Repo) Service {
-	return Service{db, redis, docker}
+func NewService(db *store.DB, redis *store.RedisRepo) Service {
+	return Service{db, redis}
 }
 
 var vAdminCookieVal = regexp.MustCompile(`^(adm:[a-f0-9]{32})$`)
@@ -146,7 +144,7 @@ func AdminLogin(s Service) httprouter.Handle {
 func AdminLogout(s Service) httprouter.Handle {
 	return func(res http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 
-		fmt.Println("request to logout")
+		// fmt.Println("request to logout")
 
 		// Get session cookie
 		cookie, err := req.Cookie("ses")
@@ -194,6 +192,7 @@ func OAuth(s Service, handler httprouter.Handle) httprouter.Handle {
 
 		ok, err := p.IsValid(req)
 		if !ok {
+			log.Println("invalid")
 			fmt.Fprintf(res, "Invalid request...")
 			return
 		}
