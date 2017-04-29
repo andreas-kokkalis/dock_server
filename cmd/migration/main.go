@@ -32,7 +32,7 @@ func main() {
 	}
 
 	// Initialize the configuration manager
-	var c config.Config
+	var c *config.Config
 	c, err = config.NewConfig(configDir, vars.Mode)
 	if err != nil {
 		log.Fatal(err)
@@ -40,7 +40,7 @@ func main() {
 
 	// Initialize Postgres storage
 	var db *store.DB
-	db, err = store.NewDB("postgres", c.GetPGConnectionString())
+	db, err = store.NewDB(c.GetPGConnectionString())
 	if err != nil {
 		log.Fatal(err)
 	}

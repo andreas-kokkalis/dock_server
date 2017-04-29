@@ -18,15 +18,11 @@ func TestNewDB(t *testing.T) {
 	c, _ := config.NewConfig(validConfigDir, "local")
 
 	testName := "Valid driver"
-	db, err := NewDB("postgres", c.GetPGConnectionString())
+	db, err := NewDB(c.GetPGConnectionString())
 	assert.Error(err, testName)
-	assert.NotNil(db.conn, testName)
-	assert.Error(db.conn.Ping(), testName)
+	assert.NotNil(db.Conn, testName)
+	assert.Error(db.Conn.Ping(), testName)
 
-	testName = "Invalid driver"
-	db, err = NewDB("", "")
-	assert.Error(err, testName)
-	assert.Nil(db.conn, testName)
 }
 
 func TestQuery(t *testing.T) {
@@ -36,8 +32,8 @@ func TestQuery(t *testing.T) {
 	// Mock the SQL connection
 	conn, mock, _ := sqlmock.New()
 	mock.MatchExpectationsInOrder(true)
-	db := &DB{conn: conn}
-	defer func() { _ = db.conn.Close() }()
+	db := &DB{Conn: conn}
+	defer func() { _ = db.Conn.Close() }()
 
 	testName := "Query()"
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
@@ -61,8 +57,8 @@ func TestQueryRow(t *testing.T) {
 	// Mock the SQL connection
 	conn, mock, _ := sqlmock.New()
 	mock.MatchExpectationsInOrder(true)
-	db := &DB{conn: conn}
-	defer func() { _ = db.conn.Close() }()
+	db := &DB{Conn: conn}
+	defer func() { _ = db.Conn.Close() }()
 
 	rows := sqlmock.NewRows([]string{"name"}).AddRow("Docker")
 	mock.ExpectQuery("SELECT (.*) FROM (.*) WHERE id = (.*)").WillReturnRows(rows)

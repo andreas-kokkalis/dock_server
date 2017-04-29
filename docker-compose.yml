@@ -2,16 +2,13 @@ version: '2'
 
 services:
     # redis
-    redisdb:
+    redis:
         image: redis
         ports:
             - "6379:6379"
-        networks:
-            default_net:
-                ipv4_address: 179.16.238.10
     # postgres
-    postgresdb:
-        image: postgres
+    postgres:
+        image: postgres:9.6.1
         command: "postgres -c log_connections=true -c log_min_duration_statement=0"
         ports:
             - "5432:5432"
@@ -19,17 +16,3 @@ services:
             - POSTGRES_USER=dock
             - POSTGRES_PASSWORD=dock
             - POSTGRES_DB=dock
-        networks:
-            default_net:
-                ipv4_address: 179.16.238.11
-
-
-# bridge network
-networks:
-  default_net:
-    driver: bridge
-    ipam:
-      driver: default
-      config:
-      - subnet: 179.16.238.0/24
-        gateway: 179.16.238.1
