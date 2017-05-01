@@ -8,7 +8,7 @@ postgres_is_up(){
     for i in {1..40}
     do
         sleep 2
-        local response=$(docker exec -i dockserver_postgresdb_1 pg_isready -h localhost -p 5432)
+        local response=$(docker exec -i dockserver_postgres_1 pg_isready -h localhost -p 5432)
         if [[ $? -eq 0 && $response == 'localhost:5432 - accepting connections' ]]; then
             is_up='true'
             break
