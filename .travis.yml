@@ -19,7 +19,7 @@ before_script:
 - make vendor
 - go install -v github.com/andreas-kokkalis/dock_server/cmd...
 script:
-- "./scripts/travis/tests.sh"
+- make unit-tests
 - "./scripts/travis/coverage.sh"
 - "./scripts/travis/integration-setup.sh"
 - "./scripts/travis/integration-run.sh"

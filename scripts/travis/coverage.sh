@@ -7,7 +7,7 @@ go get github.com/axw/gocov/gocov
 go get github.com/modocache/gover
 go get github.com/mattn/goveralls
 
-for dir in $(go list ./... | grep -v /vendor/ | grep -v /spec);
+for dir in $(go list ./... | grep -v /spec);
 do
     go test -coverprofile=profile.coverprofile $dir
     echo "$test : status: $?"

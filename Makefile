@@ -6,8 +6,6 @@ TOPDIR:=$(shell pwd)
 vendor:
 	go get -u github.com/golang/dep/cmd/dep
 	dep ensure
-# It removes vendor directories downloaded by glide
-fix-vendor: rm -rf vendor/github.com/docker/docker/vendor
 
 ########################
 # INITIALIZING PROJECT #
@@ -19,15 +17,16 @@ fix-vendor: rm -rf vendor/github.com/docker/docker/vendor
 # 	make docker-name
 # 	cd ${TOPDIR}
 
-##############
-# TEST SUITE #
-##############
-# Go commands
-GO_CMD=go
-GO_TEST=$(GO_CMD) test -cover
-# Packages to be tested
-GO_TEST_PKG_LIST:= conf
 
+##############
+# Unit Tests #
+##############
+unit-tests:
+	@./scripts/travis/tests.sh
+
+#####################
+# Integration Tests #
+#####################
 # Perform unit tests of all packages
 LOG_DIR := ${TOPDIR}/logs
 pre-test:
