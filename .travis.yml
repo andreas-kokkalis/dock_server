@@ -1,28 +1,32 @@
 sudo: required
 language: go
 go:
-  - 1.8
+- 1.8
 go_import_path: github.com/andreas-kokkalis/dock_server
 services:
-  - docker
+- docker
 cache:
   directories:
-    - $HOME/.glide/cache
+  - "$HOME/.glide/cache"
 before_install:
-  - sudo /etc/init.d/postgresql stop
+- sudo /etc/init.d/postgresql stop
 install:
-  - go get -v -u github.com/stretchr/testify/assert
-  - curl https://glide.sh/get | sh
-  - go get -u -v github.com/alecthomas/gometalinter
-  - gometalinter --install
-  - pip install future six
+- go get -v -u github.com/stretchr/testify/assert
+- curl https://glide.sh/get | sh
+- go get -u -v github.com/alecthomas/gometalinter
+- gometalinter --install
+- pip install future six
 before_script:
-  - glide install
-  - rm -rf vendor/github.com/docker/docker/vendor
-  - go install -v github.com/andreas-kokkalis/dock_server/cmd...
+- glide install
+- rm -rf vendor/github.com/docker/docker/vendor
+- go install -v github.com/andreas-kokkalis/dock_server/cmd...
 script:
-  - ./scripts/travis/tests.sh
-  - ./scripts/travis/coverage.sh
-  - ./scripts/travis/integration-setup.sh
-  - ./scripts/travis/integration-run.sh
-  - ./scripts/travis/gometalinter.sh
+- "./scripts/travis/tests.sh"
+- "./scripts/travis/coverage.sh"
+- "./scripts/travis/integration-setup.sh"
+- "./scripts/travis/integration-run.sh"
+- "./scripts/travis/gometalinter.sh"
+env:
+  global:
+  - secure: dIR/HOkkbPccbZ0QLlZNhjFePkojJqz+WEJnyBv+NTdcJRxRmHbCdiU2jDt9Sz09cpXkLwUT1QewLkOZSIEqB08tg0q7yAFQ1PCttUfpoHN7fMg9wMFYC7qoWDU+vob/exjuqmjZjH6ZN7df2RpYH72x0fiEWntndMp1r0EmL0KZNe+gde1vB7AZnOxwDEr5fidjeVDZMGBX7FRhjaSFBl6VaYRJr7L6BLpqQQorPKdILOhAhhHutQYlURfF0LWrg1jlCZScmmd2Kn4fdWOHoWy8SL+FUZtDumedluXvG7nB/7dY4aEPDjrG/v2ek3GUuqLisg5rEB2eJVYYUn56np+3chbi3f2m6AvHloRhYETmhbgW3Ja/5RZoPU4zZ9CzAo74EaCUHc80x2qt4Lrl1waYmRbYXwhOBIXYVjJOFW5zdZr5o6yibmk5u6PRX9XfpurRC47Qgnsi8Uw56TDzUjkkFH3X4l0EDJorL/VD1MimW6C5VVbJx7nPgXwdsKLJiKQ1rCNREY7mymFXZWpj16ufEDXoOuOz9zAdW5gTgTcY8HxaaRuHYM99q/DGg4+Uzo9rYyWhNIVL2mOogizpR/U7qyTPQ+9z1GsNfjkzcyN9whuWFxo/WkBR8lCN7oTAqwZFqJ6tHJ7LN1tqylB0WnTYakajZya1mxkvPKN/p+4=
+  - secure: dPDk3WWL2cnYQxrushCvootQPtaLucnVqailYu6KYaB+CB6zbj+o8RQ6gzLPlcWt3QQn8r6bTr+aIX+drGwboOB6+xkaeo1cZ1k7ltqkS9Wj6wrBI4XrPuid3cQYQW558EXAARKGkS41EzpFoGTFWUjHIP5tikXbzQ7IEWqJvyXdJHmwaXC3gFHM2CxAGt5dodshBldW1y1Tud9GaknEYMs2QeGoRbcaVcthcdzAv/SmbMb4ypE9vhsJWzV5zjgzkDpwpEx3icKZn0SiBoPYavJDVFnzyal63NWSjeKDBdaI18gJp5FtQqCFiy5Oebr5SgrWmZO1A9g+v1q97Xw9q/4KL1q2YKi38IyigYFSLt9F2EWAC68oAmxo4A0M1XjBhHv6lkZ2n7andyPDq7sDZPVTG9YiELooaY5g+LCWIe/PU3FbkSj32ssSyMs9RCCCkKhk2LFhZ1nLmm9xUSxUfBDOi+LufbGpnFXi3osXqa+gmKfDTt3WOnYSMjPRuvvnUCPsJjcPiyZAxqXPeanEYFUSG3ntlq7oYCLzv3KgeGERirypTEDM9LMp7lZN7v4KO1ytQjNhulus+B2d0kwYW6SNTGGWXFJ9SopXfW811xktpMSTMFnkeYirMSJrq3ADiRLAbnCl8D1yIo0igBNE66xVmxmrvQ8pVzPrxWW+QCo=
