@@ -3,17 +3,21 @@ TOPDIR:=$(shell pwd)
 #############
 # VENDORING #
 #############
+vendor:
+	go get -u github.com/golang/dep/cmd/dep
+	dep ensure
 # It removes vendor directories downloaded by glide
 fix-vendor: rm -rf vendor/github.com/docker/docker/vendor
 
 ########################
 # INITIALIZING PROJECT #
 ########################
-bootstrap:
-	cd scripts/seed_image
-	make docker-build
-	make docker-name
-	cd ${TOPDIR}
+# TODO: remove this, since integration tests pull the seed image from docker hub
+# bootstrap:
+# 	cd scripts/seed_image
+# 	make docker-build
+# 	make docker-name
+# 	cd ${TOPDIR}
 
 ##############
 # TEST SUITE #
@@ -43,5 +47,5 @@ post-test:
 	docker-compose stop
 
 tests: pre-test
-	@go test -v --cover $(shell go list ./... | grep -v /vendor/) | sed ''/PASS/s//$(shell printf "\033[32mPASS\033[0m")/'' | sed ''/FAIL/s//$(shell printf "\033[31mFAIL\033[0m")/''
+	@go test -v --cover $(shell go list ./... ) | sed ''/PASS/s//$(shell printf "\033[32mPASS\033[0m")/'' | sed ''/FAIL/s//$(shell printf "\033[31mFAIL\033[0m")/''
 	make post-test

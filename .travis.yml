@@ -1,24 +1,22 @@
 sudo: required
 language: go
 go:
-- 1.8
+- 1.9.2
 go_import_path: github.com/andreas-kokkalis/dock_server
-services:
-- docker
 cache:
   directories:
-  - "$HOME/.glide/cache"
+  - "$GOPATH/pkg/dep"
+services:
+- docker
 before_install:
 - sudo /etc/init.d/postgresql stop
 install:
 - go get -v -u github.com/stretchr/testify/assert
-- curl https://glide.sh/get | sh
 - go get -u -v github.com/alecthomas/gometalinter
 - gometalinter --install
 - pip install future six
 before_script:
-- glide install
-- rm -rf vendor/github.com/docker/docker/vendor
+- make vendor
 - go install -v github.com/andreas-kokkalis/dock_server/cmd...
 script:
 - "./scripts/travis/tests.sh"
