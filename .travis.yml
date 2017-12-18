@@ -14,7 +14,7 @@ install:
 - go get -v -u github.com/stretchr/testify/assert
 - go get -u -v github.com/alecthomas/gometalinter
 - gometalinter --install
-- pip install future six
+- pip install --user future six
 before_script:
 - make vendor
 - go install -v github.com/andreas-kokkalis/dock_server/cmd...
