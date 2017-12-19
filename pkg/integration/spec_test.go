@@ -4,9 +4,9 @@ import (
 	"path"
 	"testing"
 
-	"github.com/andreas-kokkalis/dock_server/cmd/dock_server/schema/dbutil"
 	"github.com/andreas-kokkalis/dock_server/pkg/drivers/postgres/postgresmock"
 	"github.com/andreas-kokkalis/dock_server/pkg/drivers/redis/redismock"
+	"github.com/andreas-kokkalis/dock_server/pkg/util/dbutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/stretchr/testify/assert"

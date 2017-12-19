@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	confDir   = "../../../../conf"
-	scriptDir = "../../../../scripts/db"
+	confDir   = "../../../conf"
+	scriptDir = "../../../scripts/db"
 )
 
 func TestNewDbManager(t *testing.T) {
