@@ -2,12 +2,6 @@
 
 
 [[projects]]
-  branch = "master"
-  name = "github.com/Davmuz/gqt"
-  packages = ["."]
-  revision = "7589d282c7c354716e76170da0aa942c6cf4c253"
-
-[[projects]]
   name = "github.com/Microsoft/go-winio"
   packages = ["."]
   revision = "fff283ad5116362ca252298cfc9b95828956d85d"
@@ -214,6 +208,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2cac26031e19d247be2147da4b59be27fe0695fbd195809d5b3b22523d20d16f"
+  inputs-digest = "6acca139193f756155eb0ddce592bb0c89d3ca276c766890495644531ca47e46"
   solver-name = "gps-cdcl"
   solver-version = 1
