@@ -3,8 +3,8 @@ package schema
 import (
 	"regexp"
 
-	"github.com/andreas-kokkalis/dock_server/cmd/dock_server/schema/dbutil"
 	"github.com/andreas-kokkalis/dock_server/pkg/config"
+	"github.com/andreas-kokkalis/dock_server/pkg/util/dbutil"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
