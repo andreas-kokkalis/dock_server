@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/andreas-kokkalis/dock_server/cmd/dock_server/schema/dbutil"
-	"github.com/andreas-kokkalis/dock_server/pkg/drivers/cache/redismock"
 	"github.com/andreas-kokkalis/dock_server/pkg/drivers/db"
+	"github.com/andreas-kokkalis/dock_server/pkg/drivers/redis/redismock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/stretchr/testify/assert"
