@@ -19,12 +19,6 @@
   revision = "1deb2db2a6fff8a35532079061b903c3a25eed52"
 
 [[projects]]
-  name = "github.com/caarlos0/env"
-  packages = ["."]
-  revision = "d0de832ed2fbc4e7bfaa30ab5cf0b3417d15f529"
-  version = "v2.1"
-
-[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "6d212800a42e8ab5c146b8ace3490ee17e5225f9"
@@ -158,7 +152,8 @@
 [[projects]]
   name = "github.com/spf13/viper"
   packages = ["."]
-  revision = "7538d73b4eb9511d85a9f1dfef202eeb8ac260f4"
+  revision = "25b30aa063fc18e48662b86996252eabdcf2f0c7"
+  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/stretchr/testify"
@@ -206,6 +201,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "56a928c1f614e3533676f4954fb6b5f6951ce540e307f6da8b00b18a68705bcf"
+  inputs-digest = "2cac26031e19d247be2147da4b59be27fe0695fbd195809d5b3b22523d20d16f"
   solver-name = "gps-cdcl"
   solver-version = 1

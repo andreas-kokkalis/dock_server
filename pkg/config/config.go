@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	redis "gopkg.in/redis.v5"
 )
@@ -15,33 +16,38 @@ type Config struct {
 
 // NewConfig initializes a viper configuration and returns
 func NewConfig(configDir string, env string) (*Config, error) {
-	c := Config{viper.New(), env}
-	c.viper.SetConfigType("yaml")
-	c.viper.SetConfigName("conf")
-	c.viper.AddConfigPath(configDir)
-
-	err := c.viper.ReadInConfig()
-	return &c, err
+	v := viper.New()
+	v.AddConfigPath(configDir)
+	v.SetConfigType("yaml")
+	v.SetConfigName("conf")
+	if err := v.ReadInConfig(); err != nil {
+		return nil, errors.Wrap(err, "Could not read config file conf.yaml at location"+configDir)
+	}
+	c := &Config{
+		env:   env,
+		viper: v.Sub(env),
+	}
+	return c, nil
 }
 
 // GetPGConnectionString ...
 func (c *Config) GetPGConnectionString() string {
 	return fmt.Sprintf(
 		"host=%s port=%s dbname=%s user=%s password=%s sslmode=%s",
-		c.viper.GetString(c.env+".postgres.host"),
-		c.viper.GetString(c.env+".postgres.port"),
-		c.viper.GetString(c.env+".postgres.dbname"),
-		c.viper.GetString(c.env+".postgres.user"),
-		c.viper.GetString(c.env+".postgres.password"),
-		c.viper.GetString(c.env+".postgres.sslmode"),
+		c.viper.GetString("postgres.host"),
+		c.viper.GetString("postgres.port"),
+		c.viper.GetString("postgres.dbname"),
+		c.viper.GetString("postgres.user"),
+		c.viper.GetString("postgres.password"),
+		c.viper.GetString("postgres.sslmode"),
 	)
 }
 
 // GetRedisConfig ...
 func (c *Config) GetRedisConfig() *redis.Options {
 	return &redis.Options{
-		Addr:     c.viper.GetString(c.env+".redis.host") + ":" + c.viper.GetString(c.env+".redis.port"),
-		Password: c.viper.GetString(c.env + ".redis.password"),
+		Addr:     c.viper.GetString("redis.host") + ":" + c.viper.GetString("redis.port"),
+		Password: c.viper.GetString("redis.password"),
 		DB:       0,
 	}
 }
@@ -49,14 +55,14 @@ func (c *Config) GetRedisConfig() *redis.Options {
 // GetDockerConfig ...
 func (c *Config) GetDockerConfig() map[string]string {
 	dockerConfig := map[string]string{
-		"host":    c.viper.GetString(c.env + ".docker.host"),
-		"version": c.viper.GetString(c.env + ".docker.version"),
-		"repo":    c.viper.GetString(c.env + ".docker.repo"),
+		"host":    c.viper.GetString("docker.host"),
+		"version": c.viper.GetString("docker.version"),
+		"repo":    c.viper.GetString("docker.repo"),
 	}
 	return dockerConfig
 }
 
 // GetAPIPorts ...
 func (c *Config) GetAPIPorts() int {
-	return c.viper.GetInt(c.env + ".api.portnum")
+	return c.viper.GetInt("api.portnum")
 }
