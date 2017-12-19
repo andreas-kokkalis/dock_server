@@ -8,6 +8,7 @@ type RedisMock struct {
 	SetFn    func(string, string, time.Duration) (string, error)
 	DelFn    func(string) (int64, error)
 	ExistsFn func(string) (bool, error)
+	CloseFn  func() error
 }
 
 // Get ...
@@ -28,6 +29,11 @@ func (r RedisMock) Del(key string) (int64, error) {
 // Exists ...
 func (r RedisMock) Exists(value string) (bool, error) {
 	return r.ExistsFn(value)
+}
+
+// Close ...
+func (r RedisMock) Close() error {
+	return r.CloseFn()
 }
 
 // NewRedis ...

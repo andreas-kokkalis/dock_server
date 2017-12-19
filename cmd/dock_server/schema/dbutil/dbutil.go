@@ -18,7 +18,7 @@ const (
 
 // DBManager models the interaction with the database schema for integration tests.
 type DBManager struct {
-	scriptPath string
+	ScriptPath string
 	DB         *store.DB
 }
 
@@ -29,14 +29,14 @@ func NewDBManager(connectionString, topDir string) (*DBManager, error) {
 		return nil, err
 	}
 	return &DBManager{
-		scriptPath: topDir,
+		ScriptPath: topDir,
 		DB:         db,
 	}, nil
 }
 
 func (d *DBManager) loadSQLScript(scriptFile string) (string, error) {
 
-	file := path.Join(d.scriptPath, scriptFile)
+	file := path.Join(d.ScriptPath, scriptFile)
 
 	// Check whether the expected file exists
 	if _, err := os.Stat(file); os.IsNotExist(err) {

@@ -38,7 +38,7 @@ func TestNewDbManager(t *testing.T) {
 func newMockManager(m *MockDB) *DBManager {
 	return &DBManager{
 		DB:         m.DB,
-		scriptPath: scriptDir,
+		ScriptPath: scriptDir,
 	}
 }
 

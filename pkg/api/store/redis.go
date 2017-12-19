@@ -13,6 +13,7 @@ type RedisClient interface {
 	Set(string, string, time.Duration) (string, error)
 	Del(string) (int64, error)
 	Exists(string) (bool, error)
+	Close() error
 }
 
 // Redis is the redis connection

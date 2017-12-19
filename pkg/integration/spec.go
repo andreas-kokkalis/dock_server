@@ -32,7 +32,7 @@ type Spec struct {
 	DBManager *dbutil.DBManager
 
 	// Redis
-	Redis     *store.Redis
+	Redis     store.RedisClient
 	RedisRepo *store.RedisRepo
 
 	// Docker
@@ -78,7 +78,7 @@ func (s *Spec) CloseDBConnection() func() {
 	}
 }
 
-// RestoreDB drops the database schema and recreates it
+// RestoreDB drops the database schema, recreates it, and migrates data
 func (s *Spec) RestoreDB() func() {
 	return func() {
 
