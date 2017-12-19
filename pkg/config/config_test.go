@@ -9,8 +9,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var validConfigPath = "../../conf/"
-var invalidConfigPath = "lalaala"
+var (
+	validConfigPath   = "../../conf/"
+	invalidConfigPath = "lalaala"
+
+	validEnv = "local"
+)
 
 type confVals struct {
 	key, val string
@@ -22,26 +26,23 @@ type confVals struct {
 // 	{"dc.docker.api.version", "1.24"},
 // }
 
-// XXX: New Version
+func newConf(t *testing.T) *Config {
+	c, err := NewConfig(validConfigPath, "local")
+	assert.NoError(t, err, "Initialize config")
+	assert.NotNil(t, c, "Initialize config")
+	return c
+}
 
 func TestNewConfig(t *testing.T) {
-	t.Parallel()
-	assert := assert.New(t)
-
-	testName := "valid config path"
-	c, err := NewConfig(validConfigPath, "local")
-	assert.NoError(err, testName)
-	assert.NotNil(c)
-
-	testName = "valid config path"
-	_, err = NewConfig(invalidConfigPath, "local")
-	assert.Error(err, testName)
+	_ = newConf(t)
+	testName := "invalid config path"
+	c, err := NewConfig(invalidConfigPath, "local")
+	assert.Error(t, err, testName)
+	assert.Nil(t, c, testName)
 }
 
 func TestGetPGConnectionString(t *testing.T) {
-	t.Parallel()
-	assert := assert.New(t)
-
+	c := newConf(t)
 	expect := fmt.Sprintf(
 		"host=%s port=%s dbname=%s user=%s password=%s sslmode=%s",
 		"localhost",
@@ -51,57 +52,43 @@ func TestGetPGConnectionString(t *testing.T) {
 		"dock",
 		"disable",
 	)
-
-	testName := "GetPGConnectionString"
-	c, err := NewConfig(validConfigPath, "local")
-	assert.NoError(err, testName)
 	actual := c.GetPGConnectionString()
-	assert.Equal(expect, actual, testName)
+	assert.Equal(t, expect, actual, "GetPGConnectionString")
 }
 
 func TestGetRedisConfig(t *testing.T) {
-	t.Parallel()
-	assert := assert.New(t)
-
+	c := newConf(t)
 	expect := &redis.Options{
 		Addr:     "localhost:6379",
 		Password: "",
 		DB:       0,
 	}
-	testName := "GetRedisConfig"
-	c, err := NewConfig(validConfigPath, "local")
-	assert.NoError(err, testName)
 	actual := c.GetRedisConfig()
-	assert.Equal(expect, actual, testName)
+	assert.Equal(t, expect, actual, "GetRedisConfig")
 
 }
 
 func TestGetDockerConfig(t *testing.T) {
-	t.Parallel()
-	assert := assert.New(t)
-
+	c := newConf(t)
 	expect := map[string]string{
 		"host":    "unix:///var/run/docker.sock",
 		"version": "1.25",
 		"repo":    "andreaskokkalis/dc",
 	}
-
-	testName := "GetDockerConfig"
-	c, err := NewConfig(validConfigPath, "local")
-	assert.NoError(err, testName)
 	actual := c.GetDockerConfig()
-	assert.Equal(expect, actual, testName)
+	assert.Equal(t, expect, actual, "GetDockerConfig")
 }
 
 func TestGetAPIPorts(t *testing.T) {
-	t.Parallel()
-	assert := assert.New(t)
-
+	c := newConf(t)
 	expect := 200
-
-	testName := "GetAPIPort"
-	c, err := NewConfig(validConfigPath, "local")
-	assert.NoError(err, testName)
 	actual := c.GetAPIPorts()
-	assert.Equal(expect, actual, testName)
+	assert.Equal(t, expect, actual, "GetPortNumbers")
+}
+
+func TestGetAPIServerPort(t *testing.T) {
+	c := newConf(t)
+	expect := ":8080"
+	actual := c.GetAPIServerPort()
+	assert.Equal(t, expect, actual, "GetAPIServerPort")
 }

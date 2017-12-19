@@ -2,12 +2,6 @@
 
 
 [[projects]]
-  branch = "master"
-  name = "github.com/Davmuz/gqt"
-  packages = ["."]
-  revision = "7589d282c7c354716e76170da0aa942c6cf4c253"
-
-[[projects]]
   name = "github.com/Microsoft/go-winio"
   packages = ["."]
   revision = "fff283ad5116362ca252298cfc9b95828956d85d"
@@ -17,12 +11,6 @@
   name = "github.com/Sirupsen/logrus"
   packages = ["."]
   revision = "1deb2db2a6fff8a35532079061b903c3a25eed52"
-
-[[projects]]
-  name = "github.com/caarlos0/env"
-  packages = ["."]
-  revision = "d0de832ed2fbc4e7bfaa30ab5cf0b3417d15f529"
-  version = "v2.1"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -61,6 +49,12 @@
   name = "github.com/hashicorp/hcl"
   packages = [".","hcl/ast","hcl/parser","hcl/scanner","hcl/strconv","hcl/token","json/parser","json/scanner","json/token"]
   revision = "630949a3c5fa3c613328e1b8256052cbc2327c9b"
+
+[[projects]]
+  name = "github.com/inconshreveable/mousetrap"
+  packages = ["."]
+  revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
+  version = "v1.0"
 
 [[projects]]
   branch = "master"
@@ -146,6 +140,12 @@
   version = "v1.0.0"
 
 [[projects]]
+  name = "github.com/spf13/cobra"
+  packages = ["."]
+  revision = "7b2c5ac9fc04fc5efafb60700713d4fa609b777b"
+  version = "v0.0.1"
+
+[[projects]]
   name = "github.com/spf13/jwalterweatherman"
   packages = ["."]
   revision = "fa7ca7e836cf3a8bb4ebf799f472c12d7e903d66"
@@ -153,12 +153,14 @@
 [[projects]]
   name = "github.com/spf13/pflag"
   packages = ["."]
-  revision = "9ff6c6923cfffbcd502984b8e0c80539a94968b7"
+  revision = "e57e3eeb33f795204c1ca35f56c44f83227c6e66"
+  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/spf13/viper"
   packages = ["."]
-  revision = "7538d73b4eb9511d85a9f1dfef202eeb8ac260f4"
+  revision = "25b30aa063fc18e48662b86996252eabdcf2f0c7"
+  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/stretchr/testify"
@@ -206,6 +208,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "56a928c1f614e3533676f4954fb6b5f6951ce540e307f6da8b00b18a68705bcf"
+  inputs-digest = "6acca139193f756155eb0ddce592bb0c89d3ca276c766890495644531ca47e46"
   solver-name = "gps-cdcl"
   solver-version = 1

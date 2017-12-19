@@ -1,9 +1,8 @@
-package store
+package db
 
 import (
 	"database/sql"
 
-	"github.com/Davmuz/gqt"
 	// postgres dialect
 	_ "github.com/lib/pq"
 )
@@ -24,7 +23,6 @@ func NewDB(connectionString string) (*DB, error) {
 		return &DB{conn}, err
 	}
 	err = conn.Ping()
-	_ = gqt.Add("templates/sql", "*.sql")
 	return &DB{conn}, err
 
 }
