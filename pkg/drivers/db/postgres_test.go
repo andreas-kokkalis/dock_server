@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var validConfigDir = "../../conf"
+var validConfigDir = "../../../conf"
 
 func TestNewDB(t *testing.T) {
 	t.Parallel()
