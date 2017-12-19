@@ -83,7 +83,7 @@ func TestGetDockerConfig(t *testing.T) {
 	expect := map[string]string{
 		"host":    "unix:///var/run/docker.sock",
 		"version": "1.25",
-		"repo":    "dc",
+		"repo":    "andreaskokkalis/dc",
 	}
 
 	testName := "GetDockerConfig"

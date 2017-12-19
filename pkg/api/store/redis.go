@@ -51,3 +51,8 @@ func NewRedisClient(options *redis.Options) (*Redis, error) {
 	log.Printf("Server is responding: %s", pong)
 	return &Redis{cli}, nil
 }
+
+// Close closes the redis connection
+func (r *Redis) Close() error {
+	return r.cli.Close()
+}

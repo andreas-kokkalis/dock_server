@@ -8,13 +8,17 @@ import (
 	_ "github.com/lib/pq"
 )
 
+const (
+	driver = "postgres"
+)
+
 // DB ...
 type DB struct {
-	conn *sql.DB
+	Conn *sql.DB
 }
 
 // NewDB ...
-func NewDB(driver string, connectionString string) (*DB, error) {
+func NewDB(connectionString string) (*DB, error) {
 	conn, err := sql.Open(driver, connectionString)
 	if err != nil {
 		return &DB{conn}, err
@@ -27,7 +31,7 @@ func NewDB(driver string, connectionString string) (*DB, error) {
 
 // Query executes an sql query and returns *sql.Rows
 func (db *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
-	rows, err := db.conn.Query(query, args...)
+	rows, err := db.Conn.Query(query, args...)
 	return rows, err
 }
 
@@ -35,6 +39,6 @@ func (db *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
 func (db *DB) QueryRow(query string, args ...interface{}) *sql.Row {
 	// TODO: there is a problem with row returned.
 	var row *sql.Row
-	row = db.conn.QueryRow(query, args...)
+	row = db.Conn.QueryRow(query, args...)
 	return row
 }

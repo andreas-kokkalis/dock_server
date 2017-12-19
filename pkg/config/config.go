@@ -14,18 +14,18 @@ type Config struct {
 }
 
 // NewConfig initializes a viper configuration and returns
-func NewConfig(configDir string, env string) (Config, error) {
+func NewConfig(configDir string, env string) (*Config, error) {
 	c := Config{viper.New(), env}
 	c.viper.SetConfigType("yaml")
 	c.viper.SetConfigName("conf")
 	c.viper.AddConfigPath(configDir)
 
 	err := c.viper.ReadInConfig()
-	return c, err
+	return &c, err
 }
 
 // GetPGConnectionString ...
-func (c Config) GetPGConnectionString() string {
+func (c *Config) GetPGConnectionString() string {
 	return fmt.Sprintf(
 		"host=%s port=%s dbname=%s user=%s password=%s sslmode=%s",
 		c.viper.GetString(c.env+".postgres.host"),
@@ -38,7 +38,7 @@ func (c Config) GetPGConnectionString() string {
 }
 
 // GetRedisConfig ...
-func (c Config) GetRedisConfig() *redis.Options {
+func (c *Config) GetRedisConfig() *redis.Options {
 	return &redis.Options{
 		Addr:     c.viper.GetString(c.env+".redis.host") + ":" + c.viper.GetString(c.env+".redis.port"),
 		Password: c.viper.GetString(c.env + ".redis.password"),
@@ -47,7 +47,7 @@ func (c Config) GetRedisConfig() *redis.Options {
 }
 
 // GetDockerConfig ...
-func (c Config) GetDockerConfig() map[string]string {
+func (c *Config) GetDockerConfig() map[string]string {
 	dockerConfig := map[string]string{
 		"host":    c.viper.GetString(c.env + ".docker.host"),
 		"version": c.viper.GetString(c.env + ".docker.version"),
@@ -57,6 +57,6 @@ func (c Config) GetDockerConfig() map[string]string {
 }
 
 // GetAPIPorts ...
-func (c Config) GetAPIPorts() int {
+func (c *Config) GetAPIPorts() int {
 	return c.viper.GetInt(c.env + ".api.portnum")
 }

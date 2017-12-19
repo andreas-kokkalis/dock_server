@@ -12,6 +12,6 @@ local:
   docker:
     host: 'unix:///var/run/docker.sock'
     version: '1.25'
-    repo: dc
+    repo: andreaskokkalis/dc
   api:
     portnum: '200'
