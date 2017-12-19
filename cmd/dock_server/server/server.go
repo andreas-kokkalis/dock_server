@@ -1,11 +1,11 @@
-package main
+package server
 
 import (
-	"errors"
-	"log"
 	"net/http"
 	"regexp"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/andreas-kokkalis/dock_server/pkg/api/auth"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/container"
@@ -14,52 +14,45 @@ import (
 	"github.com/andreas-kokkalis/dock_server/pkg/api/lti"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
 	"github.com/andreas-kokkalis/dock_server/pkg/config"
-	"github.com/caarlos0/env"
 	"github.com/julienschmidt/httprouter"
+	"github.com/spf13/cobra"
 )
 
-type envVars struct {
-	Mode string `env:"MODE"`
-}
+// TODO: Add logging
 
-var validMode = regexp.MustCompile(`^(local)`)
+var (
+	// ConfigDir flag indicates the location of the conf.yaml file
+	ConfigDir string
 
-var errInvalidMode = errors.New("Invalid environment variable MODE\n Allowed values [local]")
+	// Env flag indicates the environment that the server will run.
+	Env           string
+	vEnv          = regexp.MustCompile(`^(local)`)
+	errInvalidEnv = errors.New("Allowed env values are [local]")
+)
 
-var configDir = "./conf"
+// Start command starts the HTTP API server
+var Start = func(cmd *cobra.Command, args []string) (err error) {
 
-// TODO: figure out what to do when migration is required
-
-func main() {
-
-	vars := envVars{}
-	err := env.Parse(&vars)
-	if err != nil {
-		log.Fatalf("%+v", err)
-	}
-	if !validMode.MatchString(vars.Mode) {
-		log.Fatal(errInvalidMode)
+	if !vEnv.MatchString(Env) {
+		return errInvalidEnv
 	}
 
 	// Initialize the configuration manager
 	var c *config.Config
-	c, err = config.NewConfig(configDir, vars.Mode)
-	if err != nil {
-		log.Fatal(err)
+	if c, err = config.NewConfig(ConfigDir, Env); err != nil {
+		return err
 	}
 
 	// Initialize Postgres storage
 	var db *store.DB
-	db, err = store.NewDB(c.GetPGConnectionString())
-	if err != nil {
-		log.Fatal(err)
+	if db, err = store.NewDB(c.GetPGConnectionString()); err != nil {
+		return errors.Wrap(err, "Unable to connect to the database")
 	}
 
 	// Initialize Redis storage
 	var redis *store.Redis
-	redis, err = store.NewRedisClient(c.GetRedisConfig())
-	if err != nil {
-		log.Fatal(err)
+	if redis, err = store.NewRedisClient(c.GetRedisConfig()); err != nil {
+		return errors.Wrap(err, "Unable to connect to redis")
 	}
 	// Initialize Redis repository
 	redisRepository := store.NewRedisRepo(redis)
@@ -69,9 +62,8 @@ func main() {
 	// Initialize Docker Remote API Client
 
 	var dockerClient *docker.APIClient
-	dockerClient, err = docker.NewAPIClient(c.GetDockerConfig())
-	if err != nil {
-		log.Fatal(err)
+	if dockerClient, err = docker.NewAPIClient(c.GetDockerConfig()); err != nil {
+		return err
 	}
 	// Initialize docker repository
 	dockerRepository := docker.NewRepo(dockerClient, c.GetDockerConfig())
@@ -120,6 +112,7 @@ func main() {
 	}
 	err = myServer.ListenAndServeTLS("conf/ssl/server.pem", "conf/ssl/server.key")
 	if err != nil {
-		log.Fatal("ListenAndServe: ", err)
+		return errors.Wrap(err, "ListenAndServe")
 	}
+	return nil
 }
