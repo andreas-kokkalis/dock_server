@@ -54,4 +54,4 @@ tests: pre-test
 #########################
 mock:
 	go get github.com/matryer/moq
-	go generate pkg/cache/redis.go
+	go generate pkg/drivers/cache/redis.go

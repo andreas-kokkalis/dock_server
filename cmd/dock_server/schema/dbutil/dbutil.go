@@ -5,7 +5,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/andreas-kokkalis/dock_server/pkg/db"
+	"github.com/andreas-kokkalis/dock_server/pkg/drivers/db"
 	"github.com/pkg/errors"
 )
 

@@ -6,7 +6,7 @@ import (
 	"github.com/andreas-kokkalis/dock_server/pkg/api"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/docker"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
-	"github.com/andreas-kokkalis/dock_server/pkg/db"
+	"github.com/andreas-kokkalis/dock_server/pkg/drivers/db"
 	"github.com/julienschmidt/httprouter"
 )
 

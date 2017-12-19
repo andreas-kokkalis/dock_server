@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/andreas-kokkalis/dock_server/pkg/api"
-	"github.com/andreas-kokkalis/dock_server/pkg/cache/redismock"
+	"github.com/andreas-kokkalis/dock_server/pkg/drivers/cache/redismock"
 	"github.com/stretchr/testify/assert"
 )
 

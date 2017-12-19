@@ -7,8 +7,8 @@ import (
 	"github.com/andreas-kokkalis/dock_server/cmd/dock_server/schema/dbutil"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/docker"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
-	"github.com/andreas-kokkalis/dock_server/pkg/cache"
 	"github.com/andreas-kokkalis/dock_server/pkg/config"
+	"github.com/andreas-kokkalis/dock_server/pkg/drivers/cache"
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
 )

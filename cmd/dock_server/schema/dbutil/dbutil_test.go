@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/andreas-kokkalis/dock_server/pkg/db"
+	"github.com/andreas-kokkalis/dock_server/pkg/drivers/db"
 	"github.com/stretchr/testify/assert"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )

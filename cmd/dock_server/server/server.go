@@ -13,9 +13,9 @@ import (
 	"github.com/andreas-kokkalis/dock_server/pkg/api/image"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/lti"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
-	"github.com/andreas-kokkalis/dock_server/pkg/cache"
 	"github.com/andreas-kokkalis/dock_server/pkg/config"
-	"github.com/andreas-kokkalis/dock_server/pkg/db"
+	"github.com/andreas-kokkalis/dock_server/pkg/drivers/cache"
+	"github.com/andreas-kokkalis/dock_server/pkg/drivers/db"
 	"github.com/julienschmidt/httprouter"
 	"github.com/spf13/cobra"
 )
