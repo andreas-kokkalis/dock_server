@@ -66,6 +66,7 @@ var Drop = func(cmd *cobra.Command, args []string) (err error) {
 	return dbm.DropSchema()
 }
 
+// Insert command inserts basic required data for in the database schema
 var Insert = func(cmd *cobra.Command, args []string) (err error) {
 
 	c, err := initConf()
