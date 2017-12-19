@@ -14,8 +14,8 @@ import (
 	"github.com/andreas-kokkalis/dock_server/pkg/api/lti"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
 	"github.com/andreas-kokkalis/dock_server/pkg/config"
-	"github.com/andreas-kokkalis/dock_server/pkg/drivers/cache"
 	"github.com/andreas-kokkalis/dock_server/pkg/drivers/db"
+	"github.com/andreas-kokkalis/dock_server/pkg/drivers/redis"
 	"github.com/julienschmidt/httprouter"
 	"github.com/spf13/cobra"
 )
@@ -52,12 +52,12 @@ var Start = func(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	// Initialize Redis storage
-	var redis cache.Redis
-	if redis, err = cache.NewRedisClient(c.GetRedisConfig()); err != nil {
+	var redisCli redis.Redis
+	if redisCli, err = redis.NewClient(c.GetRedisConfig()); err != nil {
 		return errors.Wrap(err, "Unable to connect to redis")
 	}
 	// Initialize Redis repository
-	redisRepository := store.NewRedisRepo(redis)
+	redisRepository := store.NewRedisRepo(redisCli)
 
 	// Initialize PortMapper
 	mapper := docker.NewPortMapper(redisRepository, c.GetAPIPorts())

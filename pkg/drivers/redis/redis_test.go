@@ -1,4 +1,4 @@
-package cache
+package redis
 
 import (
 	"net"
@@ -10,7 +10,7 @@ import (
 )
 
 func TestInitRedisClient(t *testing.T) {
-	redis, err := NewRedisClient(
+	redis, err := NewClient(
 		&redis.Options{
 			Addr: ":1234",
 			Dialer: func() (net.Conn, error) {

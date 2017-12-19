@@ -11,16 +11,16 @@ import (
 	"time"
 
 	"github.com/andreas-kokkalis/dock_server/pkg/api"
-	"github.com/andreas-kokkalis/dock_server/pkg/drivers/cache"
+	"github.com/andreas-kokkalis/dock_server/pkg/drivers/redis"
 )
 
 // RedisRepo ...
 type RedisRepo struct {
-	redis cache.Redis
+	redis redis.Redis
 }
 
 // NewRedisRepo ...
-func NewRedisRepo(redis cache.Redis) *RedisRepo {
+func NewRedisRepo(redis redis.Redis) *RedisRepo {
 	return &RedisRepo{redis}
 }
 
