@@ -37,6 +37,20 @@ var schemaCreate = &cobra.Command{
 	Args:  cobra.NoArgs,
 }
 
+var schemaDrop = &cobra.Command{
+	Use:   "drop",
+	Short: "drop the database schema",
+	RunE:  schema.Drop,
+	Args:  cobra.NoArgs,
+}
+
+var schemaInsert = &cobra.Command{
+	Use:   "insert",
+	Short: "insert data to the database schema",
+	RunE:  schema.Insert,
+	Args:  cobra.NoArgs,
+}
+
 func main() {
 
 	rootCmd.AddCommand(serverCmd)
@@ -46,8 +60,11 @@ func main() {
 
 	rootCmd.AddCommand(schemaCmd)
 	schemaCmd.PersistentFlags().StringVarP(&schema.ConfigDir, "conf", "c", "./conf", "The directory where the conf.yaml file is located.")
+	schemaCmd.PersistentFlags().StringVarP(&schema.ScriptDir, "script", "s", "./scripts/db", "The directory where the database scripts are located.")
 	schemaCmd.PersistentFlags().StringVarP(&schema.Env, "env", "e", "local", "The environment target for the configuration")
 	schemaCmd.AddCommand(schemaCreate)
+	schemaCmd.AddCommand(schemaDrop)
+	schemaCmd.AddCommand(schemaInsert)
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)

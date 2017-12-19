@@ -47,7 +47,7 @@ var _ = BeforeSuite(func() {
 
 	router = httprouter.New()
 	// Image service
-	imageService := image.NewService(spec.DB, spec.RedisRepo, spec.DockerRepo)
+	imageService := image.NewService(spec.DBManager.DB, spec.RedisRepo, spec.DockerRepo)
 	router.GET("/v0/admin/images", image.ListImages(imageService))
 	router.GET("/v0/admin/images/history/:id", image.GetImageHistory(imageService))
 	router.DELETE("/v0/admin/images/delete/:id", image.RemoveImage(imageService))

@@ -4,7 +4,7 @@ import (
 	"log"
 	"path"
 
-	"github.com/Davmuz/gqt"
+	"github.com/andreas-kokkalis/dock_server/cmd/dock_server/schema/dbutil"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/docker"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
 	"github.com/andreas-kokkalis/dock_server/pkg/config"
@@ -15,6 +15,7 @@ import (
 const (
 	environment = "local"
 	confDir     = "conf"
+	scriptDir   = "scripts/db"
 	// TestDataDir is hardconfigured to be named testdata within each spec directory
 	TestDataDir = "testdata"
 )
@@ -28,7 +29,7 @@ type Spec struct {
 	Config *config.Config
 
 	// Postgres
-	DB *store.DB
+	DBManager *dbutil.DBManager
 
 	// Redis
 	Redis     *store.Redis
@@ -64,16 +65,16 @@ func (s *Spec) InitConfig() func() {
 // establishes postgres connection
 func (s *Spec) InitDBConnection() func() {
 	return func() {
-		db, err := store.NewDB(s.Config.GetPGConnectionString())
+		db, err := dbutil.NewDBManager(s.Config.GetPGConnectionString(), path.Join(s.TopDir, scriptDir))
 		gomega.Expect(err).To(gomega.BeNil(), "Connect Postgres")
-		s.DB = db
+		s.DBManager = db
 	}
 }
 
 // CloseDBConnection returns a function that closes the Postgres connection poo;
 func (s *Spec) CloseDBConnection() func() {
 	return func() {
-		gomega.Expect(s.DB.Conn.Close()).To(gomega.BeNil(), "Disconnect Postgres")
+		gomega.Expect(s.DBManager.DB.Conn.Close()).To(gomega.BeNil(), "Disconnect Postgres")
 	}
 }
 
@@ -81,17 +82,13 @@ func (s *Spec) CloseDBConnection() func() {
 func (s *Spec) RestoreDB() func() {
 	return func() {
 
-		err := gqt.Add(path.Join(s.TopDir, "templates/pgsql"), "*.pgsql")
-		gomega.Expect(err).To(gomega.BeNil(), "load SQL template directory")
-
-		_, err = s.DB.Query(gqt.Get("dropSchema"))
+		err := s.DBManager.DropSchema()
 		gomega.Expect(err).To(gomega.BeNil(), "dropping database tables")
 
-		_, err = s.DB.Query(gqt.Get("createSchema"))
+		err = s.DBManager.CreateSchema()
 		gomega.Expect(err).To(gomega.BeNil(), "creating database tables")
 
-		// Insert Data
-		_, err = s.DB.Query(gqt.Get("migrateData"))
+		err = s.DBManager.InsertSchema()
 		gomega.Expect(err).To(gomega.BeNil(), "migrating data")
 	}
 }

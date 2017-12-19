@@ -3,8 +3,7 @@ package schema
 import (
 	"regexp"
 
-	"github.com/Davmuz/gqt"
-	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
+	"github.com/andreas-kokkalis/dock_server/cmd/dock_server/schema/dbutil"
 	"github.com/andreas-kokkalis/dock_server/pkg/config"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -20,38 +19,64 @@ var (
 	Env           string
 	vEnv          = regexp.MustCompile(`^(local)`)
 	errInvalidEnv = errors.New("Allowed env values are [local]")
+
+	// ScriptDir flag indicates the path where the database scripts are located.
+	ScriptDir string
 )
 
-// Create command starts the HTTP API server
-var Create = func(cmd *cobra.Command, args []string) (err error) {
+func initConf() (c *config.Config, err error) {
 	if !vEnv.MatchString(Env) {
-		return errInvalidEnv
+		return nil, errInvalidEnv
 	}
 
 	// Initialize the configuration manager
-	var c *config.Config
 	if c, err = config.NewConfig(ConfigDir, Env); err != nil {
-		return err
+		return nil, err
 	}
-
-	// Initialize Postgres storage
-	var db *store.DB
-	if db, err = store.NewDB(c.GetPGConnectionString()); err != nil {
-		return errors.Wrap(err, "Unable to connect to the database")
-	}
-
-	return migrateData(db)
+	return c, nil
 }
 
-func migrateData(db *store.DB) error {
-	// Create database schema
-	_ = gqt.Add("templates/pgsql", "*.pgsql")
-	if _, err := db.Query(gqt.Get("createSchema")); err != nil {
+// Create command creates the database schema
+var Create = func(cmd *cobra.Command, args []string) (err error) {
+
+	c, err := initConf()
+	if err != nil {
 		return err
 	}
-	// Insert Data
-	if _, err := db.Query(gqt.Get("migrateData")); err != nil {
+	// Initialize Postgres storage
+	dbm, err := dbutil.NewDBManager(c.GetPGConnectionString(), ScriptDir)
+	if err != nil {
+		return errors.Wrap(err, "Unable to connect to the database")
+	}
+	return dbm.CreateSchema()
+}
+
+// Drop command drops the database schema
+var Drop = func(cmd *cobra.Command, args []string) (err error) {
+
+	c, err := initConf()
+	if err != nil {
 		return err
 	}
-	return nil
+	// Initialize Postgres storage
+	dbm, err := dbutil.NewDBManager(c.GetPGConnectionString(), ScriptDir)
+	if err != nil {
+		return errors.Wrap(err, "Unable to connect to the database")
+	}
+	return dbm.DropSchema()
+}
+
+var Insert = func(cmd *cobra.Command, args []string) (err error) {
+
+	c, err := initConf()
+	if err != nil {
+		return err
+	}
+	// Initialize Postgres storage
+	dbm, err := dbutil.NewDBManager(c.GetPGConnectionString(), ScriptDir)
+	if err != nil {
+		return errors.Wrap(err, "Unable to connect to the database")
+	}
+	return dbm.InsertSchema()
+
 }

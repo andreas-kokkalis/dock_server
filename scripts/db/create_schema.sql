@@ -1,5 +1,3 @@
-{{define "createSchema"}}
-BEGIN;
 CREATE TYPE enum_admin_status AS ENUM('active', 'deleted');
 CREATE TABLE admins(
     id SERIAL PRIMARY KEY,
@@ -10,5 +8,3 @@ CREATE TABLE admins(
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMP WITHOUT TIME ZONE
 );
-COMMIT;
-{{end}}
