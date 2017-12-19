@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/andreas-kokkalis/dock_server/cmd/dock_server/schema/dbutil"
-	"github.com/andreas-kokkalis/dock_server/pkg/drivers/db"
+	"github.com/andreas-kokkalis/dock_server/pkg/drivers/postgres"
 	"github.com/andreas-kokkalis/dock_server/pkg/drivers/redis/redismock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -15,12 +15,12 @@ import (
 
 type MockDB struct {
 	Mock sqlmock.Sqlmock
-	DB   *db.DB
+	DB   *postgres.DB
 }
 
 func newMockDB() *MockDB {
 	conn, mock, _ := sqlmock.New()
-	db := &db.DB{Conn: conn}
+	db := &postgres.DB{Conn: conn}
 	return &MockDB{mock, db}
 }
 
