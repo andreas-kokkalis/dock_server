@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/andreas-kokkalis/dock_server/cmd/dock_server/schema/dbutil"
-	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
 	"github.com/andreas-kokkalis/dock_server/pkg/cache/redismock"
+	"github.com/andreas-kokkalis/dock_server/pkg/db"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/stretchr/testify/assert"
@@ -15,12 +15,12 @@ import (
 
 type MockDB struct {
 	Mock sqlmock.Sqlmock
-	DB   *store.DB
+	DB   *db.DB
 }
 
 func newMockDB() *MockDB {
 	conn, mock, _ := sqlmock.New()
-	db := &store.DB{Conn: conn}
+	db := &db.DB{Conn: conn}
 	return &MockDB{mock, db}
 }
 

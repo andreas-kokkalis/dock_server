@@ -12,8 +12,8 @@ before_install:
 - sudo /etc/init.d/postgresql stop
 install:
 - go get -v -u github.com/stretchr/testify/assert
-- go get -u -v github.com/alecthomas/gometalinter
-- gometalinter --install
+# - go get -u -v github.com/alecthomas/gometalinter
+# - gometalinter --install
 - pip install --user future six
 before_script:
 - make vendor
