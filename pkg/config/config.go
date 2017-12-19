@@ -66,3 +66,8 @@ func (c *Config) GetDockerConfig() map[string]string {
 func (c *Config) GetAPIPorts() int {
 	return c.viper.GetInt("api.portnum")
 }
+
+// GetAPIServerPort returns the port to be used by the HTTP API server
+func (c *Config) GetAPIServerPort() string {
+	return fmt.Sprintf(":%d", c.viper.GetInt("api.port"))
+}

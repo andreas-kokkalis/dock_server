@@ -107,7 +107,7 @@ var Start = func(cmd *cobra.Command, args []string) (err error) {
 	myServer := &http.Server{
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
-		Addr:         ":8080",
+		Addr:         c.GetAPIServerPort(),
 		Handler:      router,
 	}
 	err = myServer.ListenAndServeTLS("conf/ssl/server.pem", "conf/ssl/server.key")

@@ -14,4 +14,5 @@ local:
     version: '1.25'
     repo: andreaskokkalis/dc
   api:
+    port: 8080
     portnum: '200'
