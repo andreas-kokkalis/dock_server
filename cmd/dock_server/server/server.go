@@ -13,7 +13,9 @@ import (
 	"github.com/andreas-kokkalis/dock_server/pkg/api/image"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/lti"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
+	"github.com/andreas-kokkalis/dock_server/pkg/cache"
 	"github.com/andreas-kokkalis/dock_server/pkg/config"
+	"github.com/andreas-kokkalis/dock_server/pkg/db"
 	"github.com/julienschmidt/httprouter"
 	"github.com/spf13/cobra"
 )
@@ -44,14 +46,14 @@ var Start = func(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	// Initialize Postgres storage
-	var db *store.DB
-	if db, err = store.NewDB(c.GetPGConnectionString()); err != nil {
+	var dbConn *db.DB
+	if dbConn, err = db.NewDB(c.GetPGConnectionString()); err != nil {
 		return errors.Wrap(err, "Unable to connect to the database")
 	}
 
 	// Initialize Redis storage
-	var redis *store.Redis
-	if redis, err = store.NewRedisClient(c.GetRedisConfig()); err != nil {
+	var redis cache.Redis
+	if redis, err = cache.NewRedisClient(c.GetRedisConfig()); err != nil {
 		return errors.Wrap(err, "Unable to connect to redis")
 	}
 	// Initialize Redis repository
@@ -75,18 +77,18 @@ var Start = func(cmd *cobra.Command, args []string) (err error) {
 	router := httprouter.New()
 
 	// Auth Service
-	authService := auth.NewService(db, redisRepository)
+	authService := auth.NewService(dbConn, redisRepository)
 	router.GET("/v0/admin/logout", auth.AdminLogout(authService))
 	router.POST("/v0/admin/login", auth.AdminLogin(authService))
 
 	// Image service
-	imageService := image.NewService(db, redisRepository, dockerRepository)
+	imageService := image.NewService(dbConn, redisRepository, dockerRepository)
 	router.GET("/v0/admin/images", auth.SessionAuth(authService, image.ListImages(imageService)))
 	router.GET("/v0/admin/images/history/:id", auth.SessionAuth(authService, image.GetImageHistory(imageService)))
 	router.DELETE("/v0/admin/images/delete/:id", auth.SessionAuth(authService, image.RemoveImage(imageService)))
 
 	// Container service
-	containerService := container.NewService(db, redisRepository, dockerRepository, mapper)
+	containerService := container.NewService(dbConn, redisRepository, dockerRepository, mapper)
 	router.POST("/v0/admin/containers/run/:id", auth.SessionAuth(authService, container.AdminRunContainer(containerService)))
 	router.DELETE("/v0/admin/containers/kill/:id", auth.SessionAuth(authService, container.AdminKillContainer(containerService)))
 	router.POST("/v0/admin/containers/commit/:id", auth.SessionAuth(authService, container.CommitContainer(containerService)))
@@ -94,7 +96,7 @@ var Start = func(cmd *cobra.Command, args []string) (err error) {
 	router.GET("/v0/admin/containers/list/:status", auth.SessionAuth(authService, container.GetContainers(containerService)))
 
 	// LTI service
-	ltiService := lti.NewService(db, redisRepository, dockerRepository, mapper)
+	ltiService := lti.NewService(dbConn, redisRepository, dockerRepository, mapper)
 	router.POST("/v0/lti/launch/:id", auth.OAuth(authService, lti.Launch(ltiService)))
 
 	/****************

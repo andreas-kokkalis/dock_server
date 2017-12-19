@@ -48,3 +48,10 @@ post-test:
 tests: pre-test
 	@go test -v --cover $(shell go list ./... ) | sed ''/PASS/s//$(shell printf "\033[32mPASS\033[0m")/'' | sed ''/FAIL/s//$(shell printf "\033[31mFAIL\033[0m")/''
 	make post-test
+
+#########################
+# Update mock functions #
+#########################
+mock:
+	go get github.com/matryer/moq
+	go generate pkg/cache/redis.go

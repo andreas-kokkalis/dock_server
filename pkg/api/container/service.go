@@ -11,19 +11,20 @@ import (
 	"github.com/andreas-kokkalis/dock_server/pkg/api"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/docker"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
+	"github.com/andreas-kokkalis/dock_server/pkg/db"
 	"github.com/julienschmidt/httprouter"
 )
 
 // Service for image
 type Service struct {
-	db     *store.DB
+	db     *db.DB
 	redis  *store.RedisRepo
 	docker *docker.Repo
 	mapper *docker.PortMapper
 }
 
 // NewService creates a new Image Service
-func NewService(db *store.DB, redis *store.RedisRepo, docker *docker.Repo, mapper *docker.PortMapper) Service {
+func NewService(db *db.DB, redis *store.RedisRepo, docker *docker.Repo, mapper *docker.PortMapper) Service {
 	return Service{db, redis, docker, mapper}
 }
 

@@ -5,7 +5,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
+	"github.com/andreas-kokkalis/dock_server/pkg/db"
 	"github.com/pkg/errors"
 )
 
@@ -19,18 +19,18 @@ const (
 // DBManager models the interaction with the database schema for integration tests.
 type DBManager struct {
 	ScriptPath string
-	DB         *store.DB
+	DB         *db.DB
 }
 
 // NewDBManager initializes a DBManager struct
 func NewDBManager(connectionString, topDir string) (*DBManager, error) {
-	db, err := store.NewDB(connectionString)
+	dbConn, err := db.NewDB(connectionString)
 	if err != nil {
 		return nil, err
 	}
 	return &DBManager{
 		ScriptPath: topDir,
-		DB:         db,
+		DB:         dbConn,
 	}, nil
 }
 

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
+	"github.com/andreas-kokkalis/dock_server/pkg/db"
 	"github.com/stretchr/testify/assert"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -16,13 +16,13 @@ var (
 
 type MockDB struct {
 	Mock sqlmock.Sqlmock
-	DB   *store.DB
+	DB   *db.DB
 }
 
 func newMockDB() *MockDB {
 	conn, mock, _ := sqlmock.New()
-	db := &store.DB{Conn: conn}
-	return &MockDB{mock, db}
+	dbConn := &db.DB{Conn: conn}
+	return &MockDB{mock, dbConn}
 }
 
 func (m *MockDB) CloseDB() {

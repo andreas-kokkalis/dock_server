@@ -7,6 +7,7 @@ import (
 	"github.com/andreas-kokkalis/dock_server/cmd/dock_server/schema/dbutil"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/docker"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
+	"github.com/andreas-kokkalis/dock_server/pkg/cache"
 	"github.com/andreas-kokkalis/dock_server/pkg/config"
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
@@ -32,7 +33,7 @@ type Spec struct {
 	DBManager *dbutil.DBManager
 
 	// Redis
-	Redis     store.RedisClient
+	Redis     cache.Redis
 	RedisRepo *store.RedisRepo
 
 	// Docker
@@ -97,7 +98,7 @@ func (s *Spec) RestoreDB() func() {
 // establishes redis connection
 func (s *Spec) InitRedisConnection() func() {
 	return func() {
-		redis, err := store.NewRedisClient(s.Config.GetRedisConfig())
+		redis, err := cache.NewRedisClient(s.Config.GetRedisConfig())
 		gomega.Expect(err).To(gomega.BeNil(), "Connect Redis")
 		s.Redis = redis
 		s.RedisRepo = store.NewRedisRepo(s.Redis)

@@ -1,4 +1,4 @@
-package store
+package cache
 
 import (
 	"net"
@@ -10,10 +10,6 @@ import (
 )
 
 func TestInitRedisClient(t *testing.T) {
-	t.Parallel()
-	assert := assert.New(t)
-
-	testName := "NewRedisClient"
 	redis, err := NewRedisClient(
 		&redis.Options{
 			Addr: ":1234",
@@ -22,6 +18,6 @@ func TestInitRedisClient(t *testing.T) {
 			},
 			DB: 0,
 		})
-	assert.Error(err, testName)
-	assert.Nil(redis.cli, testName)
+	assert.Error(t, err)
+	assert.Nil(t, redis)
 }

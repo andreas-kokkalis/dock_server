@@ -6,7 +6,7 @@ import (
 
 	"github.com/andreas-kokkalis/dock_server/cmd/dock_server/schema/dbutil"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
-	"github.com/andreas-kokkalis/dock_server/pkg/api/store/mock"
+	"github.com/andreas-kokkalis/dock_server/pkg/cache/redismock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/stretchr/testify/assert"
@@ -85,9 +85,7 @@ var _ = Describe("Test methods of Spec struct", func() {
 			s := NewSpec(topDir)
 			Describe("init config", s.InitConfig())
 
-			m := mock.NewRedis()
-			m.CloseFn = func() error { return nil }
-			s.Redis = m
+			s.Redis = redismock.NewRedisMock().WithClose(nil)
 			Describe("close redis connection", s.CloseRedisConnection())
 		})
 
