@@ -5,7 +5,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/andreas-kokkalis/dock_server/pkg/drivers/db"
+	"github.com/andreas-kokkalis/dock_server/pkg/drivers/postgres"
 	"github.com/pkg/errors"
 )
 
@@ -19,12 +19,12 @@ const (
 // DBManager models the interaction with the database schema for integration tests.
 type DBManager struct {
 	ScriptPath string
-	DB         *db.DB
+	DB         *postgres.DB
 }
 
 // NewDBManager initializes a DBManager struct
 func NewDBManager(connectionString, topDir string) (*DBManager, error) {
-	dbConn, err := db.NewDB(connectionString)
+	dbConn, err := postgres.NewDB(connectionString)
 	if err != nil {
 		return nil, err
 	}

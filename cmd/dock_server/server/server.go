@@ -14,7 +14,7 @@ import (
 	"github.com/andreas-kokkalis/dock_server/pkg/api/lti"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
 	"github.com/andreas-kokkalis/dock_server/pkg/config"
-	"github.com/andreas-kokkalis/dock_server/pkg/drivers/db"
+	"github.com/andreas-kokkalis/dock_server/pkg/drivers/postgres"
 	"github.com/andreas-kokkalis/dock_server/pkg/drivers/redis"
 	"github.com/julienschmidt/httprouter"
 	"github.com/spf13/cobra"
@@ -46,8 +46,8 @@ var Start = func(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	// Initialize Postgres storage
-	var dbConn *db.DB
-	if dbConn, err = db.NewDB(c.GetPGConnectionString()); err != nil {
+	var dbConn *postgres.DB
+	if dbConn, err = postgres.NewDB(c.GetPGConnectionString()); err != nil {
 		return errors.Wrap(err, "Unable to connect to the database")
 	}
 

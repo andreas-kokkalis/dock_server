@@ -1,4 +1,4 @@
-package db
+package postgres
 
 import (
 	"testing"
@@ -6,6 +6,7 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 
 	"github.com/andreas-kokkalis/dock_server/pkg/config"
+	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -31,8 +32,8 @@ func TestQuery(t *testing.T) {
 
 	// Mock the SQL connection
 	conn, mock, _ := sqlmock.New()
+	db := &DB{Conn: sqlx.NewDb(conn, "sqlmock")}
 	mock.MatchExpectationsInOrder(true)
-	db := &DB{Conn: conn}
 	defer func() { _ = db.Conn.Close() }()
 
 	testName := "Query()"
@@ -56,8 +57,8 @@ func TestQueryRow(t *testing.T) {
 
 	// Mock the SQL connection
 	conn, mock, _ := sqlmock.New()
+	db := &DB{Conn: sqlx.NewDb(conn, "sqlmock")}
 	mock.MatchExpectationsInOrder(true)
-	db := &DB{Conn: conn}
 	defer func() { _ = db.Conn.Close() }()
 
 	rows := sqlmock.NewRows([]string{"name"}).AddRow("Docker")
