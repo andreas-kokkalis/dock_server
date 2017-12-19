@@ -3,6 +3,7 @@ package postgres
 import (
 	"database/sql"
 
+	"github.com/jmoiron/sqlx"
 	// postgres dialect
 	_ "github.com/lib/pq"
 )
@@ -13,12 +14,12 @@ const (
 
 // DB ...
 type DB struct {
-	Conn *sql.DB
+	Conn *sqlx.DB
 }
 
 // NewDB ...
 func NewDB(connectionString string) (*DB, error) {
-	conn, err := sql.Open(driver, connectionString)
+	conn, err := sqlx.Open(driver, connectionString)
 	if err != nil {
 		return &DB{conn}, err
 	}
@@ -38,5 +39,6 @@ func (db *DB) QueryRow(query string, args ...interface{}) *sql.Row {
 	// TODO: there is a problem with row returned.
 	var row *sql.Row
 	row = db.Conn.QueryRow(query, args...)
+
 	return row
 }

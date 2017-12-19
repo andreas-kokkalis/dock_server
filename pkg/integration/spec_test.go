@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/andreas-kokkalis/dock_server/cmd/dock_server/schema/dbutil"
-	"github.com/andreas-kokkalis/dock_server/pkg/drivers/postgres"
+	"github.com/andreas-kokkalis/dock_server/pkg/drivers/postgres/postgresmock"
 	"github.com/andreas-kokkalis/dock_server/pkg/drivers/redis/redismock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -13,22 +13,7 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-type MockDB struct {
-	Mock sqlmock.Sqlmock
-	DB   *postgres.DB
-}
-
-func newMockDB() *MockDB {
-	conn, mock, _ := sqlmock.New()
-	db := &postgres.DB{Conn: conn}
-	return &MockDB{mock, db}
-}
-
-func (m *MockDB) CloseDB() {
-	_ = m.DB.Conn.Close()
-}
-
-func newMockManager(m *MockDB) *dbutil.DBManager {
+func newMockManager(m *postgresmock.MockDB) *dbutil.DBManager {
 	return &dbutil.DBManager{
 		DB:         m.DB,
 		ScriptPath: path.Join(topDir, scriptDir),
@@ -51,7 +36,7 @@ var _ = Describe("Test methods of Spec struct", func() {
 			s := NewSpec(topDir)
 			Describe("init config", s.InitConfig())
 
-			m := newMockDB()
+			m := postgresmock.NewMockDB()
 			dbm := newMockManager(m)
 			s.DBManager = dbm
 
@@ -64,7 +49,7 @@ var _ = Describe("Test methods of Spec struct", func() {
 			s := NewSpec(topDir)
 			Describe("init config", s.InitConfig())
 
-			m := newMockDB()
+			m := postgresmock.NewMockDB()
 			dbm := newMockManager(m)
 			s.DBManager = dbm
 
