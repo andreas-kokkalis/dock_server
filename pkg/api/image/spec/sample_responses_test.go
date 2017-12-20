@@ -1,3 +1,22 @@
+package image_test
+
+var imageHistoryGood = `
+{
+  "data": [
+    {
+      "Id": "83364c85cafc",
+      "CreatedAt": "(.+)",
+      "CreatedBy": "",
+      "RepoTags": [
+        "andreaskokkalis/dc:0.0_seed"
+      ],
+      "Size": 0,
+      "Comment": ""
+    }
+  ]
+}
+`
+var imageListGood = `
 {
   "data": [
     {
@@ -37,3 +56,4 @@
     }
   ]
 }
+`

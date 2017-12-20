@@ -4,8 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
-	"os"
-	"path"
 	"testing"
 
 	"github.com/andreas-kokkalis/dock_server/pkg/api"
@@ -23,8 +21,6 @@ var (
 
 func init() {
 	flag.StringVar(&dir, "dir", "../../../../", "dir specifies the relative to the current package position of the top level directory")
-	pwd, _ := os.Getwd()
-	testDir = path.Join(pwd, integration.TestDataDir)
 }
 
 func TestImageEndpoints(t *testing.T) {
@@ -33,8 +29,7 @@ func TestImageEndpoints(t *testing.T) {
 }
 
 var (
-	spec   *integration.Spec
-	router *httprouter.Router
+	spec *integration.Spec
 )
 
 var _ = BeforeSuite(func() {
@@ -45,12 +40,14 @@ var _ = BeforeSuite(func() {
 	Describe("Connect to redis", spec.InitRedisConnection())
 	Describe("Init docker repo", spec.InitDockerRepo())
 
-	router = httprouter.New()
+	router := httprouter.New()
 	// Image service
 	imageService := image.NewService(spec.DBManager.DB, spec.RedisRepo, spec.DockerRepo)
 	router.GET("/v0/admin/images", image.ListImages(imageService))
 	router.GET("/v0/admin/images/history/:id", image.GetImageHistory(imageService))
 	router.DELETE("/v0/admin/images/delete/:id", image.RemoveImage(imageService))
+
+	spec.Handler = router
 })
 
 var _ = AfterSuite(func() {
@@ -60,15 +57,10 @@ var _ = AfterSuite(func() {
 var _ = Describe("Image Suite", func() {
 	var img *api.Img
 	It("Should list images", func() {
-		request := integration.Request{
-			Method: http.MethodGet,
-			Target: "/v0/admin/images",
-		}
-		response := integration.Response{
-			ExpectedCode: http.StatusOK,
-			ExpectedBody: path.Join(testDir, "image_list_good.json"),
-		}
-		integration.EvalAPIResponse(router, request, &response, spec.TopDir, spec.Log)
+		request := integration.NewRequest(http.MethodGet, "/v0/admin/images", nil)
+		response := integration.NewResponse(http.StatusOK, imageListGood)
+		spec.AssertAPICall(request, response)
+
 		type res struct {
 			Data []api.Img
 		}
@@ -77,14 +69,8 @@ var _ = Describe("Image Suite", func() {
 		img = &result.Data[len(result.Data)-1]
 	})
 	It("Should get image history", func() {
-		request := integration.Request{
-			Method: http.MethodGet,
-			Target: fmt.Sprintf("/v0/admin/images/history/%s", img.ID),
-		}
-		response := integration.Response{
-			ExpectedCode: http.StatusOK,
-			ExpectedBody: path.Join(testDir, "image_history_good.json"),
-		}
-		integration.EvalAPIResponse(router, request, &response, spec.TopDir, spec.Log)
+		request := integration.NewRequest(http.MethodGet, fmt.Sprintf("/v0/admin/images/history/%s", img.ID), nil)
+		response := integration.NewResponse(http.StatusOK, imageHistoryGood)
+		spec.AssertAPICall(request, response)
 	})
 })

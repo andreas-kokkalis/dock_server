@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
 	"strings"
 )
 
@@ -20,6 +21,21 @@ var (
 	ErrFileNotFound = errors.New("Cannot open file")
 )
 
+// writeTempFile accepts a string content and writes it to a temporary file.
+// It is the callers responsibility to remove the file from the os temp directory.
+func writeTempFile(filePrefix string, content string) (f *os.File, err error) {
+	if f, err = ioutil.TempFile(os.TempDir(), filePrefix); err != nil {
+		return nil, err
+	}
+	if _, err = f.WriteString(content); err != nil {
+		return nil, err
+	}
+	if err = f.Close(); err != nil {
+		return nil, err
+	}
+	return f, nil
+}
+
 // CompareRegexJSON invokes the jsondiff.py command line tool to compare json files that contain regex
 // expected parameter is the filePath of the expected JSON model.
 // actual parameter is the string output as it is usually returned by the API
@@ -28,36 +44,37 @@ var (
 // Use this function only when you need to compare against a model that contains regular expressions for attribute values.
 func CompareRegexJSON(expected string, actual string, topDir string) (string, error) {
 
-	// Check whether the expected file exists
-	if _, err := os.Stat(expected); os.IsNotExist(err) {
-		return "", errors.New("Cannot find expected JSON model file: " + expected)
-	}
-
-	// Create the actual file
-	f, err := ioutil.TempFile(os.TempDir(), "tmp_integration")
-	if err != nil {
+	var fActual, fExpected *os.File
+	var err error
+	if fActual, err = writeTempFile("tmp_actual", actual); err != nil {
 		return "", err
 	}
-
-	if _, err = f.WriteString(actual); err != nil {
+	if fExpected, err = writeTempFile("tmp_expected", expected); err != nil {
 		return "", err
 	}
-
-	if err = f.Close(); err != nil {
-		return "", err
-	}
-
 	defer func() {
-		err = os.Remove(f.Name())
+		_ = os.Remove(fActual.Name())
+		_ = os.Remove(fExpected.Name())
 	}()
 
-	script := topDir + diffExecutable
+	script := path.Join(topDir, diffExecutable)
 	compareCmd := exec.Command(
 		"python",
 		script,
 		"--use_model",
-		f.Name(),
-		expected)
+		fActual.Name(),
+		fExpected.Name())
+	diffCmd := exec.Command(
+		"python",
+		script,
+		"--diff",
+		"--use_model",
+		fActual.Name(),
+		fExpected.Name())
+	return runJSONDiff(compareCmd, diffCmd)
+}
+
+func runJSONDiff(compareCmd *exec.Cmd, diffCmd *exec.Cmd) (string, error) {
 	out, err := compareCmd.CombinedOutput()
 	if err != nil {
 		return "", err
@@ -67,13 +84,6 @@ func CompareRegexJSON(expected string, actual string, topDir string) (string, er
 		return "", nil
 	} else if strings.Contains(stringOut, "jsondiff - INFO - False") {
 		// does not match compute diff and return
-		diffCmd := exec.Command(
-			"python",
-			script,
-			"--diff",
-			"--use_model",
-			f.Name(),
-			expected)
 		out, err = diffCmd.CombinedOutput()
 		if err != nil {
 			return "", err
@@ -91,55 +101,30 @@ func CompareRegexJSON(expected string, actual string, topDir string) (string, er
 // Use this function only when you need to perform a plain diff of JSON objects.
 func CompareJSON(expected string, actual string, topDir string) (string, error) {
 
-	// Check whether the expected file exists
-	if _, err := os.Stat(expected); os.IsNotExist(err) {
-		return "", errors.New("Cannot find expected JSON model file: " + expected)
-	}
-
-	f, err := ioutil.TempFile(os.TempDir(), "tmp_integration")
-	if err != nil {
+	var fActual, fExpected *os.File
+	var err error
+	if fActual, err = writeTempFile("tmp_actual", actual); err != nil {
 		return "", err
 	}
-
-	if _, err = f.WriteString(actual); err != nil {
+	if fExpected, err = writeTempFile("tmp_expected", expected); err != nil {
 		return "", err
 	}
-
-	if err = f.Close(); err != nil {
-		return "", err
-	}
-
 	defer func() {
-		err = os.Remove(f.Name())
+		_ = os.Remove(fActual.Name())
+		_ = os.Remove(fExpected.Name())
 	}()
 
-	script := topDir + diffExecutable
+	script := path.Join(topDir, diffExecutable)
 	compareCmd := exec.Command(
 		"python",
 		script,
-		f.Name(),
-		expected)
-	out, err := compareCmd.CombinedOutput()
-	if err != nil {
-		return "", err
-	}
-	stringOut := string(out)
-	if strings.Contains(stringOut, "jsondiff - INFO - True") {
-		return "", nil
-	} else if strings.Contains(stringOut, "jsondiff - INFO - False") {
-		// does not match compute diff and return
-		diffCmd := exec.Command(
-			"python",
-			script,
-			"--diff",
-			f.Name(),
-			expected)
-		out, err = diffCmd.CombinedOutput()
-		if err != nil {
-			return "", err
-		}
-		return string(out), nil
-	} else {
-		return "", errors.New("jsondiff returned unexpected output in compare mode")
-	}
+		fActual.Name(),
+		fExpected.Name())
+	diffCmd := exec.Command(
+		"python",
+		script,
+		"--diff",
+		fActual.Name(),
+		fExpected.Name())
+	return runJSONDiff(compareCmd, diffCmd)
 }

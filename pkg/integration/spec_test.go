@@ -1,12 +1,16 @@
 package integration
 
 import (
+	"encoding/json"
+	"net/http"
 	"path"
 	"testing"
 
+	"github.com/andreas-kokkalis/dock_server/pkg/api"
 	"github.com/andreas-kokkalis/dock_server/pkg/drivers/postgres/postgresmock"
 	"github.com/andreas-kokkalis/dock_server/pkg/drivers/redis/redismock"
 	"github.com/andreas-kokkalis/dock_server/pkg/util/dbutil"
+	"github.com/julienschmidt/httprouter"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/stretchr/testify/assert"
@@ -23,6 +27,38 @@ func newMockManager(m *postgresmock.MockDB) *dbutil.DBManager {
 func TestNewSpec(t *testing.T) {
 	s := NewSpec(topDir)
 	assert.Equal(t, s.TopDir, topDir)
+}
+
+var expectedJSONBody = `
+{
+  "data": {"foo":"bar"}
+}
+`
+
+func TestAssertAPICall(t *testing.T) {
+	RegisterFailHandler(Fail)
+	GinkgoRecover()
+
+	s := NewSpec(topDir)
+	router := httprouter.New()
+
+	router.GET("/", func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+		w.WriteHeader(200)
+
+		type SampleData struct {
+			Foo string `json:"foo"`
+		}
+
+		wb, _ := json.Marshal(api.Response{Data: SampleData{"bar"}})
+		w.Write(wb)
+	})
+
+	s.Handler = router
+
+	req := NewRequest(http.MethodGet, "/", nil)
+	res := NewResponse(200, expectedJSONBody)
+
+	s.AssertAPICall(req, res)
 }
 
 var _ = Describe("Test methods of Spec struct", func() {
