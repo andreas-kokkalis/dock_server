@@ -1,9 +1,12 @@
 package integration
 
 import (
+	"encoding/json"
 	"log"
+	"net/http"
 	"path"
 
+	"github.com/andreas-kokkalis/dock_server/pkg/api"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/docker"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
 	"github.com/andreas-kokkalis/dock_server/pkg/config"
@@ -17,8 +20,6 @@ const (
 	environment = "local"
 	confDir     = "conf"
 	scriptDir   = "scripts/db"
-	// TestDataDir is hardconfigured to be named testdata within each spec directory
-	TestDataDir = "testdata"
 )
 
 // Spec struct is used to hold information between different suites of integration tests
@@ -42,6 +43,9 @@ type Spec struct {
 
 	// Logger
 	Log *log.Logger
+
+	// Handler
+	Handler http.Handler
 }
 
 // NewSpec initializes a spec struct with the given values
@@ -120,4 +124,26 @@ func (s *Spec) InitDockerRepo() func() {
 		s.DockerCLI = dockerClient
 		s.DockerRepo = docker.NewRepo(dockerClient, s.Config.GetDockerConfig())
 	}
+}
+
+// AssertAPICall performs an HTTP request, records the output and asserts if it matches against the expected response code and body.
+func (s *Spec) AssertAPICall(request *Request, response *Response) {
+
+	// Perform HTTP Request
+	s.Handler.ServeHTTP(response.recorder, request.HTTPRequest)
+
+	// Log request and response to stdout
+	s.Log.Printf("\n------------------\n%s\n------------------\n", request.pretty())
+	s.Log.Printf("\n------------------\n%s\n------------------\n", response.pretty())
+
+	// Perform assertions
+	gomega.Expect(response.Code()).To(gomega.Equal(response.expectedCode), "status codes do not match")
+
+	var actualResponse api.Response
+	err := json.Unmarshal(response.recorder.Body.Bytes(), &actualResponse)
+	gomega.Expect(err).To(gomega.BeNil())
+
+	diff, err := CompareRegexJSON(response.expectedBody, response.ToString(), s.TopDir)
+	gomega.Expect(err).To(gomega.BeNil(), "Diff tool returned error")
+	gomega.Expect(diff).To(gomega.Equal(""), "Diff is not empty")
 }
