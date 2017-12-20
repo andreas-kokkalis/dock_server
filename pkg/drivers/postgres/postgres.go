@@ -1,9 +1,8 @@
 package postgres
 
 import (
-	"database/sql"
-
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 	// postgres dialect
 	_ "github.com/lib/pq"
 )
@@ -28,17 +27,37 @@ func NewDB(connectionString string) (*DB, error) {
 
 }
 
-// Query executes an sql query and returns *sql.Rows
-func (db *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
-	rows, err := db.Conn.Query(query, args...)
-	return rows, err
-}
+//nolint
+const (
+	ErrNamedQuery = "error while executing named query"
+	ErrScan       = "error scaning result to data structure"
+	ErrRow        = "error occured while iterating over results"
+)
 
-// QueryRow executes an asql query and returns a single row
-func (db *DB) QueryRow(query string, args ...interface{}) *sql.Row {
-	// TODO: there is a problem with row returned.
-	var row *sql.Row
-	row = db.Conn.QueryRow(query, args...)
+var (
+	// ErrNoResult is returned when retrieving at least a row was expected but the query returned no results
+	ErrNoResult = errors.New("no rows returned when expecting results")
+)
 
-	return row
+// nolint
+func (db *DB) QueryRow(query string, val, dest interface{}) error {
+	row, err := db.Conn.NamedQuery(query, val)
+	if err != nil {
+		return errors.Wrap(err, ErrNamedQuery)
+	}
+
+	defer row.Close() // nolint: errcheck
+
+	if row.Next() {
+		if err = row.StructScan(dest); err != nil {
+			return errors.Wrap(err, ErrScan)
+		}
+	} else {
+		return ErrNoResult
+	}
+
+	if err = row.Err(); err != nil {
+		return errors.Wrap(err, ErrRow)
+	}
+	return nil
 }

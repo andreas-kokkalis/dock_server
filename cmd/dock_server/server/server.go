@@ -77,7 +77,8 @@ var Start = func(cmd *cobra.Command, args []string) (err error) {
 	router := httprouter.New()
 
 	// Auth Service
-	authService := auth.NewService(dbConn, redisRepository)
+	adminRepo := store.NewDBAdminRepo(dbConn)
+	authService := auth.NewService(adminRepo, redisRepository)
 	router.GET("/v0/admin/logout", auth.AdminLogout(authService))
 	router.POST("/v0/admin/login", auth.AdminLogin(authService))
 
