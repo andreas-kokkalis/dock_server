@@ -18,12 +18,12 @@ import (
 type Service struct {
 	db     *postgres.DB
 	redis  *store.RedisRepo
-	docker *docker.Repo
+	docker docker.DockerRepository
 	mapper *docker.PortMapper
 }
 
 // NewService creates a new Image Service
-func NewService(db *postgres.DB, redis *store.RedisRepo, docker *docker.Repo, mapper *docker.PortMapper) Service {
+func NewService(db *postgres.DB, redis *store.RedisRepo, docker docker.DockerRepository, mapper *docker.PortMapper) Service {
 	return Service{db, redis, docker, mapper}
 }
 
@@ -89,7 +89,7 @@ func Launch(s Service) httprouter.Handle {
 				log.Printf("[CreateContainer]: No ports were available to reserve.\n")
 				_ = t.Execute(res, Resp{Error: "there are no resources available in the system"})
 			}
-			cfg, err = s.docker.RunContainer(imageID, username, password, port)
+			cfg, err = s.docker.ContainerRun(imageID, username, password, port)
 			if err != nil {
 				fmt.Println(err.Error())
 				s.mapper.Remove(port)

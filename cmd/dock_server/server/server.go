@@ -68,7 +68,7 @@ var Start = func(cmd *cobra.Command, args []string) (err error) {
 		return err
 	}
 	// Initialize docker repository
-	dockerRepository := docker.NewRepo(dockerClient, c.GetDockerConfig())
+	dockerRepository := docker.NewDockerRepository(dockerClient, c.GetDockerConfig())
 
 	// Start a goroute that will run the PeriodicChecker
 	go docker.PeriodicChecker(dockerRepository, mapper, redisRepository)

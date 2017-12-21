@@ -39,7 +39,7 @@ type Spec struct {
 
 	// Docker
 	DockerCLI  *docker.APIClient
-	DockerRepo *docker.Repo
+	DockerRepo docker.DockerRepository
 
 	// Logger
 	Log *log.Logger
@@ -122,7 +122,7 @@ func (s *Spec) InitDockerRepo() func() {
 		dockerClient, err := docker.NewAPIClient(s.Config.GetDockerConfig())
 		gomega.Expect(err).To(gomega.BeNil(), "Init docker api client")
 		s.DockerCLI = dockerClient
-		s.DockerRepo = docker.NewRepo(dockerClient, s.Config.GetDockerConfig())
+		s.DockerRepo = docker.NewDockerRepository(dockerClient, s.Config.GetDockerConfig())
 	}
 }
 

@@ -19,12 +19,12 @@ import (
 type Service struct {
 	db     *postgres.DB
 	redis  *store.RedisRepo
-	docker *docker.Repo
+	docker docker.DockerRepository
 	mapper *docker.PortMapper
 }
 
 // NewService creates a new Image Service
-func NewService(db *postgres.DB, redis *store.RedisRepo, docker *docker.Repo, mapper *docker.PortMapper) Service {
+func NewService(db *postgres.DB, redis *store.RedisRepo, docker docker.DockerRepository, mapper *docker.PortMapper) Service {
 	return Service{db, redis, docker, mapper}
 }
 
@@ -94,7 +94,7 @@ func AdminRunContainer(s Service) httprouter.Handle {
 				response.WriteError(res, http.StatusInternalServerError, "there are no resources available in the system")
 			}
 			// Run the container and get the url
-			cfg, err = s.docker.RunContainer(imageID, username, password, port)
+			cfg, err = s.docker.ContainerRun(imageID, username, password, port)
 			if err != nil {
 				s.mapper.Remove(port)
 				response.WriteError(res, http.StatusInternalServerError, err.Error())

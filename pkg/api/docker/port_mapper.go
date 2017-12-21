@@ -110,7 +110,7 @@ func (pm *PortMapper) fixup(ports map[int]string) {
 // PeriodicChecker checks every X seconds for inconsistencies
 // First it gets all used ports by running containers, and syncs the concurrent ports map
 // Then it checks if redis configurations exists for the corresponding ports. If such configurations are absent, it will request to kill the containers
-func PeriodicChecker(docker *Repo, pm *PortMapper, redis *store.RedisRepo) {
+func PeriodicChecker(docker DockerRepository, pm *PortMapper, redis *store.RedisRepo) {
 
 	for {
 		time.Sleep(time.Second * 3)
