@@ -1,4 +1,4 @@
-package docker
+package portmapper
 
 import (
 	"errors"
@@ -17,8 +17,6 @@ const startPort int = 4200
 // A resource that is free should be part of the data structure,
 // A resource that is used, should be removed from the data structure
 // TODO: investigate if this is feasible using the chan go idiom
-
-// TODO: Possibly make portResources part of PortMapper
 
 // PortMapper ...
 type PortMapper struct {

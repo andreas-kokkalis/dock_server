@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/andreas-kokkalis/dock_server/pkg/api"
-	"github.com/andreas-kokkalis/dock_server/pkg/api/docker"
+	"github.com/andreas-kokkalis/dock_server/pkg/api/portmapper"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
 	"github.com/andreas-kokkalis/dock_server/pkg/drivers/postgres"
 	"github.com/julienschmidt/httprouter"
@@ -19,11 +19,11 @@ type Service struct {
 	db     *postgres.DB
 	redis  *store.RedisRepo
 	docker store.DockerRepository
-	mapper *docker.PortMapper
+	mapper *portmapper.PortMapper
 }
 
 // NewService creates a new Image Service
-func NewService(db *postgres.DB, redis *store.RedisRepo, docker store.DockerRepository, mapper *docker.PortMapper) Service {
+func NewService(db *postgres.DB, redis *store.RedisRepo, docker store.DockerRepository, mapper *portmapper.PortMapper) Service {
 	return Service{db, redis, docker, mapper}
 }
 
