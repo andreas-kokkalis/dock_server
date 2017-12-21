@@ -71,14 +71,14 @@ func RemoveImage(s Service) httprouter.Handle {
 		}
 
 		// Check if there are running containers of that image
-		containers, _ := s.docker.ContainersByImageID(imageID)
+		containers, _ := s.docker.GetRunningContainersByImageID(imageID)
 		if len(containers) > 0 {
 			api.WriteErrorResponse(res, http.StatusBadRequest, ErrImageHasRunningContainers)
 			return
 		}
 
 		// Remove Image
-		err := s.docker.RemoveImage(imageID)
+		err := s.docker.ImageRemove(imageID)
 		if err != nil {
 			api.WriteErrorResponse(res, http.StatusInternalServerError, err.Error())
 			return

@@ -18,23 +18,18 @@ import (
 	"github.com/docker/go-connections/nat"
 )
 
-// DockerRepository models the interaction with Docker daemon
+// DockerRepository models the interaction with Docker daemon for the purposes of the dock_server API
 type DockerRepository interface {
-	ContainerCheckState(containerID string, state string) (bool, error)
 	ContainerGetUsedPorts() (map[int]string, error)
 	ContainerRemove(containerID string, port int) error
 	ContainerRun(imageID, username, password string, port int) (api.RunConfig, error)
-	ContainerCreate(imageID, password string, port int) (string, error)
-	ContainerStart(containerID string) error
 	ContainerCommit(comment, author, containerID, refTag string) error
-	GetContainers(status string) ([]api.Ctn, error)
+	ContainerList(status string) ([]api.Ctn, error)
 	ImageList() ([]api.Img, error)
-	ImageListRepositories() []string
-	ImageTagByID(imageID string) (string, error)
 	ImageHistory(imageID string) ([]api.ImgHistory, error)
-	RemoveImage(imageID string) error
-	GetTagByID(imageID string) (string, error)
-	ContainersByImageID(imageID string) ([]api.Ctn, error)
+	ImageRemove(imageID string) error
+	ImageGetTagByID(imageID string) (string, error)
+	GetRunningContainersByImageID(imageID string) ([]api.Ctn, error)
 }
 
 // DockerRepo ...
@@ -54,8 +49,8 @@ func NewDockerRepository(docker *dd.APIClient, dockerConfig map[string]string) D
 
 */
 
-// ContainerCheckState checks if container has the desired state
-func (d *DockerRepo) ContainerCheckState(containerID string, state string) (bool, error) {
+// containerCheckState checks if container has the desired state
+func (d *DockerRepo) containerCheckState(containerID string, state string) (bool, error) {
 
 	var inspect types.ContainerJSON
 	var err error
@@ -81,7 +76,7 @@ func (d *DockerRepo) ContainerGetUsedPorts() (ports map[int]string, err error) {
 	var containerListOptions types.ContainerListOptions
 
 	filterArgs := filters.NewArgs()
-	for _, imageRepo := range d.ImageListRepositories() {
+	for _, imageRepo := range d.imageListRepositories() {
 		filterArgs.Add("ancestor", imageRepo)
 	}
 	filterArgs.Add("status", "running")
@@ -140,13 +135,13 @@ func (d *DockerRepo) ContainerRemove(containerID string, port int) (err error) {
 // ContainerRun does something
 func (d *DockerRepo) ContainerRun(imageID, username, password string, port int) (cfg api.RunConfig, err error) {
 	// Create the container
-	id /*, port*/, err := d.ContainerCreate(imageID, password, port)
+	id /*, port*/, err := d.containerCreate(imageID, password, port)
 	if err != nil {
 		log.Printf("[RunContainer]: Error while creating: %v\n", err.Error())
 		return cfg, err
 	}
 	// Start the container
-	err = d.ContainerStart(id)
+	err = d.containerStart(id)
 	if err != nil {
 		log.Printf("[RunContainer]: Error while starting: %v\n", err.Error())
 		return cfg, err
@@ -162,14 +157,14 @@ func (d *DockerRepo) ContainerRun(imageID, username, password string, port int) 
 	return cfg, nil
 }
 
-// ContainerCreate creates a container based on
+// containerCreate creates a container based on
 // imageName and reference Tag,
 // and returns the containerID
-func (d *DockerRepo) ContainerCreate(imageID, password string, port int) (containerID string /*, port int*/, err error) {
+func (d *DockerRepo) containerCreate(imageID, password string, port int) (containerID string /*, port int*/, err error) {
 	// Set environment variables for shellinabox container
 	envVars := []string{"SIAB_PASSWORD=" + password, "SIAB_SUDO=true"}
 	// Get the imageTag
-	refTag, err := d.GetTagByID(imageID)
+	refTag, err := d.ImageGetTagByID(imageID)
 	if err != nil {
 		return containerID /*, port*/, err
 	}
@@ -215,8 +210,8 @@ func (d *DockerRepo) ContainerCreate(imageID, password string, port int) (contai
 	return body.ID[:12] /*, port*/, nil
 }
 
-// ContainerStart sends a request to start a container
-func (d *DockerRepo) ContainerStart(containerID string) error {
+// containerStart sends a request to start a container
+func (d *DockerRepo) containerStart(containerID string) error {
 
 	// Start container
 	err := d.docker.Cli.ContainerStart(context.Background(), containerID, types.ContainerStartOptions{})
@@ -227,7 +222,7 @@ func (d *DockerRepo) ContainerStart(containerID string) error {
 
 	// Check if container is running
 	var isRunning bool
-	isRunning, err = d.ContainerCheckState(containerID, "running")
+	isRunning, err = d.containerCheckState(containerID, "running")
 	if err != nil {
 		return err
 	}
@@ -254,10 +249,11 @@ func (d *DockerRepo) ContainerCommit(comment, author, containerID, refTag string
 	return nil
 }
 
-// GetContainers returns the list of containers. Use
+// ContainerList returns the list of containers. Use
 // type.ContainerListOptions to filter for state such as
 // status=(created,	restarting, running, paused, exited, dead)
-func (d *DockerRepo) GetContainers(status string) ([]api.Ctn, error) {
+// TODO: filter containers by base repository
+func (d *DockerRepo) ContainerList(status string) ([]api.Ctn, error) {
 	var containerList []api.Ctn
 
 	// If containers are filtered by status, prepare the ContainerListOptions
@@ -326,8 +322,8 @@ func (d *DockerRepo) ImageList() ([]api.Img, error) {
 	return imageList, nil
 }
 
-// ImageListRepositories returns the lsit of the dc repositories and tags
-func (d *DockerRepo) ImageListRepositories() (imageList []string) {
+// imageListRepositories returns the lsit of the dc repositories and tags
+func (d *DockerRepo) imageListRepositories() (imageList []string) {
 	images, err := d.docker.Cli.ImageList(context.Background(), types.ImageListOptions{})
 	if err != nil {
 		return imageList
@@ -344,9 +340,9 @@ func (d *DockerRepo) ImageListRepositories() (imageList []string) {
 	return imageList
 }
 
-// ImageTagByID returns an imageTag given and imageID:
+// imageTagByID returns an imageTag given and imageID:
 // 	performs an ImageList request, gathers all results and returns the tag of the given imageID
-func (d *DockerRepo) ImageTagByID(imageID string) (string, error) {
+func (d *DockerRepo) imageTagByID(imageID string) (string, error) {
 	images, err := d.docker.Cli.ImageList(context.Background(), types.ImageListOptions{})
 	if err != nil {
 		return "", err
@@ -382,11 +378,11 @@ func (d *DockerRepo) ImageHistory(imageID string) ([]api.ImgHistory, error) {
 	return res, nil
 }
 
-// RemoveImage removes an image
-func (d *DockerRepo) RemoveImage(imageID string) error {
+// ImageRemove removes an image
+func (d *DockerRepo) ImageRemove(imageID string) error {
 
 	options := types.ImageRemoveOptions{}
-	tag, _ := d.GetTagByID(imageID)
+	tag, _ := d.ImageGetTagByID(imageID)
 	imgDelete, err := d.docker.Cli.ImageRemove(context.Background(), d.imageRepo+":"+tag, options)
 	if err != nil {
 		fmt.Println(err)
@@ -398,9 +394,9 @@ func (d *DockerRepo) RemoveImage(imageID string) error {
 	return nil
 }
 
-// GetTagByID returns an imageTag given and imageID:
+// ImageGetTagByID returns an imageTag given and imageID:
 // 	performs an ImageList request, gathers all results and returns the tag of the given imageID
-func (d *DockerRepo) GetTagByID(imageID string) (string, error) {
+func (d *DockerRepo) ImageGetTagByID(imageID string) (string, error) {
 	images, err := d.docker.Cli.ImageList(context.Background(), types.ImageListOptions{})
 	if err != nil {
 		return "", err
@@ -415,8 +411,8 @@ func (d *DockerRepo) GetTagByID(imageID string) (string, error) {
 	return "", nil
 }
 
-// ContainersByImageID returns running containers of specific ImageID
-func (d *DockerRepo) ContainersByImageID(imageID string) (containerList []api.Ctn, err error) {
+// GetRunningContainersByImageID returns running containers of specific ImageID
+func (d *DockerRepo) GetRunningContainersByImageID(imageID string) (containerList []api.Ctn, err error) {
 	// If containers are filtered by status, prepare the ContainerListOptions
 	var containerListOptions types.ContainerListOptions
 

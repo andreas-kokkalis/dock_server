@@ -299,7 +299,7 @@ func GetContainers(s Service) httprouter.Handle {
 		}
 
 		// Get the list of containers
-		containers, err := s.docker.GetContainers(status)
+		containers, err := s.docker.ContainerList(status)
 		if err != nil {
 			// http.Error(res, er.ServerError, http.StatusInternalServerError)
 			response.AddError(err.Error())
