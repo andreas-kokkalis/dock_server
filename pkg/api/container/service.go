@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/andreas-kokkalis/dock_server/pkg/api"
-	"github.com/andreas-kokkalis/dock_server/pkg/api/docker"
-	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
+	"github.com/andreas-kokkalis/dock_server/pkg/api/portmapper"
+	"github.com/andreas-kokkalis/dock_server/pkg/api/repositories"
 	"github.com/andreas-kokkalis/dock_server/pkg/drivers/postgres"
 	"github.com/julienschmidt/httprouter"
 )
@@ -18,13 +18,13 @@ import (
 // Service for image
 type Service struct {
 	db     *postgres.DB
-	redis  *store.RedisRepo
-	docker *docker.Repo
-	mapper *docker.PortMapper
+	redis  *repositories.RedisRepo
+	docker repositories.DockerRepository
+	mapper *portmapper.PortMapper
 }
 
 // NewService creates a new Image Service
-func NewService(db *postgres.DB, redis *store.RedisRepo, docker *docker.Repo, mapper *docker.PortMapper) Service {
+func NewService(db *postgres.DB, redis *repositories.RedisRepo, docker repositories.DockerRepository, mapper *portmapper.PortMapper) Service {
 	return Service{db, redis, docker, mapper}
 }
 
@@ -94,7 +94,7 @@ func AdminRunContainer(s Service) httprouter.Handle {
 				response.WriteError(res, http.StatusInternalServerError, "there are no resources available in the system")
 			}
 			// Run the container and get the url
-			cfg, err = s.docker.RunContainer(imageID, username, password, port)
+			cfg, err = s.docker.ContainerRun(imageID, username, password, port)
 			if err != nil {
 				s.mapper.Remove(port)
 				response.WriteError(res, http.StatusInternalServerError, err.Error())
@@ -240,7 +240,7 @@ func CommitContainer(s Service) httprouter.Handle {
 			return
 		}
 		// Create the new image
-		err = s.docker.CommitContainer(data.Comment, data.Author, containerID, data.RefTag)
+		err = s.docker.ContainerCommit(data.Comment, data.Author, containerID, data.RefTag)
 		if err != nil {
 			response.WriteError(res, http.StatusInternalServerError, err.Error())
 			return
@@ -299,7 +299,7 @@ func GetContainers(s Service) httprouter.Handle {
 		}
 
 		// Get the list of containers
-		containers, err := s.docker.GetContainers(status)
+		containers, err := s.docker.ContainerList(status)
 		if err != nil {
 			// http.Error(res, er.ServerError, http.StatusInternalServerError)
 			response.AddError(err.Error())

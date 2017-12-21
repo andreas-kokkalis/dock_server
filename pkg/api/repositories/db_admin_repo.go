@@ -1,4 +1,4 @@
-package store
+package repositories
 
 import (
 	"github.com/andreas-kokkalis/dock_server/pkg/api"

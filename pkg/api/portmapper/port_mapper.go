@@ -1,13 +1,12 @@
-package docker
+package portmapper
 
 import (
 	"errors"
+	"github.com/andreas-kokkalis/dock_server/pkg/api/repositories"
 	"log"
 	"strconv"
 	"sync"
 	"time"
-
-	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
 )
 
 const startPort int = 4200
@@ -18,11 +17,9 @@ const startPort int = 4200
 // A resource that is used, should be removed from the data structure
 // TODO: investigate if this is feasible using the chan go idiom
 
-// TODO: Possibly make portResources part of PortMapper
-
 // PortMapper ...
 type PortMapper struct {
-	redis *store.RedisRepo
+	redis *repositories.RedisRepo
 	ports *portResources
 }
 
@@ -32,7 +29,7 @@ type portResources struct {
 }
 
 // NewPortMapper initializes the port mapper
-func NewPortMapper(redis *store.RedisRepo, numPorts int) *PortMapper {
+func NewPortMapper(redis *repositories.RedisRepo, numPorts int) *PortMapper {
 	mapper := &PortMapper{redis: redis}
 	mapper.ports = &portResources{}
 	mapper.ports.portsAvailable = make(map[int]bool)
@@ -110,7 +107,7 @@ func (pm *PortMapper) fixup(ports map[int]string) {
 // PeriodicChecker checks every X seconds for inconsistencies
 // First it gets all used ports by running containers, and syncs the concurrent ports map
 // Then it checks if redis configurations exists for the corresponding ports. If such configurations are absent, it will request to kill the containers
-func PeriodicChecker(docker *Repo, pm *PortMapper, redis *store.RedisRepo) {
+func PeriodicChecker(docker repositories.DockerRepository, pm *PortMapper, redis *repositories.RedisRepo) {
 
 	for {
 		time.Sleep(time.Second * 3)

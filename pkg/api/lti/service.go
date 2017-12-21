@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/andreas-kokkalis/dock_server/pkg/api"
-	"github.com/andreas-kokkalis/dock_server/pkg/api/docker"
-	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
+	"github.com/andreas-kokkalis/dock_server/pkg/api/portmapper"
+	"github.com/andreas-kokkalis/dock_server/pkg/api/repositories"
 	"github.com/andreas-kokkalis/dock_server/pkg/drivers/postgres"
 	"github.com/julienschmidt/httprouter"
 )
@@ -17,13 +17,13 @@ import (
 // Service for image
 type Service struct {
 	db     *postgres.DB
-	redis  *store.RedisRepo
-	docker *docker.Repo
-	mapper *docker.PortMapper
+	redis  *repositories.RedisRepo
+	docker repositories.DockerRepository
+	mapper *portmapper.PortMapper
 }
 
 // NewService creates a new Image Service
-func NewService(db *postgres.DB, redis *store.RedisRepo, docker *docker.Repo, mapper *docker.PortMapper) Service {
+func NewService(db *postgres.DB, redis *repositories.RedisRepo, docker repositories.DockerRepository, mapper *portmapper.PortMapper) Service {
 	return Service{db, redis, docker, mapper}
 }
 
@@ -89,7 +89,7 @@ func Launch(s Service) httprouter.Handle {
 				log.Printf("[CreateContainer]: No ports were available to reserve.\n")
 				_ = t.Execute(res, Resp{Error: "there are no resources available in the system"})
 			}
-			cfg, err = s.docker.RunContainer(imageID, username, password, port)
+			cfg, err = s.docker.ContainerRun(imageID, username, password, port)
 			if err != nil {
 				fmt.Println(err.Error())
 				s.mapper.Remove(port)
