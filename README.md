@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/andreas-kokkalis/dock_server.svg?branch=master)](https://travis-ci.org/andreas-kokkalis/dock_server/)
 [![Coverage Status](https://coveralls.io/repos/github/andreas-kokkalis/dock_server/badge.svg?branch=master)](https://coveralls.io/github/andreas-kokkalis/dock_server?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/andreas-kokkalis/dock_server)](https://goreportcard.com/report/github.com/andreas-kokkalis/dock_server)
 # Dock-server
 Dock server is an LTI tool provider, that allows creating docker images, running containers.
 
