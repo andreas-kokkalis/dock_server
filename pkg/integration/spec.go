@@ -7,7 +7,6 @@ import (
 	"path"
 
 	"github.com/andreas-kokkalis/dock_server/pkg/api"
-	"github.com/andreas-kokkalis/dock_server/pkg/api/docker"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
 	"github.com/andreas-kokkalis/dock_server/pkg/config"
 	dd "github.com/andreas-kokkalis/dock_server/pkg/drivers/docker"
@@ -40,7 +39,7 @@ type Spec struct {
 
 	// Docker
 	DockerCLI  *dd.APIClient
-	DockerRepo docker.DockerRepository
+	DockerRepo store.DockerRepository
 
 	// Logger
 	Log *log.Logger
@@ -123,7 +122,7 @@ func (s *Spec) InitDockerRepo() func() {
 		dockerClient, err := dd.NewAPIClient(s.Config.GetDockerConfig())
 		gomega.Expect(err).To(gomega.BeNil(), "Init docker api client")
 		s.DockerCLI = dockerClient
-		s.DockerRepo = docker.NewDockerRepository(dockerClient, s.Config.GetDockerConfig())
+		s.DockerRepo = store.NewDockerRepository(dockerClient, s.Config.GetDockerConfig())
 	}
 }
 

@@ -1,4 +1,4 @@
-package docker
+package store
 
 import (
 	"context"

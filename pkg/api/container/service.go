@@ -19,12 +19,12 @@ import (
 type Service struct {
 	db     *postgres.DB
 	redis  *store.RedisRepo
-	docker docker.DockerRepository
+	docker store.DockerRepository
 	mapper *docker.PortMapper
 }
 
 // NewService creates a new Image Service
-func NewService(db *postgres.DB, redis *store.RedisRepo, docker docker.DockerRepository, mapper *docker.PortMapper) Service {
+func NewService(db *postgres.DB, redis *store.RedisRepo, docker store.DockerRepository, mapper *docker.PortMapper) Service {
 	return Service{db, redis, docker, mapper}
 }
 
