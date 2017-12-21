@@ -240,7 +240,7 @@ func CommitContainer(s Service) httprouter.Handle {
 			return
 		}
 		// Create the new image
-		err = s.docker.CommitContainer(data.Comment, data.Author, containerID, data.RefTag)
+		err = s.docker.ContainerCommit(data.Comment, data.Author, containerID, data.RefTag)
 		if err != nil {
 			response.WriteError(res, http.StatusInternalServerError, err.Error())
 			return

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/andreas-kokkalis/dock_server/pkg/api"
+	dd "github.com/andreas-kokkalis/dock_server/pkg/drivers/docker"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
@@ -23,9 +24,9 @@ type DockerRepository interface {
 	ContainerGetUsedPorts() (map[int]string, error)
 	ContainerRemove(containerID string, port int) error
 	ContainerRun(imageID, username, password string, port int) (api.RunConfig, error)
-	CreateContainer(imageID, password string, port int) (string, error)
-	StartContainer(containerID string) error
-	CommitContainer(comment, author, containerID, refTag string) error
+	ContainerCreate(imageID, password string, port int) (string, error)
+	ContainerStart(containerID string) error
+	ContainerCommit(comment, author, containerID, refTag string) error
 	GetContainers(status string) ([]api.Ctn, error)
 	ImageList() ([]api.Img, error)
 	ImageListRepositories() []string
@@ -38,12 +39,12 @@ type DockerRepository interface {
 
 // DockerRepo ...
 type DockerRepo struct {
-	docker    *APIClient
+	docker    *dd.APIClient
 	imageRepo string
 }
 
 // NewDockerRepository returns a new docker repo
-func NewDockerRepository(docker *APIClient, dockerConfig map[string]string) DockerRepository {
+func NewDockerRepository(docker *dd.APIClient, dockerConfig map[string]string) DockerRepository {
 	return &DockerRepo{docker, dockerConfig["repo"]}
 }
 
@@ -139,13 +140,13 @@ func (d *DockerRepo) ContainerRemove(containerID string, port int) (err error) {
 // ContainerRun does something
 func (d *DockerRepo) ContainerRun(imageID, username, password string, port int) (cfg api.RunConfig, err error) {
 	// Create the container
-	id /*, port*/, err := d.CreateContainer(imageID, password, port)
+	id /*, port*/, err := d.ContainerCreate(imageID, password, port)
 	if err != nil {
 		log.Printf("[RunContainer]: Error while creating: %v\n", err.Error())
 		return cfg, err
 	}
 	// Start the container
-	err = d.StartContainer(id)
+	err = d.ContainerStart(id)
 	if err != nil {
 		log.Printf("[RunContainer]: Error while starting: %v\n", err.Error())
 		return cfg, err
@@ -161,10 +162,10 @@ func (d *DockerRepo) ContainerRun(imageID, username, password string, port int) 
 	return cfg, nil
 }
 
-// CreateContainer creates a container based on
+// ContainerCreate creates a container based on
 // imageName and reference Tag,
 // and returns the containerID
-func (d *DockerRepo) CreateContainer(imageID, password string, port int) (containerID string /*, port int*/, err error) {
+func (d *DockerRepo) ContainerCreate(imageID, password string, port int) (containerID string /*, port int*/, err error) {
 	// Set environment variables for shellinabox container
 	envVars := []string{"SIAB_PASSWORD=" + password, "SIAB_SUDO=true"}
 	// Get the imageTag
@@ -214,8 +215,8 @@ func (d *DockerRepo) CreateContainer(imageID, password string, port int) (contai
 	return body.ID[:12] /*, port*/, nil
 }
 
-// StartContainer sends a request to start a container
-func (d *DockerRepo) StartContainer(containerID string) error {
+// ContainerStart sends a request to start a container
+func (d *DockerRepo) ContainerStart(containerID string) error {
 
 	// Start container
 	err := d.docker.Cli.ContainerStart(context.Background(), containerID, types.ContainerStartOptions{})
@@ -236,8 +237,8 @@ func (d *DockerRepo) StartContainer(containerID string) error {
 	return nil
 }
 
-// CommitContainer creates a new image from a running container
-func (d *DockerRepo) CommitContainer(comment, author, containerID, refTag string) error {
+// ContainerCommit creates a new image from a running container
+func (d *DockerRepo) ContainerCommit(comment, author, containerID, refTag string) error {
 
 	// TODO: on options, can add a slice of string with the list of changes for this commit
 	options := types.ContainerCommitOptions{Comment: comment, Author: author, Reference: d.imageRepo + ":" + refTag}

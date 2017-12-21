@@ -14,6 +14,7 @@ import (
 	"github.com/andreas-kokkalis/dock_server/pkg/api/lti"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
 	"github.com/andreas-kokkalis/dock_server/pkg/config"
+	dd "github.com/andreas-kokkalis/dock_server/pkg/drivers/docker"
 	"github.com/andreas-kokkalis/dock_server/pkg/drivers/postgres"
 	"github.com/andreas-kokkalis/dock_server/pkg/drivers/redis"
 	"github.com/julienschmidt/httprouter"
@@ -63,8 +64,8 @@ var Start = func(cmd *cobra.Command, args []string) (err error) {
 	mapper := docker.NewPortMapper(redisRepository, c.GetAPIPorts())
 	// Initialize Docker Remote API Client
 
-	var dockerClient *docker.APIClient
-	if dockerClient, err = docker.NewAPIClient(c.GetDockerConfig()); err != nil {
+	var dockerClient *dd.APIClient
+	if dockerClient, err = dd.NewAPIClient(c.GetDockerConfig()); err != nil {
 		return err
 	}
 	// Initialize docker repository
