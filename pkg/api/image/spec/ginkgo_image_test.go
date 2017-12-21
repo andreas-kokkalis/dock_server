@@ -35,14 +35,15 @@ var (
 var _ = BeforeSuite(func() {
 	spec = integration.NewSpec(dir)
 	Describe("Initialize config", spec.InitConfig())
-	Describe("Connect to postgres", spec.InitDBConnection())
-	Describe("Restore database state", spec.RestoreDB())
+	// TODO: remove these on once used in the proper testing environment
+	// Describe("Connect to postgres", spec.InitDBConnection())
+	// Describe("Restore database state", spec.RestoreDB())
 	Describe("Connect to redis", spec.InitRedisConnection())
 	Describe("Init docker repo", spec.InitDockerRepo())
 
 	router := httprouter.New()
 	// Image service
-	imageService := image.NewService(spec.DBManager.DB, spec.RedisRepo, spec.DockerRepo)
+	imageService := image.NewService(spec.RedisRepo, spec.DockerRepo)
 	router.GET("/v0/admin/images", image.ListImages(imageService))
 	router.GET("/v0/admin/images/history/:id", image.GetImageHistory(imageService))
 	router.DELETE("/v0/admin/images/delete/:id", image.RemoveImage(imageService))

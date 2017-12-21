@@ -83,7 +83,7 @@ var Start = func(cmd *cobra.Command, args []string) (err error) {
 	router.POST("/v0/admin/login", auth.AdminLogin(authService))
 
 	// Image service
-	imageService := image.NewService(dbConn, redisRepository, dockerRepository)
+	imageService := image.NewService(redisRepository, dockerRepository)
 	router.GET("/v0/admin/images", auth.SessionAuth(authService, image.ListImages(imageService)))
 	router.GET("/v0/admin/images/history/:id", auth.SessionAuth(authService, image.GetImageHistory(imageService)))
 	router.DELETE("/v0/admin/images/delete/:id", auth.SessionAuth(authService, image.RemoveImage(imageService)))

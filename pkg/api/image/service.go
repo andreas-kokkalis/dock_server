@@ -6,20 +6,18 @@ import (
 	"github.com/andreas-kokkalis/dock_server/pkg/api"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/docker"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
-	"github.com/andreas-kokkalis/dock_server/pkg/drivers/postgres"
 	"github.com/julienschmidt/httprouter"
 )
 
 // Service for image
 type Service struct {
-	db     *postgres.DB
 	redis  *store.RedisRepo
 	docker *docker.Repo
 }
 
 // NewService creates a new Image Service
-func NewService(db *postgres.DB, redis *store.RedisRepo, docker *docker.Repo) Service {
-	return Service{db, redis, docker}
+func NewService(redis *store.RedisRepo, docker *docker.Repo) Service {
+	return Service{redis, docker}
 }
 
 // ListImages returns the list of images along with data per image
