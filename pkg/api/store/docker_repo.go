@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/andreas-kokkalis/dock_server/pkg/api"
-	dd "github.com/andreas-kokkalis/dock_server/pkg/drivers/docker"
+	"github.com/andreas-kokkalis/dock_server/pkg/drivers/docker"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
@@ -34,12 +34,12 @@ type DockerRepository interface {
 
 // DockerRepo ...
 type DockerRepo struct {
-	docker    *dd.APIClient
+	docker    *docker.APIClient
 	imageRepo string
 }
 
 // NewDockerRepository returns a new docker repo
-func NewDockerRepository(docker *dd.APIClient, dockerConfig map[string]string) DockerRepository {
+func NewDockerRepository(docker *docker.APIClient, dockerConfig map[string]string) DockerRepository {
 	return &DockerRepo{docker, dockerConfig["repo"]}
 }
 

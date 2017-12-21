@@ -9,7 +9,7 @@ import (
 	"github.com/andreas-kokkalis/dock_server/pkg/api"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
 	"github.com/andreas-kokkalis/dock_server/pkg/config"
-	dd "github.com/andreas-kokkalis/dock_server/pkg/drivers/docker"
+	"github.com/andreas-kokkalis/dock_server/pkg/drivers/docker"
 	"github.com/andreas-kokkalis/dock_server/pkg/drivers/redis"
 	"github.com/andreas-kokkalis/dock_server/pkg/util/dbutil"
 	"github.com/onsi/ginkgo"
@@ -38,7 +38,7 @@ type Spec struct {
 	RedisRepo *store.RedisRepo
 
 	// Docker
-	DockerCLI  *dd.APIClient
+	DockerCLI  *docker.APIClient
 	DockerRepo store.DockerRepository
 
 	// Logger
@@ -119,7 +119,7 @@ func (s *Spec) CloseRedisConnection() func() {
 // InitDockerRepo initializes the docker repository and the connection to docker API client
 func (s *Spec) InitDockerRepo() func() {
 	return func() {
-		dockerClient, err := dd.NewAPIClient(s.Config.GetDockerConfig())
+		dockerClient, err := docker.NewAPIClient(s.Config.GetDockerConfig())
 		gomega.Expect(err).To(gomega.BeNil(), "Init docker api client")
 		s.DockerCLI = dockerClient
 		s.DockerRepo = store.NewDockerRepository(dockerClient, s.Config.GetDockerConfig())
