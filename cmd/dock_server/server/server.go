@@ -1,6 +1,7 @@
 package server
 
 import (
+	"log"
 	"net/http"
 	"regexp"
 	"time"
@@ -112,11 +113,23 @@ var Start = func(cmd *cobra.Command, args []string) (err error) {
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		Addr:         c.GetAPIServerPort(),
-		Handler:      router,
+		Handler:      logger{router},
 	}
 	err = myServer.ListenAndServeTLS("conf/ssl/server.pem", "conf/ssl/server.key")
 	if err != nil {
 		return errors.Wrap(err, "ListenAndServe")
 	}
 	return nil
+}
+
+type logger struct {
+	handler http.Handler
+}
+
+func (l logger) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	defer func() {
+		log.Printf("[took: %v] %s %s", time.Since(start), r.Method, r.URL.Path)
+	}()
+	l.handler.ServeHTTP(w, r)
 }

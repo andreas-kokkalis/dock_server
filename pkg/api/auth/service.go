@@ -42,6 +42,7 @@ func SessionAuth(s Service, handler httprouter.Handle) httprouter.Handle {
 		}
 		// Validate Cookie value
 		if !vAdminCookieVal.Match([]byte(cookie.Value)) {
+			// XXX: not application/json header
 			http.Error(res, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			_, _ = res.Write([]byte("Not authorized"))
 			return
