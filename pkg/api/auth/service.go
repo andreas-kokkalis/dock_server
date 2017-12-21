@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -20,13 +19,13 @@ import (
 
 // Service for image
 type Service struct {
-	db    *postgres.DB
-	redis *store.RedisRepo
+	adminRepo *store.DBAdminRepo
+	redis     *store.RedisRepo
 }
 
 // NewService creates a new Image Service
-func NewService(db *postgres.DB, redis *store.RedisRepo) Service {
-	return Service{db, redis}
+func NewService(adminRepo *store.DBAdminRepo, redis *store.RedisRepo) Service {
+	return Service{adminRepo, redis}
 }
 
 var vAdminCookieVal = regexp.MustCompile(`^(adm:[a-f0-9]{32})$`)
@@ -74,7 +73,7 @@ func AdminLogin(s Service) httprouter.Handle {
 		log.Println("started login")
 		// Parse post params
 		decoder := json.NewDecoder(req.Body)
-		var data loginRequest
+		var data api.Admin
 		err := decoder.Decode(&data)
 		if err != nil {
 			response.WriteError(res, http.StatusUnprocessableEntity, err.Error())
@@ -83,13 +82,11 @@ func AdminLogin(s Service) httprouter.Handle {
 
 		log.Println("decoded login request")
 		log.Println(data.Username, data.Password)
+
 		// Query the database and check if user exists
-		var id int
-		var password string
-		row := s.db.QueryRow("SELECT id, password FROM admins WHERE username = $1", data.Username)
-		err = row.Scan(&id, &password)
+		admin, err := s.adminRepo.GetAdminByUsername(data)
 		switch {
-		case err == sql.ErrNoRows:
+		case err == postgres.ErrNoResult:
 			// Case when user does not exist in the database
 			response.WriteError(res, http.StatusUnauthorized, api.ErrUsernameNotExists)
 			return
@@ -100,10 +97,8 @@ func AdminLogin(s Service) httprouter.Handle {
 			return
 		}
 
-		log.Println("got value from db")
-
 		// Verify that passwords match
-		err = bcrypt.CompareHashAndPassword([]byte(password), []byte(data.Password))
+		err = bcrypt.CompareHashAndPassword([]byte(admin.Password), []byte(data.Password))
 		if err != nil {
 			response.WriteError(res, http.StatusUnauthorized, api.ErrPasswordMismatch)
 			return
@@ -111,7 +106,7 @@ func AdminLogin(s Service) httprouter.Handle {
 
 		// Check whether the session exists or not.
 		var sessionExists bool
-		key := s.redis.CreateAdminKey(id)
+		key := s.redis.CreateAdminKey(admin.ID)
 		sessionExists, err = s.redis.ExistsAdminSession(key)
 		if err != nil {
 			response.WriteError(res, http.StatusInternalServerError, err.Error())

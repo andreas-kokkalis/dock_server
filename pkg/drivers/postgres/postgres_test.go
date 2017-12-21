@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"errors"
 	"testing"
 
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -26,47 +27,62 @@ func TestNewDB(t *testing.T) {
 
 }
 
-func TestQuery(t *testing.T) {
-	t.Parallel()
-	assert := assert.New(t)
-
-	// Mock the SQL connection
-	conn, mock, _ := sqlmock.New()
-	db := &DB{Conn: sqlx.NewDb(conn, "sqlmock")}
-	mock.MatchExpectationsInOrder(true)
-	defer func() { _ = db.Conn.Close() }()
-
-	testName := "Query()"
-	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
-	mock.ExpectQuery("SELECT (.*) FROM (.*)").WillReturnRows(rows)
-	r, err := db.Query("SELECT id FROM test")
-	assert.NoError(err, testName)
-	testName = "rows.Next()"
-	assert.NotNil(r.Next(), testName)
-	var id int
-	err = r.Scan(&id)
-	testName = "rows.Scan()"
-	assert.NoError(err, testName)
-	assert.Equal(id, 1, testName)
-	assert.NoError(mock.ExpectationsWereMet(), testName)
+type mockDB struct {
+	mock sqlmock.Sqlmock
+	db   *DB
 }
 
-func TestQueryRow(t *testing.T) {
-	t.Parallel()
-	assert := assert.New(t)
-
-	// Mock the SQL connection
+// nolint
+func NewMockDB() *mockDB {
 	conn, mock, _ := sqlmock.New()
 	db := &DB{Conn: sqlx.NewDb(conn, "sqlmock")}
-	mock.MatchExpectationsInOrder(true)
-	defer func() { _ = db.Conn.Close() }()
+	return &mockDB{mock, db}
+}
 
-	rows := sqlmock.NewRows([]string{"name"}).AddRow("Docker")
-	mock.ExpectQuery("SELECT (.*) FROM (.*) WHERE id = (.*)").WillReturnRows(rows)
-	r := db.QueryRow("SELECT name FROM test WHERE id = $1", 1)
-	testName := "rows.Scan()"
-	var name string
-	err := r.Scan(&name)
-	assert.NoError(err, testName)
-	assert.Equal("Docker", name, testName)
+//nolint
+func (m *mockDB) CloseDB() {
+	_ = m.db.Conn.Close()
+}
+
+func TestQueryRowX(t *testing.T) {
+
+	type obj struct {
+		Name string `db:"name"`
+		ID   int    `db:"id"`
+	}
+	var dest obj
+
+	query := "SELECT (.*) FROM (.*) WHERE id = (.*)"
+	namedQ := "SELECT name FROM test WHERE id = :id"
+
+	// Mock the SQL connection
+	m := NewMockDB()
+	m.mock.ExpectQuery(query).WillReturnRows(sqlmock.NewRows([]string{"name"}).AddRow("Docker"))
+	err := m.db.QueryRow(namedQ, obj{ID: 1}, &dest)
+	assert.NoError(t, err)
+	assert.Equal(t, "Docker", dest.Name)
+	assert.Nil(t, m.mock.ExpectationsWereMet())
+	m.CloseDB()
+
+	m = NewMockDB()
+	m.mock.ExpectQuery(query).WillReturnError(errors.New("connection error"))
+	err = m.db.QueryRow(namedQ, obj{ID: 1}, &dest)
+	assert.Error(t, err, "connection error")
+	assert.Nil(t, m.mock.ExpectationsWereMet())
+	m.CloseDB()
+
+	m = NewMockDB()
+	m.mock.ExpectQuery(query).WillReturnRows(sqlmock.NewRows([]string{"blah"}).AddRow("Docker"))
+	err = m.db.QueryRow(namedQ, obj{ID: 1}, &dest)
+	assert.Error(t, err, "scan error")
+	assert.Nil(t, m.mock.ExpectationsWereMet())
+	m.CloseDB()
+
+	m = NewMockDB()
+	m.mock.ExpectQuery(query).WillReturnRows(sqlmock.NewRows([]string{"blah"}))
+	err = m.db.QueryRow(namedQ, obj{ID: 1}, &dest)
+	assert.Error(t, err, "no rows")
+	assert.Equal(t, err, ErrNoResult)
+	assert.Nil(t, m.mock.ExpectationsWereMet())
+	m.CloseDB()
 }
