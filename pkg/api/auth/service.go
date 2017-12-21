@@ -19,42 +19,41 @@ import (
 
 // Service for image
 type Service struct {
-	adminRepo *repositories.DBAdminRepo
-	redis     *repositories.RedisRepo
+	adminRepo repositories.AdminDBRepository
+	redis     repositories.RedisRepository
 }
 
 // NewService creates a new Image Service
-func NewService(adminRepo *repositories.DBAdminRepo, redis *repositories.RedisRepo) Service {
+func NewService(adminRepo repositories.AdminDBRepository, redis repositories.RedisRepository) Service {
 	return Service{adminRepo, redis}
 }
 
 var vAdminCookieVal = regexp.MustCompile(`^(adm:[a-f0-9]{32})$`)
 
 // SessionAuth performs validation before invoking the route
+// TODO: perhaps redirect to login service from here
 func SessionAuth(s Service, handler httprouter.Handle) httprouter.Handle {
-	return func(res http.ResponseWriter, req *http.Request, params httprouter.Params) {
+	return func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 
 		// Get session cookie
-		cookie, err := req.Cookie("ses")
+		cookie, err := r.Cookie("ses")
 		if err != nil {
-			http.Error(res, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			api.WriteErrorResponse(w, http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
 			return
 		}
 		// Validate Cookie value
 		if !vAdminCookieVal.Match([]byte(cookie.Value)) {
-			// XXX: not application/json header
-			http.Error(res, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-			_, _ = res.Write([]byte("Not authorized"))
+			api.WriteErrorResponse(w, http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
 			return
 		}
 
 		// Check if session exists in Redis. If it doesn't exist sent Unauthorized. Frontend will redirect to login page.
-		exists, err := s.redis.ExistsAdminSession(cookie.Value)
+		exists, err := s.redis.AdminSessionExists(cookie.Value)
 		if err != nil || !exists {
-			http.Error(res, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			api.WriteErrorResponse(w, http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
 			return
 		}
-		handler(res, req, params)
+		handler(w, r, params)
 	}
 }
 
@@ -68,60 +67,50 @@ type loginRequest struct {
 // Params: username, password
 // TODO: validation of username and password
 func AdminLogin(s Service) httprouter.Handle {
-	return func(res http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-		res.Header().Set("Content-Type", "application/json")
-		response := api.NewResponse()
-		log.Println("started login")
+	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		// Parse post params
-		decoder := json.NewDecoder(req.Body)
+		decoder := json.NewDecoder(r.Body)
 		var data api.Admin
 		err := decoder.Decode(&data)
 		if err != nil {
-			response.WriteError(res, http.StatusUnprocessableEntity, err.Error())
+			api.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
-
-		log.Println("decoded login request")
-		log.Println(data.Username, data.Password)
 
 		// Query the database and check if user exists
 		admin, err := s.adminRepo.GetAdminByUsername(data)
 		switch {
 		case err == postgres.ErrNoResult:
 			// Case when user does not exist in the database
-			response.WriteError(res, http.StatusUnauthorized, api.ErrUsernameNotExists)
+			api.WriteErrorResponse(w, http.StatusUnauthorized, api.ErrUsernameNotExists)
 			return
 		case err != nil:
 			// Database error
-			log.Println(err)
-			response.WriteError(res, http.StatusInternalServerError, err.Error())
+			api.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		// Verify that passwords match
 		err = bcrypt.CompareHashAndPassword([]byte(admin.Password), []byte(data.Password))
 		if err != nil {
-			response.WriteError(res, http.StatusUnauthorized, api.ErrPasswordMismatch)
+			api.WriteErrorResponse(w, http.StatusUnauthorized, api.ErrPasswordMismatch)
 			return
 		}
 
 		// Check whether the session exists or not.
 		var sessionExists bool
-		key := s.redis.CreateAdminKey(admin.ID)
-		sessionExists, err = s.redis.ExistsAdminSession(key)
-		if err != nil {
-			response.WriteError(res, http.StatusInternalServerError, err.Error())
+		key := s.redis.AdminSessionKeyCreate(admin.ID)
+		if sessionExists, err = s.redis.AdminSessionExists(key); err != nil {
+			api.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 		// Case session does not exist
 		if !sessionExists {
-			err = s.redis.SetAdminSession(key)
-			if err != nil {
-				response.WriteError(res, http.StatusInternalServerError, err.Error())
+			if err = s.redis.AdminSessionSet(key); err != nil {
+				api.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
 		}
-		log.Println("creating cookie")
 		// Whether the session exists or not, write the cookie
 		cookie := &http.Cookie{
 			Name:    "ses",
@@ -129,31 +118,27 @@ func AdminLogin(s Service) httprouter.Handle {
 			Path:    "/",
 			Expires: time.Now().Add(24 * time.Hour),
 		}
-		http.SetCookie(res, cookie)
-		fmt.Println(cookie)
-		response.Data = "SUCCESS"
-		_, _ = res.Write(response.Marshal())
-		return
+		http.SetCookie(w, cookie)
+
+		api.WriteOKResponse(w, "SUCCESS")
 	}
 }
 
 // AdminLogout logs out an admin
 func AdminLogout(s Service) httprouter.Handle {
-	return func(res http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-
-		// fmt.Println("request to logout")
+	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 		// Get session cookie
-		cookie, err := req.Cookie("ses")
+		cookie, err := r.Cookie("ses")
 		if err != nil {
-			http.Error(res, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			api.WriteErrorResponse(w, http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
 			return
 		}
 
 		// Check if session exists in Redis. If it doesn't exist sent Unauthorized. Frontend will redirect to login page.
-		err = s.redis.DeleteAdminSession(cookie.Value)
+		err = s.redis.AdminSessionDelete(cookie.Value)
 		if err != nil {
-			http.Error(res, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			api.WriteErrorResponse(w, http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
 			return
 		}
 
@@ -163,7 +148,8 @@ func AdminLogout(s Service) httprouter.Handle {
 			Path:    "/",
 			Expires: time.Now(),
 		}
-		http.SetCookie(res, cookie)
+		http.SetCookie(w, cookie)
+		api.WriteOKResponse(w, nil)
 	}
 }
 
@@ -172,31 +158,29 @@ const (
 	oauthSecret = "oauth_secret"
 )
 
-// OAuth stuff
+// OAuth middleware
 func OAuth(s Service, handler httprouter.Handle) httprouter.Handle {
-	return func(res http.ResponseWriter, req *http.Request, params httprouter.Params) {
-
-		// TODO: Add check if user is not a student, return error
+	return func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 
 		// OAuth authentication of the TP requires to match the
 		// request URL with the expected path. Since image IDs
 		// change all the time, the path is constructed using
 		// the imageID as extracted from the HTTP Header.
-		path := fmt.Sprintf("https://%s%s", req.Host, req.URL.Path)
+		path := fmt.Sprintf("https://%s%s", r.Host, r.URL.Path)
 		fmt.Println(path)
 		p := lti.NewProvider(oauthSecret, path)
 		p.ConsumerKey = oauthKey
 
-		ok, err := p.IsValid(req)
+		ok, err := p.IsValid(r)
 		if !ok {
 			log.Println("invalid")
-			fmt.Fprintf(res, "Invalid request...")
+			fmt.Fprintf(w, "Invalid request...")
 			return
 		}
 		if err != nil {
 			log.Printf("Invalid request %s", err)
 			return
 		}
-		handler(res, req, params)
+		handler(w, r, params)
 	}
 }

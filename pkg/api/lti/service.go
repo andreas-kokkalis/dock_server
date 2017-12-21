@@ -17,13 +17,13 @@ import (
 // Service for image
 type Service struct {
 	db     *postgres.DB
-	redis  *repositories.RedisRepo
+	redis  repositories.RedisRepository
 	docker repositories.DockerRepository
 	mapper *portmapper.PortMapper
 }
 
 // NewService creates a new Image Service
-func NewService(db *postgres.DB, redis *repositories.RedisRepo, docker repositories.DockerRepository, mapper *portmapper.PortMapper) Service {
+func NewService(db *postgres.DB, redis repositories.RedisRepository, docker repositories.DockerRepository, mapper *portmapper.PortMapper) Service {
 	return Service{db, redis, docker, mapper}
 }
 
@@ -54,20 +54,20 @@ func Launch(s Service) httprouter.Handle {
 		// extract Canvas userID and store is as session key
 		userID := req.PostFormValue("user_id")
 		var sessionExists bool
-		sessionExists, err = s.redis.ExistsUserRunConfig(userID)
+		sessionExists, err = s.redis.UserRunConfigExists(userID)
 		if err != nil {
 			_ = t.Execute(res, Resp{Error: api.ErrServerError})
 		}
 
 		var cfg api.RunConfig
 		if sessionExists {
-			cfg, err = s.redis.GetUserRunConfig(userID)
+			cfg, err = s.redis.UserRunConfigGet(userID)
 			if err != nil {
 				_ = t.Execute(res, Resp{Error: api.ErrServerError})
 			}
 			fmt.Printf("exists: %v\n", cfg)
 			// Update the TTL
-			err = s.redis.SetUserRunConfig(userID, cfg)
+			err = s.redis.UserRunConfigSet(userID, cfg)
 			if err != nil {
 				_ = t.Execute(res, Resp{Error: api.ErrServerError})
 			}
@@ -97,7 +97,7 @@ func Launch(s Service) httprouter.Handle {
 			}
 			fmt.Printf("not exists: %v\n", cfg)
 			// Set session
-			err = s.redis.SetUserRunConfig(userID, cfg)
+			err = s.redis.UserRunConfigSet(userID, cfg)
 			if err != nil {
 				// XXX: container is running
 				// s.mapper.Remove(port)
@@ -108,7 +108,7 @@ func Launch(s Service) httprouter.Handle {
 		// Whether the session exists or not, write the cookie
 		cookie := &http.Cookie{
 			Name:    "dock_session",
-			Value:   s.redis.GetUserRunKey(userID),
+			Value:   s.redis.UserRunKeyGet(userID),
 			Expires: time.Now().Add(24 * time.Hour),
 		}
 		http.SetCookie(res, cookie)

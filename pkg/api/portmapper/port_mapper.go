@@ -2,11 +2,12 @@ package portmapper
 
 import (
 	"errors"
-	"github.com/andreas-kokkalis/dock_server/pkg/api/repositories"
 	"log"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/andreas-kokkalis/dock_server/pkg/api/repositories"
 )
 
 const startPort int = 4200
@@ -19,7 +20,7 @@ const startPort int = 4200
 
 // PortMapper ...
 type PortMapper struct {
-	redis *repositories.RedisRepo
+	redis repositories.RedisRepository
 	ports *portResources
 }
 
@@ -29,7 +30,7 @@ type portResources struct {
 }
 
 // NewPortMapper initializes the port mapper
-func NewPortMapper(redis *repositories.RedisRepo, numPorts int) *PortMapper {
+func NewPortMapper(redis repositories.RedisRepository, numPorts int) *PortMapper {
 	mapper := &PortMapper{redis: redis}
 	mapper.ports = &portResources{}
 	mapper.ports.portsAvailable = make(map[int]bool)
@@ -75,7 +76,7 @@ func (pm *PortMapper) fixup(ports map[int]string) {
 			// Make port available in memory
 			pm.ports.portsAvailable[port] = true
 			// Remove trailing redis configuration
-			pm.redis.RemoveIncosistentRedisKeys(strconv.Itoa(port))
+			pm.redis.DeleteStaleMappedPort(strconv.Itoa(port))
 		}
 	}
 
@@ -85,7 +86,7 @@ func (pm *PortMapper) fixup(ports map[int]string) {
 			// Make port available in memory
 			pm.ports.portsAvailable[port] = true
 			// Remove trailing redis configuration
-			pm.redis.RemoveIncosistentRedisKeys(strconv.Itoa(port))
+			pm.redis.DeleteStaleMappedPort(strconv.Itoa(port))
 		}
 	}
 
@@ -107,7 +108,7 @@ func (pm *PortMapper) fixup(ports map[int]string) {
 // PeriodicChecker checks every X seconds for inconsistencies
 // First it gets all used ports by running containers, and syncs the concurrent ports map
 // Then it checks if redis configurations exists for the corresponding ports. If such configurations are absent, it will request to kill the containers
-func PeriodicChecker(docker repositories.DockerRepository, pm *PortMapper, redis *repositories.RedisRepo) {
+func PeriodicChecker(docker repositories.DockerRepository, pm *PortMapper, redis repositories.RedisRepository) {
 
 	for {
 		time.Sleep(time.Second * 3)
@@ -124,7 +125,7 @@ func PeriodicChecker(docker repositories.DockerRepository, pm *PortMapper, redis
 
 		// Check for expired redis keys
 		for port, containerID := range ports {
-			if !redis.ExistsPort(strconv.Itoa(port)) {
+			if !redis.PortIsMapped(strconv.Itoa(port)) {
 				_ = docker.ContainerRemove(containerID, port)
 				pm.Remove(port)
 

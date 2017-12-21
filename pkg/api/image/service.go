@@ -10,12 +10,12 @@ import (
 
 // Service for image
 type Service struct {
-	redis  *repositories.RedisRepo
+	redis  repositories.RedisRepository
 	docker repositories.DockerRepository
 }
 
 // NewService creates a new Image Service
-func NewService(redis *repositories.RedisRepo, docker repositories.DockerRepository) Service {
+func NewService(redis repositories.RedisRepository, docker repositories.DockerRepository) Service {
 	return Service{redis, docker}
 }
 

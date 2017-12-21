@@ -14,13 +14,46 @@ import (
 	"github.com/andreas-kokkalis/dock_server/pkg/drivers/redis"
 )
 
+//go:generate moq -out ../repomocks/redis_repo_mock.go -pkg repomocks . RedisRepository
+// XXX: the generate is temporary
+
+// RedisRepository models the interactions with the cache storage for containers, students and admins
+type RedisRepository interface {
+
+	// each redis key has a hardcoded prefix that indicates the purpose of the key.
+	StripSessionKeyPrefix(key string) string
+
+	// api for run configuration of students
+	UserRunKeyGet(userID string) string
+	UserRunConfigDelete(userID string) error
+	UserRunConfigExists(userID string) (bool, error)
+	UserRunConfigGet(userID string) (runConfig api.RunConfig, err error)
+	UserRunConfigSet(userID string, runConfig api.RunConfig) (err error)
+
+	// ui admin session
+	AdminSessionKeyCreate(adminID int) string
+	AdminSessionExists(key string) (bool, error)
+	AdminSessionSet(key string) error
+	AdminSessionDelete(key string) error
+
+	// ui admin running containers
+	AdminRunConfigExists(key string) (bool, error)
+	AdminRunConfigDelete(key string) error
+	AdminRunConfigGet(key string) (runConfig api.RunConfig, err error)
+	AdminRunConfigSet(key string, runConfig api.RunConfig) (err error)
+
+	// api for portmapper
+	PortIsMapped(port string) bool
+	DeleteStaleMappedPort(port string)
+}
+
 // RedisRepo ...
 type RedisRepo struct {
 	redis redis.Redis
 }
 
 // NewRedisRepo ...
-func NewRedisRepo(redis redis.Redis) *RedisRepo {
+func NewRedisRepo(redis redis.Redis) RedisRepository {
 	return &RedisRepo{redis}
 }
 
@@ -41,33 +74,33 @@ func (r *RedisRepo) StripSessionKeyPrefix(key string) string {
 				USER
    ============================ */
 
-// GetUserRunKey constructs the user key
-func (r *RedisRepo) GetUserRunKey(userID string) string {
+// UserRunKeyGet constructs the user key
+func (r *RedisRepo) UserRunKeyGet(userID string) string {
 	return usrPrefix + userID
 }
 
-// DeleteUserRunConfig deletes the user session
-func (r *RedisRepo) DeleteUserRunConfig(userID string) error {
+// UserRunConfigDelete deletes the user session
+func (r *RedisRepo) UserRunConfigDelete(userID string) error {
 
-	runConfig, err := r.GetUserRunConfig(r.GetUserRunKey(userID))
+	runConfig, err := r.UserRunConfigGet(r.UserRunKeyGet(userID))
 	if err != nil {
 		// TODO: parse error
 	}
 	r.delPort(runConfig.Port)
 
-	_, err = r.redis.Del(r.GetUserRunKey(userID))
+	_, err = r.redis.Del(r.UserRunKeyGet(userID))
 	return err
 }
 
-// ExistsUserRunConfig returns true if there is a session for the particular user
-func (r *RedisRepo) ExistsUserRunConfig(userID string) (bool, error) {
-	return r.redis.Exists(r.GetUserRunKey(userID))
+// UserRunConfigExists returns true if there is a session for the particular user
+func (r *RedisRepo) UserRunConfigExists(userID string) (bool, error) {
+	return r.redis.Exists(r.UserRunKeyGet(userID))
 }
 
-// GetUserRunConfig returns the user session
-func (r *RedisRepo) GetUserRunConfig(userID string) (runConfig api.RunConfig, err error) {
+// UserRunConfigGet returns the user session
+func (r *RedisRepo) UserRunConfigGet(userID string) (runConfig api.RunConfig, err error) {
 	var val string
-	val, err = r.redis.Get(r.GetUserRunKey(userID))
+	val, err = r.redis.Get(r.UserRunKeyGet(userID))
 	if err != nil {
 		return runConfig, err
 	}
@@ -75,22 +108,22 @@ func (r *RedisRepo) GetUserRunConfig(userID string) (runConfig api.RunConfig, er
 	return runConfig, err
 }
 
-// SetUserRunConfig will add the session
-func (r *RedisRepo) SetUserRunConfig(userID string, runConfig api.RunConfig) (err error) {
+// UserRunConfigSet will add the session
+func (r *RedisRepo) UserRunConfigSet(userID string, runConfig api.RunConfig) (err error) {
 	// Marshal to JSON
 	var js []byte
 	js, _ = json.Marshal(runConfig)
 
 	// Set key value
 	var OK string
-	OK, err = r.redis.Set(r.GetUserRunKey(userID), string(js), userTTL)
+	OK, err = r.redis.Set(r.UserRunKeyGet(userID), string(js), userTTL)
 	if err != nil {
 		return err
 	}
 	if OK != "OK" {
 		return errors.New("Not OK")
 	}
-	r.setPort(runConfig.Port, r.GetUserRunKey(userID), userTTL)
+	r.setPort(runConfig.Port, r.UserRunKeyGet(userID), userTTL)
 	return nil
 }
 
@@ -100,8 +133,8 @@ func (r *RedisRepo) SetUserRunConfig(userID string, runConfig api.RunConfig) (er
 	============================
 */
 
-// CreateAdminKey returns the admin session key
-func (r *RedisRepo) CreateAdminKey(adminID int) string {
+// AdminSessionKeyCreate returns the admin session key
+func (r *RedisRepo) AdminSessionKeyCreate(adminID int) string {
 	h := md5.New()
 	_, _ = io.WriteString(h, strconv.Itoa(adminID))
 	_, _ = io.WriteString(h, "key")
@@ -110,19 +143,19 @@ func (r *RedisRepo) CreateAdminKey(adminID int) string {
 	return admPrefix + s
 }
 
-// ExistsAdminSession checks if a session exists for that particular adminID
-func (r *RedisRepo) ExistsAdminSession(key string) (bool, error) {
+// AdminSessionExists checks if a session exists for that particular adminID
+func (r *RedisRepo) AdminSessionExists(key string) (bool, error) {
 	return r.redis.Exists(key)
 }
 
-// SetAdminSession will add a key for that admin
-func (r *RedisRepo) SetAdminSession(key string) error {
+// AdminSessionSet will add a key for that admin
+func (r *RedisRepo) AdminSessionSet(key string) error {
 	_, err := r.redis.Set(key, key, 0)
 	return err
 }
 
-// DeleteAdminSession will add a key for that admin
-func (r *RedisRepo) DeleteAdminSession(key string) error {
+// AdminSessionDelete will add a key for that admin
+func (r *RedisRepo) AdminSessionDelete(key string) error {
 	_, err := r.redis.Del(key)
 	return err
 }
@@ -131,28 +164,28 @@ func (r *RedisRepo) DeleteAdminSession(key string) error {
 	Admin Run Container Session
 ==============================================*/
 
-// GetAdminSessionRunKey constructs the admin run key
-func (r *RedisRepo) GetAdminSessionRunKey(key string) string {
+// generateAdminRunKey constructs the admin run key
+func (r *RedisRepo) generateAdminRunKey(key string) string {
 	return admRunPrefix + key
 }
 
-// DeleteAdminRunConfig deletes the user session
-func (r *RedisRepo) DeleteAdminRunConfig(key string) error {
-	runConfig, _ := r.GetAdminRunConfig(key)
+// AdminRunConfigDelete deletes the user session
+func (r *RedisRepo) AdminRunConfigDelete(key string) error {
+	runConfig, _ := r.AdminRunConfigGet(key)
 	r.delPort(runConfig.Port)
-	_, err := r.redis.Del(r.GetAdminSessionRunKey(key))
+	_, err := r.redis.Del(r.generateAdminRunKey(key))
 	return err
 }
 
-// ExistsAdminRunConfig returns true if there is a session for the particular user
-func (r *RedisRepo) ExistsAdminRunConfig(key string) (bool, error) {
-	return r.redis.Exists(r.GetAdminSessionRunKey(key))
+// AdminRunConfigExists returns true if there is a session for the particular user
+func (r *RedisRepo) AdminRunConfigExists(key string) (bool, error) {
+	return r.redis.Exists(r.generateAdminRunKey(key))
 }
 
-// GetAdminRunConfig returns the user session
-func (r *RedisRepo) GetAdminRunConfig(key string) (runConfig api.RunConfig, err error) {
+// AdminRunConfigGet returns the user session
+func (r *RedisRepo) AdminRunConfigGet(key string) (runConfig api.RunConfig, err error) {
 	var val string
-	val, err = r.redis.Get(r.GetAdminSessionRunKey(key))
+	val, err = r.redis.Get(r.generateAdminRunKey(key))
 	if err != nil {
 		return runConfig, err
 	}
@@ -160,22 +193,22 @@ func (r *RedisRepo) GetAdminRunConfig(key string) (runConfig api.RunConfig, err 
 	return runConfig, nil
 }
 
-// SetAdminRunConfig will add the session
-func (r *RedisRepo) SetAdminRunConfig(key string, runConfig api.RunConfig) (err error) {
+// AdminRunConfigSet will add the session
+func (r *RedisRepo) AdminRunConfigSet(key string, runConfig api.RunConfig) (err error) {
 	// Marshal to JSON
 	var js []byte
 	js, _ = json.Marshal(runConfig)
 
 	// Set key value
 	var OK string
-	OK, err = r.redis.Set(r.GetAdminSessionRunKey(key), string(js), adminTTL)
+	OK, err = r.redis.Set(r.generateAdminRunKey(key), string(js), adminTTL)
 	if err != nil {
 		return err
 	}
 	if OK != "OK" {
 		return errors.New("Not OK")
 	}
-	r.setPort(runConfig.Port, r.GetAdminSessionRunKey(key), userTTL)
+	r.setPort(runConfig.Port, r.generateAdminRunKey(key), userTTL)
 	return nil
 }
 
@@ -190,8 +223,8 @@ func (r *RedisRepo) delPort(port string) {
 	log.Printf("[RedisSession]: Removed configuration for port: %s\n", port)
 }
 
-// RemoveIncosistentRedisKeys is used when a container is
-func (r *RedisRepo) RemoveIncosistentRedisKeys(port string) {
+// DeleteStaleMappedPort is used when a container is
+func (r *RedisRepo) DeleteStaleMappedPort(port string) {
 	val, _ := r.redis.Get("port:" + port)
 	if val != "" {
 		r.delPort(port)
@@ -199,8 +232,8 @@ func (r *RedisRepo) RemoveIncosistentRedisKeys(port string) {
 	}
 }
 
-// ExistsPort is a used by PeriodicChecker function to determine whether a running container should be killed, if the corresponding port key has expired.
-func (r *RedisRepo) ExistsPort(port string) bool {
+// PortIsMapped is a used by PeriodicChecker function to determine whether a running container should be killed, if the corresponding port key has expired.
+func (r *RedisRepo) PortIsMapped(port string) bool {
 	exists, _ := r.redis.Exists("port:" + port)
 	// TODO: YOLO error handling
 	return exists

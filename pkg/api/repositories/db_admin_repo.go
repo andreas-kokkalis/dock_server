@@ -5,18 +5,25 @@ import (
 	"github.com/andreas-kokkalis/dock_server/pkg/drivers/postgres"
 )
 
-//nolint
-type DBAdminRepo struct {
+//go:generate moq -out ../repomocks/db_admin_repo_mock.go -pkg repomocks . AdminDBRepository
+
+// AdminDBRepository models the interaction of an admin with the database
+type AdminDBRepository interface {
+	GetAdminByUsername(input api.Admin) (api.Admin, error)
+}
+
+// AdminDBRepo implements AdminDBRepository
+type AdminDBRepo struct {
 	db *postgres.DB
 }
 
-//nolint
-func NewDBAdminRepo(db *postgres.DB) *DBAdminRepo {
-	return &DBAdminRepo{db}
+// NewAdminDBRepository initializes an AdminDBRepo
+func NewAdminDBRepository(db *postgres.DB) AdminDBRepository {
+	return &AdminDBRepo{db}
 }
 
 //nolint
-func (d *DBAdminRepo) GetAdminByUsername(input api.Admin) (api.Admin, error) {
+func (d *AdminDBRepo) GetAdminByUsername(input api.Admin) (api.Admin, error) {
 	q := `
 		SELECT
 			id,

@@ -35,7 +35,7 @@ type Spec struct {
 
 	// Redis
 	Redis     redis.Redis
-	RedisRepo *repositories.RedisRepo
+	RedisRepo repositories.RedisRepository
 
 	// Docker
 	DockerCLI  *docker.APIClient
