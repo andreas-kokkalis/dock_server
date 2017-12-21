@@ -58,6 +58,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/jmoiron/sqlx"
+  packages = [".","reflectx"]
+  revision = "de8647470aafe4854c976707c431dbe1eb2822c6"
+
+[[projects]]
+  branch = "master"
   name = "github.com/jordic/lti"
   packages = [".","oauth"]
   revision = "2c756eacbab9b559741be8f8cff39561fa40f703"
@@ -208,6 +214,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6acca139193f756155eb0ddce592bb0c89d3ca276c766890495644531ca47e46"
+  inputs-digest = "0c0e95ab7a11e789b3928fef78fe18a0c2ad59cf54eba54f05bb51d34c0eefb4"
   solver-name = "gps-cdcl"
   solver-version = 1
