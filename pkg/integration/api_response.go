@@ -40,7 +40,7 @@ func (r *Response) ToStructure(target interface{}) {
 
 // nolint
 type Res struct {
-	Code    int          `json`
+	Code    int          `json:"Code"`
 	Headers http.Header  `json:"Headers"`
 	Body    api.Response `json:"Body,omitempty"`
 }
