@@ -11,7 +11,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/andreas-kokkalis/dock_server/pkg/api"
-	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
+	"github.com/andreas-kokkalis/dock_server/pkg/api/repositories"
 	"github.com/andreas-kokkalis/dock_server/pkg/drivers/postgres"
 	"github.com/jordic/lti"
 	"github.com/julienschmidt/httprouter"
@@ -19,12 +19,12 @@ import (
 
 // Service for image
 type Service struct {
-	adminRepo *store.DBAdminRepo
-	redis     *store.RedisRepo
+	adminRepo *repositories.DBAdminRepo
+	redis     *repositories.RedisRepo
 }
 
 // NewService creates a new Image Service
-func NewService(adminRepo *store.DBAdminRepo, redis *store.RedisRepo) Service {
+func NewService(adminRepo *repositories.DBAdminRepo, redis *repositories.RedisRepo) Service {
 	return Service{adminRepo, redis}
 }
 

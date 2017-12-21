@@ -7,7 +7,7 @@ import (
 	"path"
 
 	"github.com/andreas-kokkalis/dock_server/pkg/api"
-	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
+	"github.com/andreas-kokkalis/dock_server/pkg/api/repositories"
 	"github.com/andreas-kokkalis/dock_server/pkg/config"
 	"github.com/andreas-kokkalis/dock_server/pkg/drivers/docker"
 	"github.com/andreas-kokkalis/dock_server/pkg/drivers/redis"
@@ -35,11 +35,11 @@ type Spec struct {
 
 	// Redis
 	Redis     redis.Redis
-	RedisRepo *store.RedisRepo
+	RedisRepo *repositories.RedisRepo
 
 	// Docker
 	DockerCLI  *docker.APIClient
-	DockerRepo store.DockerRepository
+	DockerRepo repositories.DockerRepository
 
 	// Logger
 	Log *log.Logger
@@ -105,7 +105,7 @@ func (s *Spec) InitRedisConnection() func() {
 		redis, err := redis.NewClient(s.Config.GetRedisConfig())
 		gomega.Expect(err).To(gomega.BeNil(), "Connect Redis")
 		s.Redis = redis
-		s.RedisRepo = store.NewRedisRepo(s.Redis)
+		s.RedisRepo = repositories.NewRedisRepo(s.Redis)
 	}
 }
 
@@ -122,7 +122,7 @@ func (s *Spec) InitDockerRepo() func() {
 		dockerClient, err := docker.NewAPIClient(s.Config.GetDockerConfig())
 		gomega.Expect(err).To(gomega.BeNil(), "Init docker api client")
 		s.DockerCLI = dockerClient
-		s.DockerRepo = store.NewDockerRepository(dockerClient, s.Config.GetDockerConfig())
+		s.DockerRepo = repositories.NewDockerRepository(dockerClient, s.Config.GetDockerConfig())
 	}
 }
 

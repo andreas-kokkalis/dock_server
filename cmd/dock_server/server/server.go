@@ -12,7 +12,7 @@ import (
 	"github.com/andreas-kokkalis/dock_server/pkg/api/image"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/lti"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/portmapper"
-	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
+	"github.com/andreas-kokkalis/dock_server/pkg/api/repositories"
 	"github.com/andreas-kokkalis/dock_server/pkg/config"
 	"github.com/andreas-kokkalis/dock_server/pkg/drivers/docker"
 	"github.com/andreas-kokkalis/dock_server/pkg/drivers/postgres"
@@ -58,7 +58,7 @@ var Start = func(cmd *cobra.Command, args []string) (err error) {
 		return errors.Wrap(err, "Unable to connect to redis")
 	}
 	// Initialize Redis repository
-	redisRepository := store.NewRedisRepo(redisCli)
+	redisRepository := repositories.NewRedisRepo(redisCli)
 
 	// Initialize PortMapper
 	mapper := portmapper.NewPortMapper(redisRepository, c.GetAPIPorts())
@@ -69,7 +69,7 @@ var Start = func(cmd *cobra.Command, args []string) (err error) {
 		return err
 	}
 	// Initialize docker repository
-	dockerRepository := store.NewDockerRepository(dockerClient, c.GetDockerConfig())
+	dockerRepository := repositories.NewDockerRepository(dockerClient, c.GetDockerConfig())
 
 	// Start a goroute that will run the PeriodicChecker
 	go portmapper.PeriodicChecker(dockerRepository, mapper, redisRepository)
@@ -78,7 +78,7 @@ var Start = func(cmd *cobra.Command, args []string) (err error) {
 	router := httprouter.New()
 
 	// Auth Service
-	adminRepo := store.NewDBAdminRepo(dbConn)
+	adminRepo := repositories.NewDBAdminRepo(dbConn)
 	authService := auth.NewService(adminRepo, redisRepository)
 	router.GET("/v0/admin/logout", auth.AdminLogout(authService))
 	router.POST("/v0/admin/login", auth.AdminLogin(authService))

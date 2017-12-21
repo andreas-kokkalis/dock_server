@@ -4,18 +4,18 @@ import (
 	"net/http"
 
 	"github.com/andreas-kokkalis/dock_server/pkg/api"
-	"github.com/andreas-kokkalis/dock_server/pkg/api/store"
+	"github.com/andreas-kokkalis/dock_server/pkg/api/repositories"
 	"github.com/julienschmidt/httprouter"
 )
 
 // Service for image
 type Service struct {
-	redis  *store.RedisRepo
-	docker store.DockerRepository
+	redis  *repositories.RedisRepo
+	docker repositories.DockerRepository
 }
 
 // NewService creates a new Image Service
-func NewService(redis *store.RedisRepo, docker store.DockerRepository) Service {
+func NewService(redis *repositories.RedisRepo, docker repositories.DockerRepository) Service {
 	return Service{redis, docker}
 }
 
