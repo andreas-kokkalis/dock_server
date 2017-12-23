@@ -81,26 +81,26 @@ var Start = func(cmd *cobra.Command, args []string) (err error) {
 	// Auth Service
 	adminRepo := repositories.NewAdminDBRepository(dbConn)
 	authService := auth.NewService(adminRepo, redisRepository)
-	router.GET("/v0/admin/logout", auth.AdminLogout(authService))
-	router.POST("/v0/admin/login", auth.AdminLogin(authService))
+	router.GET("/v0/admin/logout", authService.AdminLogout)
+	router.POST("/v0/admin/login", authService.AdminLogin)
 
 	// Image service
 	imageService := image.NewService(redisRepository, dockerRepository)
-	router.GET("/v0/admin/images", auth.SessionAuth(authService, image.ListImages(imageService)))
-	router.GET("/v0/admin/images/history/:id", auth.SessionAuth(authService, image.GetImageHistory(imageService)))
-	router.DELETE("/v0/admin/images/delete/:id", auth.SessionAuth(authService, image.RemoveImage(imageService)))
+	router.GET("/v0/admin/images", authService.SessionAuth(image.ListImages(imageService)))
+	router.GET("/v0/admin/images/history/:id", authService.SessionAuth(image.GetImageHistory(imageService)))
+	router.DELETE("/v0/admin/images/delete/:id", authService.SessionAuth(image.RemoveImage(imageService)))
 
 	// Container service
 	containerService := container.NewService(dbConn, redisRepository, dockerRepository, mapper)
-	router.POST("/v0/admin/containers/run/:id", auth.SessionAuth(authService, container.AdminRunContainer(containerService)))
-	router.DELETE("/v0/admin/containers/kill/:id", auth.SessionAuth(authService, container.AdminKillContainer(containerService)))
-	router.POST("/v0/admin/containers/commit/:id", auth.SessionAuth(authService, container.CommitContainer(containerService)))
-	router.GET("/v0/admin/containers/list", auth.SessionAuth(authService, container.GetContainers(containerService)))
-	router.GET("/v0/admin/containers/list/:status", auth.SessionAuth(authService, container.GetContainers(containerService)))
+	router.POST("/v0/admin/containers/run/:id", authService.SessionAuth(container.AdminRunContainer(containerService)))
+	router.DELETE("/v0/admin/containers/kill/:id", authService.SessionAuth(container.AdminKillContainer(containerService)))
+	router.POST("/v0/admin/containers/commit/:id", authService.SessionAuth(container.CommitContainer(containerService)))
+	router.GET("/v0/admin/containers/list", authService.SessionAuth(container.GetContainers(containerService)))
+	router.GET("/v0/admin/containers/list/:status", authService.SessionAuth(container.GetContainers(containerService)))
 
 	// LTI service
 	ltiService := lti.NewService(dbConn, redisRepository, dockerRepository, mapper)
-	router.POST("/v0/lti/launch/:id", auth.OAuth(authService, lti.Launch(ltiService)))
+	router.POST("/v0/lti/launch/:id", authService.OAuth(lti.Launch(ltiService)))
 
 	/****************
 	* ADMIN FRONTEND
