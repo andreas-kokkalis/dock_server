@@ -15,7 +15,7 @@ const (
 	ErrDatabaseError = "A database error occured"
 
 	// ErrUsernameNotExists when username does not exist in db
-	ErrUsernameNotExists = "Username does not exist mismatch"
+	ErrUsernameNotExists = "Username does not exist"
 	// ErrPasswordMismatch when given password does not match the stored
 	ErrPasswordMismatch = "Password mismatch"
 	// ErrCredentialsInvalid When username and password are invalid

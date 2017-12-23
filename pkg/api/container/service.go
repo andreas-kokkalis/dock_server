@@ -18,13 +18,13 @@ import (
 // Service for image
 type Service struct {
 	db     *postgres.DB
-	redis  *repositories.RedisRepo
+	redis  repositories.RedisRepository
 	docker repositories.DockerRepository
 	mapper *portmapper.PortMapper
 }
 
 // NewService creates a new Image Service
-func NewService(db *postgres.DB, redis *repositories.RedisRepo, docker repositories.DockerRepository, mapper *portmapper.PortMapper) Service {
+func NewService(db *postgres.DB, redis repositories.RedisRepository, docker repositories.DockerRepository, mapper *portmapper.PortMapper) Service {
 	return Service{db, redis, docker, mapper}
 }
 
@@ -58,7 +58,7 @@ func AdminRunContainer(s Service) httprouter.Handle {
 
 		cookie, _ := req.Cookie("ses")
 		log.Println(cookie.Value)
-		sessionExists, err := s.redis.ExistsAdminRunConfig(cookie.Value)
+		sessionExists, err := s.redis.AdminRunConfigExists(cookie.Value)
 		if err != nil {
 			response.WriteError(res, http.StatusInternalServerError, api.ErrServerError)
 			return
@@ -67,14 +67,14 @@ func AdminRunContainer(s Service) httprouter.Handle {
 		username := "guest"
 		password := "password"
 		if sessionExists {
-			cfg, err = s.redis.GetAdminRunConfig(cookie.Value)
+			cfg, err = s.redis.AdminRunConfigGet(cookie.Value)
 			if err != nil {
 				response.WriteError(res, http.StatusInternalServerError, api.ErrServerError)
 				return
 			}
 			fmt.Printf("exists: %v\n", cfg)
 			// Update the TTL
-			err = s.redis.SetAdminRunConfig(cookie.Value, cfg)
+			err = s.redis.AdminRunConfigSet(cookie.Value, cfg)
 			if err != nil {
 				response.WriteError(res, http.StatusInternalServerError, api.ErrServerError)
 				return
@@ -101,7 +101,7 @@ func AdminRunContainer(s Service) httprouter.Handle {
 				return
 			}
 
-			err = s.redis.SetAdminRunConfig(cookie.Value, cfg)
+			err = s.redis.AdminRunConfigSet(cookie.Value, cfg)
 			if err != nil {
 				// XXX: not sure if this is needed here, cause there was no error creating the cotnainer
 				// s.mapper.Remove(port)
@@ -131,7 +131,7 @@ func AdminKillContainer(s Service) httprouter.Handle {
 
 		cookie, err := req.Cookie("ses")
 		var cfg api.RunConfig
-		cfg, err = s.redis.GetAdminRunConfig(cookie.Value)
+		cfg, err = s.redis.AdminRunConfigGet(cookie.Value)
 		if err != nil {
 			response.WriteError(res, http.StatusInternalServerError, api.ErrContainerAlreadyKilled)
 			return
@@ -190,7 +190,7 @@ func AdminKillContainer(s Service) httprouter.Handle {
 		fmt.Println("Waited 100ms")
 
 		// Remove Redis key
-		err = s.redis.DeleteAdminRunConfig(cookie.Value)
+		err = s.redis.AdminRunConfigDelete(cookie.Value)
 		if err != nil {
 			response.WriteError(res, http.StatusInternalServerError, err.Error())
 			return
@@ -248,7 +248,7 @@ func CommitContainer(s Service) httprouter.Handle {
 		// Get the cookie to get the admin key
 		cookie, err := req.Cookie("ses")
 		var cfg api.RunConfig
-		cfg, err = s.redis.GetAdminRunConfig(cookie.Value)
+		cfg, err = s.redis.AdminRunConfigGet(cookie.Value)
 		if err != nil {
 			response.WriteError(res, http.StatusInternalServerError, api.ErrServerError)
 			return
@@ -268,7 +268,7 @@ func CommitContainer(s Service) httprouter.Handle {
 			return
 		}
 		// Remove Redis key
-		err = s.redis.DeleteAdminRunConfig(cookie.Value)
+		err = s.redis.AdminRunConfigDelete(cookie.Value)
 		if err != nil {
 			response.WriteError(res, http.StatusInternalServerError, api.ErrServerError)
 			return

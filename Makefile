@@ -58,3 +58,6 @@ integration-run:
 mock:
 	go get github.com/matryer/moq
 	go generate pkg/drivers/redis/redis.go
+
+	mkdir -p pkg/api/repositories/redis && cp pkg/api/repositories/redis_repo.go pkg/api/repositories/redis/ && go generate pkg/api/repositories/redis/redis_repo.go && rm -rf pkg/api/repositories/redis/
+	mkdir -p pkg/api/repositories/admin && cp pkg/api/repositories/db_admin_repo.go pkg/api/repositories/admin/ && go generate pkg/api/repositories/admin/db_admin_repo.go && rm -rf pkg/api/repositories/admin/
