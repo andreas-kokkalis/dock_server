@@ -79,17 +79,15 @@ func AdminLogin(s Service) httprouter.Handle {
 
 		// Query the database and check if user exists
 		admin, err := s.adminRepo.GetAdminByUsername(data)
-		switch {
-		case err == postgres.ErrNoResult:
-			// Case when user does not exist in the database
-			api.WriteErrorResponse(w, http.StatusUnauthorized, api.ErrUsernameNotExists)
-			return
-		case err != nil:
-			// Database error
+		if err != nil {
+			if err == postgres.ErrNoResult {
+				// Case when user does not exist in the database
+				api.WriteErrorResponse(w, http.StatusUnauthorized, api.ErrUsernameNotExists)
+				return
+			}
 			api.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-
 		// Verify that passwords match
 		err = bcrypt.CompareHashAndPassword([]byte(admin.Password), []byte(data.Password))
 		if err != nil {

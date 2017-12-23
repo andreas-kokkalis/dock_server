@@ -1,7 +1,9 @@
 package auth
 
 import (
+	"bytes"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -9,6 +11,7 @@ import (
 	"github.com/andreas-kokkalis/dock_server/pkg/api"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/repositories"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/repositories/repomocks"
+	"github.com/andreas-kokkalis/dock_server/pkg/drivers/postgres"
 	"github.com/andreas-kokkalis/dock_server/pkg/drivers/redis/redismock"
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
@@ -98,38 +101,105 @@ func TestSessionAuth(t *testing.T) {
 
 }
 
+func body(json string) io.Reader {
+	return bytes.NewBuffer([]byte(json))
+}
+
 func TestAdminLogin(t *testing.T) {
 	admin := api.Admin{
 		ID:       1,
 		Username: "foo",
 		Password: "$2a$10$4F5Hpu0NM8Uy4bI/XQWKDO552uK77WwNpi3zIforzLngziZVszk06",
 	}
-	redisRepo := repositories.NewRedisRepo(redismock.NewRedisMock().WithExists(true, nil))
-	adminMatches := repomocks.NewAdminDBRepositoryMock().WithGetAdminByUsername(admin, nil)
+	// adminMatches := repomocks.NewAdminDBRepositoryMock().WithGetAdminByUsername(admin, nil)
+
+	bodyGood := `{"usename":"admin", "password": "kthtest"}`
+	bodyMismatch := `{"usename":"admin", "password": "foo"}`
 
 	tests := []struct {
 		service    Service
+		body       io.Reader
 		request    *http.Request
 		expectCode int
 		name       string
 	}{
 		{
-			service: NewService(
-				adminMatches,
-				redisRepo,
-			),
-			request:    httptest.NewRequest(http.MethodGet, "/", nil),
+			service:    NewService(nil, nil),
+			body:       nil,
 			expectCode: http.StatusBadRequest,
 			name:       "No JSON Body",
+		},
+		{
+			service: NewService(
+				repomocks.NewAdminDBRepositoryMock().
+					WithGetAdminByUsername(api.Admin{}, postgres.ErrNoResult),
+				nil),
+			body:       body(bodyGood),
+			expectCode: http.StatusUnauthorized,
+			name:       "Username does not exist",
+		},
+		{
+			service: NewService(
+				repomocks.NewAdminDBRepositoryMock().
+					WithGetAdminByUsername(api.Admin{}, errors.New("database error")),
+				nil),
+			body:       body(bodyGood),
+			expectCode: http.StatusInternalServerError,
+			name:       "Database error",
+		},
+		{
+			service: NewService(
+				repomocks.NewAdminDBRepositoryMock().
+					WithGetAdminByUsername(admin, nil),
+				nil),
+			body:       body(bodyMismatch),
+			expectCode: http.StatusUnauthorized,
+			name:       "Password mismatch",
+		},
+		{
+			service: NewService(
+				repomocks.NewAdminDBRepositoryMock().
+					WithGetAdminByUsername(admin, nil),
+				repomocks.NewRedisRepositoryMock().
+					WithAdminSessionKeyCreate("adminkey").
+					WithAdminSessionExists(false, errors.New("session exists errors"))),
+			body:       body(bodyGood),
+			expectCode: http.StatusInternalServerError,
+			name:       "Session exists errors",
+		},
+		{
+			service: NewService(
+				repomocks.NewAdminDBRepositoryMock().
+					WithGetAdminByUsername(admin, nil),
+				repomocks.NewRedisRepositoryMock().
+					WithAdminSessionKeyCreate("adminkey").
+					WithAdminSessionExists(false, nil).
+					WithAdminSessionSet(errors.New("set session errors"))),
+			body:       body(bodyGood),
+			expectCode: http.StatusInternalServerError,
+			name:       "Session does not exist, session set error",
+		},
+		{
+			service: NewService(
+				repomocks.NewAdminDBRepositoryMock().
+					WithGetAdminByUsername(admin, nil),
+				repomocks.NewRedisRepositoryMock().
+					WithAdminSessionKeyCreate("adminkey").
+					WithAdminSessionExists(true, nil).
+					WithAdminSessionSet(errors.New("set session errors"))),
+			body:       body(bodyGood),
+			expectCode: http.StatusOK,
+			name:       "Success",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			handler := AdminLogin(tt.service)
+			r := httptest.NewRequest(http.MethodPost, "/", tt.body)
 			w := httptest.NewRecorder()
-			handler(w, tt.request, nil)
-			assert.Equal(t, tt.expectCode, w.Code, tt.name)
+			handler(w, r, nil)
+			assert.Equal(t, tt.expectCode, w.Code, tt.name, w.Body.String())
 		})
 
 	}
