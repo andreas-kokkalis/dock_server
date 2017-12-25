@@ -8,6 +8,7 @@ import (
 
 	"github.com/andreas-kokkalis/dock_server/pkg/api"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/image"
+	"github.com/andreas-kokkalis/dock_server/pkg/api/image/spec/imgspec"
 	"github.com/andreas-kokkalis/dock_server/pkg/integration"
 	"github.com/julienschmidt/httprouter"
 	. "github.com/onsi/ginkgo"
@@ -44,9 +45,9 @@ var _ = BeforeSuite(func() {
 	router := httprouter.New()
 	// Image service
 	imageService := image.NewService(spec.RedisRepo, spec.DockerRepo)
-	router.GET("/v0/admin/images", image.ListImages(imageService))
-	router.GET("/v0/admin/images/history/:id", image.GetImageHistory(imageService))
-	router.DELETE("/v0/admin/images/delete/:id", image.RemoveImage(imageService))
+	router.GET("/v0/admin/images", imageService.ListImages)
+	router.GET("/v0/admin/images/history/:id", imageService.GetImageHistory)
+	router.DELETE("/v0/admin/images/delete/:id", imageService.RemoveImage)
 
 	spec.Handler = router
 })
@@ -56,22 +57,37 @@ var _ = AfterSuite(func() {
 })
 
 var _ = Describe("Image Suite", func() {
-	var img *api.Img
-	It("Should list images", func() {
+	var img api.Img
+	It("Should list all images", func() {
 		request := integration.NewRequest(http.MethodGet, "/v0/admin/images", nil)
-		response := integration.NewResponse(http.StatusOK, imageListGood)
+		response := integration.NewResponse(http.StatusOK, imgspec.ImageListGood)
 		spec.AssertAPICall(request, response)
 
-		type res struct {
-			Data []api.Img
-		}
-		var result res
-		response.ToStructure(&result)
-		img = &result.Data[len(result.Data)-1]
+		var images []api.Img
+		response.Unmarshall(&images)
+		img = images[len(images)-1]
+
 	})
-	It("Should get image history", func() {
+	It("Should get image history of seed image", func() {
 		request := integration.NewRequest(http.MethodGet, fmt.Sprintf("/v0/admin/images/history/%s", img.ID), nil)
-		response := integration.NewResponse(http.StatusOK, imageHistoryGood)
+		response := integration.NewResponse(http.StatusOK, imgspec.ImageHistoryGood)
 		spec.AssertAPICall(request, response)
+	})
+	It("Should not find image history for invalid image ID", func() {
+		invalidImageIDReponse := `
+		{
+      		"errors": [
+        		"ImageID is invalid"
+      		],
+      		"status": "Bad Request"
+    	}`
+		request := integration.NewRequest(http.MethodGet, "/v0/admin/images/history/123", nil)
+		response := integration.NewResponse(http.StatusBadRequest, invalidImageIDReponse)
+		spec.AssertAPICall(request, response)
+	})
+	It("Should remove image", func() {
+		//TODO: 1. Run container
+		//TODO: 2. Commit image
+		//TODO: 3. Remove Image
 	})
 })

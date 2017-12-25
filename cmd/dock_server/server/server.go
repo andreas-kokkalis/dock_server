@@ -85,18 +85,18 @@ var Start = func(cmd *cobra.Command, args []string) (err error) {
 	router.POST("/v0/admin/login", authService.AdminLogin)
 
 	// Image service
-	imageService := image.NewService(redisRepository, dockerRepository)
-	router.GET("/v0/admin/images", authService.SessionAuth(image.ListImages(imageService)))
-	router.GET("/v0/admin/images/history/:id", authService.SessionAuth(image.GetImageHistory(imageService)))
-	router.DELETE("/v0/admin/images/delete/:id", authService.SessionAuth(image.RemoveImage(imageService)))
+	imgService := image.NewService(redisRepository, dockerRepository)
+	router.GET("/v0/admin/images", authService.SessionAuth(imgService.ListImages))
+	router.GET("/v0/admin/images/history/:id", authService.SessionAuth(imgService.GetImageHistory))
+	router.DELETE("/v0/admin/images/delete/:id", authService.SessionAuth(imgService.RemoveImage))
 
 	// Container service
-	containerService := container.NewService(dbConn, redisRepository, dockerRepository, mapper)
-	router.POST("/v0/admin/containers/run/:id", authService.SessionAuth(container.AdminRunContainer(containerService)))
-	router.DELETE("/v0/admin/containers/kill/:id", authService.SessionAuth(container.AdminKillContainer(containerService)))
-	router.POST("/v0/admin/containers/commit/:id", authService.SessionAuth(container.CommitContainer(containerService)))
-	router.GET("/v0/admin/containers/list", authService.SessionAuth(container.GetContainers(containerService)))
-	router.GET("/v0/admin/containers/list/:status", authService.SessionAuth(container.GetContainers(containerService)))
+	cntService := container.NewService(redisRepository, dockerRepository, mapper)
+	router.POST("/v0/admin/containers/run/:id", authService.SessionAuth(cntService.AdminRunContainer))
+	router.DELETE("/v0/admin/containers/kill/:id", authService.SessionAuth(cntService.AdminKillContainer))
+	router.POST("/v0/admin/containers/commit/:id", authService.SessionAuth(cntService.CommitContainer))
+	router.GET("/v0/admin/containers/list", authService.SessionAuth(cntService.GetContainers))
+	router.GET("/v0/admin/containers/list/:status", authService.SessionAuth(cntService.GetContainers))
 
 	// LTI service
 	ltiService := lti.NewService(dbConn, redisRepository, dockerRepository, mapper)
@@ -110,10 +110,10 @@ var Start = func(cmd *cobra.Command, args []string) (err error) {
 
 	// Start the server
 	myServer := &http.Server{
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		Addr:         c.GetAPIServerPort(),
-		Handler:      logger{router},
+		// ReadTimeout:  5 * time.Second,
+		// WriteTimeout: 10 * time.Second,
+		Addr:    c.GetAPIServerPort(),
+		Handler: logger{router},
 	}
 	err = myServer.ListenAndServeTLS("conf/ssl/server.pem", "conf/ssl/server.key")
 	if err != nil {

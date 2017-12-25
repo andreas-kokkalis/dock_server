@@ -134,3 +134,24 @@ func PeriodicChecker(docker repositories.DockerRepository, pm *PortMapper, redis
 		}
 	}
 }
+
+func Check(docker repositories.DockerRepository, pm *PortMapper, redis repositories.RedisRepository) {
+	ports, err := docker.ContainerGetUsedPorts()
+
+	// Check for containers that have crashed / stopped etc.
+	// Remove the PortsAvailable
+	// Remove their redis keys
+	if err != nil {
+		pm.fixup(ports)
+
+		// Check for expired redis keys
+		for port, containerID := range ports {
+			if !redis.PortIsMapped(strconv.Itoa(port)) {
+				_ = docker.ContainerRemove(containerID, port)
+				pm.Remove(port)
+
+				log.Printf("[PortMapper]: removing expired container with ID: %s and port: %d\n", containerID, port)
+			}
+		}
+	}
+}

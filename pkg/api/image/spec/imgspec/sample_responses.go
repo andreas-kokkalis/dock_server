@@ -1,6 +1,6 @@
-package image_test
+package imgspec
 
-var imageHistoryGood = `
+var ImageHistoryGood = `
 {
   "data": [
     {
@@ -16,7 +16,7 @@ var imageHistoryGood = `
   ]
 }
 `
-var imageListGood = `
+var ImageListGood = `
 {
   "data": [
     {

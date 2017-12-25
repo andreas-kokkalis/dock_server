@@ -11,6 +11,12 @@ import (
 )
 
 func TestResponse(t *testing.T) {
+	type Data struct {
+		Foo string `json:"foo"`
+	}
+
+	d1 := Data{"bar"}
+
 	tests := []struct {
 		code int
 		body string
@@ -31,20 +37,15 @@ func TestResponse(t *testing.T) {
 			defer ginkgo.GinkgoRecover()
 
 			actual := NewResponse(tt.code, tt.body)
-
-			// w := httptest.NewRecorder()
 			expect := &Response{expectedCode: tt.code, expectedBody: tt.body, recorder: httptest.NewRecorder()}
 			assert.Equal(t, expect, actual)
 
 			actual.recorder.WriteHeader(tt.code)
 			actual.recorder.WriteString(tt.body)
 
-			// Test the toString log func
-			// js, err := json.MarshalIndent(actual, "", " ")
-			// assert.NoError(t, err)
-			// actualRequestString := actual.toString()
-			// expectedRequestString := string(js)
-			// assert.Contains(t, actualRequestString, expectedRequestString)
+			var actualData Data
+			actual.Unmarshall(&actualData)
+			assert.Equal(t, d1, actualData)
 		})
 	}
 }

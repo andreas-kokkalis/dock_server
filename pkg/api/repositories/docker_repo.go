@@ -23,7 +23,7 @@ type DockerRepository interface {
 	ContainerGetUsedPorts() (map[int]string, error)
 	ContainerRemove(containerID string, port int) error
 	ContainerRun(imageID, username, password string, port int) (api.RunConfig, error)
-	ContainerCommit(comment, author, containerID, refTag string) error
+	ContainerCommit(comment, author, containerID, refTag string) (string, error)
 	ContainerList(status string) ([]api.Ctn, error)
 	ImageList() ([]api.Img, error)
 	ImageHistory(imageID string) ([]api.ImgHistory, error)
@@ -233,20 +233,28 @@ func (d *DockerRepo) containerStart(containerID string) error {
 }
 
 // ContainerCommit creates a new image from a running container
-func (d *DockerRepo) ContainerCommit(comment, author, containerID, refTag string) error {
+func (d *DockerRepo) ContainerCommit(comment, author, containerID, refTag string) (string, error) {
+	// XXX: new version of docker-daemon adds the docker.io/ domain by default when tagging images.
+	fullRef := "docker.io/" + d.imageRepo + ":" + refTag
 
 	// TODO: on options, can add a slice of string with the list of changes for this commit
-	options := types.ContainerCommitOptions{Comment: comment, Author: author, Reference: d.imageRepo + ":" + refTag}
+	options := types.ContainerCommitOptions{
+		Comment:   comment,
+		Author:    author,
+		Reference: fullRef,
+	}
+	log.Printf("options: %+v", options)
 	response, err := d.docker.Cli.ContainerCommit(context.Background(), containerID, options)
 	if err != nil {
-		return err
+		fmt.Printf("response: %+v\nerror: %s", response, err.Error())
+		return "", err
 	}
-	// TODO: figure out what to do with the response
 	fmt.Printf("%+v\n", response)
 	log.Printf("[CommitContainer]: Committed container with ID:%s\n", containerID)
 	//sha256:baa8ace946df92b5fb1722538d73531503485535604863e34e174a5d284a601b
 
-	return nil
+	imgID := response.ID[7:19]
+	return imgID, nil
 }
 
 // ContainerList returns the list of containers. Use
@@ -315,7 +323,7 @@ func (d *DockerRepo) ImageList() ([]api.Img, error) {
 		// fmt.Println(image.RepoTags[0])
 		s := image.RepoTags[0]
 		if s[0:strings.LastIndex(s, ":")] == d.imageRepo {
-			log.Printf("[List-Images]: %+v\n", image)
+			// log.Printf("[List-Images]: %+v\n", image)
 			imageList = append(imageList, api.Img{ID: image.ID[7:19], RepoTags: image.RepoTags, CreatedAt: time.Unix(image.Created, 0)})
 		}
 	}

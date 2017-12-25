@@ -30,12 +30,14 @@ func (r *Response) ToString() string {
 	return r.recorder.Body.String()
 }
 
-// ToStructure unmarshals the JSON API response to the target data structure
-// target should be a pointer to a structure
-// TODO: rename to decode
-func (r *Response) ToStructure(target interface{}) {
-	err := json.Unmarshal(r.recorder.Body.Bytes(), target)
-	gomega.Expect(err).To(gomega.BeNil(), "error unmarshalling JSON response to data structure")
+// Unmarshall takes a JSON api response and unmarshals the result data into the target interface
+func (r *Response) Unmarshall(target interface{}) {
+	var res api.Response
+	err := json.Unmarshal(r.recorder.Body.Bytes(), &res)
+	gomega.Expect(err).To(gomega.BeNil(), "error unmarshalling JSON response")
+	byteData, _ := json.Marshal(res.Data)
+	err = json.Unmarshal(byteData, target)
+	gomega.Expect(err).To(gomega.BeNil(), "error unmarshalling JSON data to target datastructure")
 }
 
 // nolint

@@ -7,6 +7,7 @@ import (
 	"path"
 
 	"github.com/andreas-kokkalis/dock_server/pkg/api"
+	"github.com/andreas-kokkalis/dock_server/pkg/api/portmapper"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/repositories"
 	"github.com/andreas-kokkalis/dock_server/pkg/config"
 	"github.com/andreas-kokkalis/dock_server/pkg/drivers/docker"
@@ -40,6 +41,9 @@ type Spec struct {
 	// Docker
 	DockerCLI  *docker.APIClient
 	DockerRepo repositories.DockerRepository
+
+	// PortMapper
+	Mapper *portmapper.PortMapper
 
 	// Logger
 	Log *log.Logger
@@ -123,6 +127,12 @@ func (s *Spec) InitDockerRepo() func() {
 		gomega.Expect(err).To(gomega.BeNil(), "Init docker api client")
 		s.DockerCLI = dockerClient
 		s.DockerRepo = repositories.NewDockerRepository(dockerClient, s.Config.GetDockerConfig())
+	}
+}
+
+func (s *Spec) InitPortMapper() func() {
+	return func() {
+		s.Mapper = portmapper.NewPortMapper(s.RedisRepo, s.Config.GetAPIPorts())
 	}
 }
 

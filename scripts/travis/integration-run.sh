@@ -19,3 +19,4 @@ fi
 # Wait a bit cause the pg_isready checks seems to reply with 0, although the database is still starting
 sleep 5
 go test -v ./pkg/api/image/spec -ginkgo.v
+go test -v ./pkg/api/container/spec -ginkgo.v

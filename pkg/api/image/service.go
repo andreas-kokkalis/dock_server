@@ -21,37 +21,33 @@ func NewService(redis repositories.RedisRepository, docker repositories.DockerRe
 
 // ListImages returns the list of images along with data per image
 // GET /v0/images
-func ListImages(s Service) httprouter.Handle {
-	return func(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-		images, err := s.docker.ImageList()
-		if err != nil {
-			api.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-		api.WriteOKResponse(w, images)
+func (s Service) ListImages(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+	images, err := s.docker.ImageList()
+	if err != nil {
+		api.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
 	}
+	api.WriteOKResponse(w, images)
 }
 
 // GetImageHistory returns the history of a particular image
 // GET /images/history/:id
-func GetImageHistory(s Service) httprouter.Handle {
-	return func(res http.ResponseWriter, req *http.Request, params httprouter.Params) {
+func (s Service) GetImageHistory(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 
-		// Validate imageID
-		imageID := params.ByName("id")
-		if !api.VImageID.MatchString(imageID) {
-			api.WriteErrorResponse(res, http.StatusBadRequest, api.ErrInvalidImageID)
-			return
-		}
-
-		// Retrieve image history
-		history, err := s.docker.ImageHistory(imageID)
-		if err != nil {
-			api.WriteErrorResponse(res, http.StatusInternalServerError, err.Error())
-			return
-		}
-		api.WriteOKResponse(res, history)
+	// Validate imageID
+	imageID := params.ByName("id")
+	if !api.VImageID.MatchString(imageID) {
+		api.WriteErrorResponse(w, http.StatusBadRequest, api.ErrInvalidImageID)
+		return
 	}
+
+	// Retrieve image history
+	history, err := s.docker.ImageHistory(imageID)
+	if err != nil {
+		api.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	api.WriteOKResponse(w, history)
 }
 
 var (
@@ -61,59 +57,26 @@ var (
 
 // RemoveImage removes an image from the registry
 // DELETE /images/abc33412adqw
-func RemoveImage(s Service) httprouter.Handle {
-	return func(res http.ResponseWriter, req *http.Request, params httprouter.Params) {
-		// Validate imageID
-		imageID := params.ByName("id")
-		if !api.VImageID.MatchString(imageID) {
-			api.WriteErrorResponse(res, http.StatusBadRequest, api.ErrInvalidImageID)
-			return
-		}
-
-		// Check if there are running containers of that image
-		containers, _ := s.docker.GetRunningContainersByImageID(imageID)
-		if len(containers) > 0 {
-			api.WriteErrorResponse(res, http.StatusBadRequest, ErrImageHasRunningContainers)
-			return
-		}
-
-		// Remove Image
-		err := s.docker.ImageRemove(imageID)
-		if err != nil {
-			api.WriteErrorResponse(res, http.StatusInternalServerError, err.Error())
-			return
-		}
-		api.WriteOKResponse(res, nil)
+func (s Service) RemoveImage(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	// Validate imageID
+	imageID := params.ByName("id")
+	if !api.VImageID.MatchString(imageID) {
+		api.WriteErrorResponse(w, http.StatusBadRequest, api.ErrInvalidImageID)
+		return
 	}
-}
 
-/*
-// CreateRunURL will create a LTI basic launch URL and return the configuration
-func CreateRunURL(s Service) httprouter.Handle {
-	return func(res http.ResponseWriter, req *http.Request, params httprouter.Params) {
-		res.Header().Set("Content-Type", "application/json")
-		response := api.NewResponse()
-
-		// TODO: auth
-
-		// Validate ContainerID
-		imageID := params.ByName("id")
-		if !api.VImageID.MatchString(imageID) {
-			response.WriteError(res, http.StatusBadRequest, api.ErrInvalidImageID)
-			return
-		}
-
-		tag, err := s.docker.GetTagByID(imageID)
-		if err != nil {
-			response.WriteError(res, http.StatusInternalServerError, err.Error())
-			return
-		}
-		if tag == "" {
-			response.WriteError(res, http.StatusFailedDependency, er.ImageNotFound)
-			return
-		}
-		response.SetData("https://localhost:8080/lti/launch/" + imageID)
-		res.Write(response.Marshal())
+	// Check if there are running containers of that image
+	containers, _ := s.docker.GetRunningContainersByImageID(imageID)
+	if len(containers) > 0 {
+		api.WriteErrorResponse(w, http.StatusBadRequest, ErrImageHasRunningContainers)
+		return
 	}
+
+	// Remove Image
+	err := s.docker.ImageRemove(imageID)
+	if err != nil {
+		api.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	api.WriteOKResponse(w, "Image was removed successfuly")
 }
-*/

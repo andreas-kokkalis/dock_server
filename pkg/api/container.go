@@ -15,3 +15,23 @@ type Ctn struct {
 	Status string
 	State  string
 }
+
+// ContainerRun models responses for a running container
+type ContainerRun struct {
+	URL         string `json:"url"`
+	Username    string `json:"username"`
+	Password    string `json:"password"`
+	ContainerID string `json:"id"`
+}
+
+// ContainerCommitResponse models the response of creating a new image from a running container.
+type ContainerCommitResponse struct {
+	ImageID string `json:"imageID"`
+}
+
+// ContainerCommitRequest models a request for creating an image from a runnign container
+type ContainerCommitRequest struct {
+	Comment string `json:"comment"`
+	Author  string `json:"auth"`
+	RefTag  string `json:"tag"`
+}
