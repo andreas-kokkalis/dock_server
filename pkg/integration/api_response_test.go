@@ -1,10 +1,10 @@
 package integration
 
 import (
-	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/andreas-kokkalis/dock_server/pkg/api"
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
 	"github.com/stretchr/testify/assert"
@@ -14,38 +14,18 @@ func TestResponse(t *testing.T) {
 	type Data struct {
 		Foo string `json:"foo"`
 	}
+	bodyData := Data{Foo: "bar"}
+	// Since the request can only be used within a gomega assertion,
+	// register the fail handler, and a recover function
+	gomega.RegisterFailHandler(ginkgo.Fail)
+	defer ginkgo.GinkgoRecover()
 
-	d1 := Data{"bar"}
+	response := NewResponse(200, `{"foo":"bar"}`)
+	response.recorder = httptest.NewRecorder()
+	api.WriteOKResponse(response.recorder, bodyData)
 
-	tests := []struct {
-		code int
-		body string
-		name string
-	}{
-		{
-			http.StatusOK,
-			`{"foo": "bar"}`,
-			"good test",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// Since the request can only be used within a gomega assertion,
-			// register the fail handler, and a recover function
-			gomega.RegisterFailHandler(ginkgo.Fail)
-			defer ginkgo.GinkgoRecover()
-
-			actual := NewResponse(tt.code, tt.body)
-			expect := &Response{expectedCode: tt.code, expectedBody: tt.body, recorder: httptest.NewRecorder()}
-			assert.Equal(t, expect, actual)
-
-			actual.recorder.WriteHeader(tt.code)
-			actual.recorder.WriteString(tt.body)
-
-			var actualData Data
-			actual.Unmarshall(&actualData)
-			assert.Equal(t, d1, actualData)
-		})
-	}
+	var actualData Data
+	response.Unmarshall(&actualData)
+	assert.Equal(t, response.recorder.Code, response.expectedCode)
+	assert.Equal(t, bodyData, actualData)
 }
