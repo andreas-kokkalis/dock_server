@@ -15,7 +15,6 @@ import (
 )
 
 //go:generate moq -out ../repomocks/redis_repo_mock.go -pkg repomocks . RedisRepository
-// XXX: the generate is temporary
 
 // RedisRepository models the interactions with the cache storage for containers, students and admins
 type RedisRepository interface {

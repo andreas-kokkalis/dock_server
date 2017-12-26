@@ -31,6 +31,12 @@ func NewRequest(method, url string, body interface{}) *Request {
 	}
 }
 
+// WithSessionCookie sets a session cookie in the HTTP request
+func (r *Request) WithSessionCookie(val string) *Request {
+	r.HTTPRequest.AddCookie(&http.Cookie{Name: "ses", Value: val})
+	return r
+}
+
 // pretty pretty creates a pretty string that models an HTTP request
 func (r *Request) pretty() string {
 	lg := LogRequest{HTTPRequest: Req{r.method, r.url, r.body}}

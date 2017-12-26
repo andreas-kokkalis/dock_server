@@ -52,13 +52,17 @@
     <script type="text/javascript">
         $(document).ready(function() {
             $.ajax({
-                url: "/v0/admin/ping",
+                url: "/v0/admin/containers/list/running",
+				type: "get",
+                contentType: "application/json",
                 success: function(response) {
                     console.log(response)
                 }
             });
             $.ajax({
-                url: "/v0/admin/ping",
+                url: "/v0/admin/containers/list/running",
+				type: "get",
+                contentType: "application/json",
                 success: function(response) {
                     console.log(response)
                 }
@@ -67,10 +71,11 @@
 
         function deleteContainer() {
             $.ajax({
-                url: "https://localhost:8080/v0/admin/containers/kill/" + getUrlParameter('id'),
+                url: "/v0/admin/containers/kill/" + getUrlParameter('id'),
                 type: 'DELETE',
                 dataType: 'json',
                 contentType: "application/json",
+				timeout: 5000,
                 cache: false,
                 success: function(response) {
                     console.log("Success: " + response)
