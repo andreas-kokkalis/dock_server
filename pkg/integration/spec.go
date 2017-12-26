@@ -130,6 +130,7 @@ func (s *Spec) InitDockerRepo() func() {
 	}
 }
 
+// InitPortMapper initiallizes the mapper struct
 func (s *Spec) InitPortMapper() func() {
 	return func() {
 		s.Mapper = portmapper.NewPortMapper(s.RedisRepo, s.Config.GetAPIPorts())

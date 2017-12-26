@@ -31,6 +31,7 @@ func NewRequest(method, url string, body interface{}) *Request {
 	}
 }
 
+// WithSessionCookie sets a session cookie in the HTTP request
 func (r *Request) WithSessionCookie(val string) *Request {
 	r.HTTPRequest.AddCookie(&http.Cookie{Name: "ses", Value: val})
 	return r
