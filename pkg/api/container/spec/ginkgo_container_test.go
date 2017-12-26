@@ -28,7 +28,7 @@ func init() {
 
 func TestImageEndpoints(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Image Suite")
+	RunSpecs(t, "Container Suite")
 }
 
 var (
