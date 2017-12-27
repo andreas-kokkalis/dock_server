@@ -31,7 +31,7 @@ func NewDB(connectionString string) (*DB, error) {
 const (
 	ErrNamedQuery = "error while executing named query"
 	ErrScan       = "error scaning result to data structure"
-	ErrRow        = "error occured while iterating over results"
+	ErrRow        = "error occurred while iterating over results"
 )
 
 var (
