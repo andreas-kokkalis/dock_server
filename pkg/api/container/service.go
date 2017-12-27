@@ -25,20 +25,6 @@ func NewService(redis repositories.RedisRepository, docker repositories.DockerRe
 	return Service{redis, docker, mapper}
 }
 
-/*
-type runRequest struct {
-	Username string `json:"user"`
-	Password string `json:"pwd"`
-}
-*/
-
-type runResponse struct {
-	URL         string `json:"url"`
-	Username    string `json:"username"`
-	Password    string `json:"password"`
-	ContainerID string `json:"id"`
-}
-
 // AdminRunContainer POST
 // POST /v0/containers/run
 func (s Service) AdminRunContainer(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
@@ -130,7 +116,6 @@ func (s Service) AdminKillContainer(w http.ResponseWriter, r *http.Request, para
 		api.WriteErrorResponse(w, http.StatusInternalServerError, api.ErrContainerAlreadyKilled)
 		return
 	}
-	// fmt.Println(cfg)
 
 	// XXX: There is an issue when terminating the TLS handshake in the running container.
 	// The frontend client produces a network_changed error.
@@ -182,9 +167,6 @@ func (s Service) AdminKillContainer(w http.ResponseWriter, r *http.Request, para
 		api.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	// time.Sleep(time.Millisecond * 100)
-	// fmt.Println("Waited 100ms")
-
 	// Remove Redis key
 	err = s.redis.AdminRunConfigDelete(cookie.Value)
 	if err != nil {
@@ -192,9 +174,6 @@ func (s Service) AdminKillContainer(w http.ResponseWriter, r *http.Request, para
 		return
 	}
 
-	// fmt.Printf("%+v\n", req)
-	// fmt.Printf("\n\n%+v\n", res.Header())
-	// defer res.WriteHeader(200)
 	api.WriteOKResponse(w, "Container Killed")
 }
 
