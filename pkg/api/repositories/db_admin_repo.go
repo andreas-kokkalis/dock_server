@@ -22,7 +22,7 @@ func NewAdminDBRepository(db *postgres.DB) AdminDBRepository {
 	return &AdminDBRepo{db}
 }
 
-//nolint
+// GetAdminByUsername returnes an admin object if the username matches with one registered in the database.
 func (d *AdminDBRepo) GetAdminByUsername(input api.Admin) (api.Admin, error) {
 	q := `
 		SELECT

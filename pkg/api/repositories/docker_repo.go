@@ -106,14 +106,14 @@ func (d *DockerRepo) ContainerRemove(containerID string, port int) (err error) {
 		err = Cli.ContainerStop(context.Background(), containerID, &t)
 		if err != nil {
 			// shut up ...
-			fmt.Println("Attemted to stop the container")
+			fmt.Println("Attempted to stop the container")
 			//return err
 		}
 
 		// Then kill it
 		err = Cli.ContainerKill(context.Background(), containerID, "SIGKILL")
 		if err != nil {
-			fmt.Println("Attemted to kill the container")
+			fmt.Println("Attempted to kill the container")
 			// srv.FreeResource(srv.PortResources, port)
 			// return err
 		}
@@ -126,7 +126,7 @@ func (d *DockerRepo) ContainerRemove(containerID string, port int) (err error) {
 	options := types.ContainerRemoveOptions{Force: true}
 	err = d.docker.Cli.ContainerRemove(context.Background(), containerID, options)
 	if err != nil {
-		log.Printf("[RemoveContainer]: An error occured while removing container %s\n\tError: %v\n", containerID, err.Error())
+		log.Printf("[RemoveContainer]: An error occurred while removing container %s\n\tError: %v\n", containerID, err.Error())
 		return err
 	}
 	return err
@@ -192,7 +192,7 @@ func (d *DockerRepo) containerCreate(imageID, password string, port int) (contai
 
 	// --- Host configuration
 	// Prepare portBindings containerPort -> Host port. are part of PortMap
-	portBindings := []nat.PortBinding{nat.PortBinding{HostPort: strconv.Itoa(port)}}
+	portBindings := []nat.PortBinding{{HostPort: strconv.Itoa(port)}}
 	// ContainerPorts.PrintUsed() // Debug Logging
 	// PortMap is member of container.HostConfig
 	portMap := map[nat.Port][]nat.PortBinding{natPort: portBindings}
