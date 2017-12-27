@@ -33,14 +33,12 @@ func (s Service) ListImages(w http.ResponseWriter, req *http.Request, _ httprout
 // GetImageHistory returns the history of a particular image
 // GET /images/history/:id
 func (s Service) GetImageHistory(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-
 	// Validate imageID
 	imageID := params.ByName("id")
 	if !api.VImageID.MatchString(imageID) {
 		api.WriteErrorResponse(w, http.StatusBadRequest, api.ErrInvalidImageID)
 		return
 	}
-
 	// Retrieve image history
 	history, err := s.docker.ImageHistory(imageID)
 	if err != nil {
