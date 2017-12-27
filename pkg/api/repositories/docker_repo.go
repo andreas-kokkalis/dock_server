@@ -192,7 +192,7 @@ func (d *DockerRepo) containerCreate(imageID, password string, port int) (contai
 
 	// --- Host configuration
 	// Prepare portBindings containerPort -> Host port. are part of PortMap
-	portBindings := []nat.PortBinding{nat.PortBinding{HostPort: strconv.Itoa(port)}}
+	portBindings := []nat.PortBinding{{HostPort: strconv.Itoa(port)}}
 	// ContainerPorts.PrintUsed() // Debug Logging
 	// PortMap is member of container.HostConfig
 	portMap := map[nat.Port][]nat.PortBinding{natPort: portBindings}
