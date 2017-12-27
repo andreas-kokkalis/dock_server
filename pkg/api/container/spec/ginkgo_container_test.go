@@ -190,7 +190,7 @@ var _ = Describe("Image Suite", func() {
 	It("Should remove the new image", func() {
 		imageRemoveResponse := `
 		{
-	      "data": "Image was removed successfuly"
+	      "data": "Image was removed successfully"
 	    }`
 		request := integration.NewRequest(http.MethodDelete, fmt.Sprintf("/v0/admin/images/delete/%s", newImgID.ImageID), nil).
 			WithSessionCookie("adm:7ff10abb653dead4186089acbd2b7891")

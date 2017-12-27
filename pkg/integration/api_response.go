@@ -52,7 +52,7 @@ type LogResponse struct {
 	HTTPResponse Res `json:"HTTP_Response"`
 }
 
-// pretty function of Respone logs the API response for debugging purposes
+// pretty function of Response logs the API response for debugging purposes
 func (r *Response) pretty() string {
 
 	var body api.Response

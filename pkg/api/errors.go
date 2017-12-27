@@ -11,8 +11,8 @@ const (
 	ErrInvalidContainerState = "Container state is invalid"
 	// ErrInvalidPostData when running a container and post data are insufficient
 	ErrInvalidPostData = "POST parameters have errors"
-	// ErrDatabaseError occured
-	ErrDatabaseError = "A database error occured"
+	// ErrDatabaseError occurred
+	ErrDatabaseError = "A database error occurred"
 
 	// ErrUsernameNotExists when username does not exist in db
 	ErrUsernameNotExists = "Username does not exist"

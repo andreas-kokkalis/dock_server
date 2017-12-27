@@ -78,5 +78,5 @@ func (s Service) RemoveImage(w http.ResponseWriter, r *http.Request, params http
 		api.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	api.WriteOKResponse(w, "Image was removed successfuly")
+	api.WriteOKResponse(w, "Image was removed successfully")
 }

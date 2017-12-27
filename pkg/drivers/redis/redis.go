@@ -49,7 +49,7 @@ func (r *Client) Del(key string) (int64, error) {
 	return r.cli.Del(key).Result()
 }
 
-// Exists implementes redis.Exists
+// Exists implements redis.Exists
 func (r *Client) Exists(key string) (bool, error) {
 	return r.cli.Exists(key).Result()
 }
