@@ -66,6 +66,10 @@ func TestCreateSchema(t *testing.T) {
 	assert.Error(t, dbm.CreateSchema(), "exec errors")
 	assert.Nil(t, m.Mock.ExpectationsWereMet())
 	m.CloseDB()
+
+	dbm = newMockManager(m)
+	dbm.ScriptPath = "foo"
+	assert.Error(t, dbm.CreateSchema(), "Unable to read create schema script")
 }
 
 func TestDropSchema(t *testing.T) {
@@ -95,6 +99,10 @@ func TestDropSchema(t *testing.T) {
 	assert.Error(t, dbm.DropSchema(), "exec errors")
 	assert.Nil(t, m.Mock.ExpectationsWereMet())
 	m.CloseDB()
+
+	dbm = newMockManager(m)
+	dbm.ScriptPath = "foo"
+	assert.Error(t, dbm.DropSchema(), "Unable to read drop schema script")
 }
 
 func TestInsertSchema(t *testing.T) {
@@ -124,4 +132,8 @@ func TestInsertSchema(t *testing.T) {
 	assert.Error(t, dbm.InsertSchema(), "exec errors")
 	assert.Nil(t, m.Mock.ExpectationsWereMet())
 	m.CloseDB()
+
+	dbm = newMockManager(m)
+	dbm.ScriptPath = "foo"
+	assert.Error(t, dbm.InsertSchema(), "Unable to read insert schema script")
 }
