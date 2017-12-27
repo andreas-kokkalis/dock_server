@@ -28,4 +28,4 @@ mock:
 
 	mkdir -p pkg/api/repositories/redis && cp pkg/api/repositories/redis_repo.go pkg/api/repositories/redis/ && go generate pkg/api/repositories/redis/redis_repo.go && rm -rf pkg/api/repositories/redis/
 	mkdir -p pkg/api/repositories/admin && cp pkg/api/repositories/db_admin_repo.go pkg/api/repositories/admin/ && go generate pkg/api/repositories/admin/db_admin_repo.go && rm -rf pkg/api/repositories/admin/
-	# mkdir -p pkg/api/repositories/docker && cp pkg/api/repositories/docker_repo.go pkg/api/repositories/docker/ && go generate pkg/api/repositories/docker/docker_repo.go && rm -rf pkg/api/repositories/docker/
+	mkdir -p pkg/api/repositories/docker && cp pkg/api/repositories/docker_repository.go pkg/api/repositories/docker/ && go generate pkg/api/repositories/docker/docker_repository.go && rm -rf pkg/api/repositories/docker/

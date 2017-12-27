@@ -89,55 +89,23 @@ func (pm *PortMapper) fixup(ports map[int]string) {
 			pm.redis.DeleteStaleMappedPort(strconv.Itoa(port))
 		}
 	}
-
 	pm.ports.lock.Unlock()
 }
-
-// // PrintUsed will print the used ports, duh
-// func (res *portResources) PrintUsed() {
-// 	res.lock.Lock()
-// 	for port, isUsed := range res.portsAvailable {
-// 		if isUsed {
-// 			log.Printf("[PortMapper]: Port: %d is used.\n", port)
-// 		}
-// 	}
-// 	res.lock.Unlock()
-// 	return
-// }
 
 // PeriodicChecker checks every X seconds for inconsistencies
 // First it gets all used ports by running containers, and syncs the concurrent ports map
 // Then it checks if redis configurations exists for the corresponding ports. If such configurations are absent, it will request to kill the containers
 func PeriodicChecker(docker repositories.DockerRepository, pm *PortMapper, redis repositories.RedisRepository) {
-
 	for {
 		time.Sleep(time.Second * 3)
-
-		ports, err := docker.ContainerGetUsedPorts()
-		if err != nil {
-			continue
-		}
-
-		// Check for containers that have crashed / stopped etc.
-		// Remove the PortsAvailable
-		// Remove their redis keys
-		pm.fixup(ports)
-
-		// Check for expired redis keys
-		for port, containerID := range ports {
-			if !redis.PortIsMapped(strconv.Itoa(port)) {
-				_ = docker.ContainerRemove(containerID, port)
-				pm.Remove(port)
-
-				log.Printf("[PortMapper]: removing expired container with ID: %s and port: %d\n", containerID, port)
-			}
-		}
+		Check(docker, pm, redis)
 	}
 }
 
+// Check checks whether the ports used by container sessions, are in sync with the ports registered in redis cache.
+// If a port is no longer in use by a container, and stale keys exists in the cache, they are be removed.
 func Check(docker repositories.DockerRepository, pm *PortMapper, redis repositories.RedisRepository) {
 	ports, err := docker.ContainerGetUsedPorts()
-
 	// Check for containers that have crashed / stopped etc.
 	// Remove the PortsAvailable
 	// Remove their redis keys
@@ -149,7 +117,6 @@ func Check(docker repositories.DockerRepository, pm *PortMapper, redis repositor
 			if !redis.PortIsMapped(strconv.Itoa(port)) {
 				_ = docker.ContainerRemove(containerID, port)
 				pm.Remove(port)
-
 				log.Printf("[PortMapper]: removing expired container with ID: %s and port: %d\n", containerID, port)
 			}
 		}
