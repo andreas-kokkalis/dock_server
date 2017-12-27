@@ -1,16 +1,12 @@
 #!/usr/bin/env bash
 
-set -e
+set -ex
 
-go get golang.org/x/tools/cmd/cover
-go get github.com/axw/gocov/gocov
-go get github.com/modocache/gover
-go get github.com/mattn/goveralls
-
-for dir in $(go list ./... | grep -v /spec);
-do
-    go test -coverprofile=profile.coverprofile $dir
-    echo "$test : status: $?"
+echo "" > coverage.txt
+for dir in $(go list ./... | grep -v /spec); do
+	go test -race -coverprofile=profile.out -covermode=atomic $dir
+	if [ -f profile.out ]; then
+        cat profile.out >> coverage.txt
+        rm profile.out
+	fi
 done
-gover
-goveralls -coverprofile=gover.coverprofile -service=travis-ci

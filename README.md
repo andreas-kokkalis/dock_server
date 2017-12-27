@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/andreas-kokkalis/dock_server.svg?branch=master)](https://travis-ci.org/andreas-kokkalis/dock_server/)
-[![Coverage Status](https://coveralls.io/repos/github/andreas-kokkalis/dock_server/badge.svg?branch=master)](https://coveralls.io/github/andreas-kokkalis/dock_server?branch=master)
+[![codecov](https://codecov.io/gh/andreas-kokkalis/dock_server/branch/master/graph/badge.svg)](https://codecov.io/gh/andreas-kokkalis/dock_server)
 [![Go Report Card](https://goreportcard.com/badge/github.com/andreas-kokkalis/dock_server)](https://goreportcard.com/report/github.com/andreas-kokkalis/dock_server)
 # Dock-server
 Dock server is an LTI tool provider, that allows creating docker images, running containers.
@@ -15,4 +15,3 @@ Docker version >=1.12.3
 glide version 0.13.0-dev https://github.com/Masterminds/glide
 
 golang 1.7
-
