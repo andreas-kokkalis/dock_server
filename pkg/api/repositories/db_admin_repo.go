@@ -27,7 +27,8 @@ func (d *AdminDBRepo) GetAdminByUsername(input api.Admin) (api.Admin, error) {
 	q := `
 		SELECT
 			id,
-			password
+			password,
+			username
 		FROM
 			admins
 		WHERE
@@ -38,6 +39,6 @@ func (d *AdminDBRepo) GetAdminByUsername(input api.Admin) (api.Admin, error) {
 	if err != nil && err != postgres.ErrNoResult {
 		return api.Admin{}, err
 	}
-
+	admin.Username = input.Username
 	return admin, nil
 }
