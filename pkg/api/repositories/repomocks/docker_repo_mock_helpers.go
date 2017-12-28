@@ -54,3 +54,11 @@ func (d *DockerRepositoryMock) WithGetRunningContainersByImageID(containers []ap
 	}
 	return d
 }
+
+// WithContainerRun sets the ContainerRun mock function
+func (d *DockerRepositoryMock) WithContainerRun(runConfig api.RunConfig, err error) *DockerRepositoryMock {
+	d.ContainerRunFunc = func(_, _, _ string, _ int) (api.RunConfig, error) {
+		return runConfig, err
+	}
+	return d
+}

@@ -65,7 +65,8 @@ func TestFixup(t *testing.T) {
 
 func TestCheck(t *testing.T) {
 
-	// First scenario, ports are reserved, but cntainers have crashed
+	// First scenario, ports are reserved, Getting ports of containers returns error
+	// Do not remove any used ports
 	emptyPortsMap := make(map[int]string)
 	redis := repomocks.NewRedisRepositoryMock().
 		WithPortIsMapped(true).
@@ -85,7 +86,11 @@ func TestCheck(t *testing.T) {
 
 	Check(docker, pm, redis)
 	for port, available := range pm.ports.portsAvailable {
-		assert.True(t, available, fmt.Sprintf("port: %d", port))
+		if port == port1 || port == port2 {
+			assert.False(t, available, fmt.Sprintf("port: %d", port))
+		} else {
+			assert.True(t, available, fmt.Sprintf("port: %d", port))
+		}
 	}
 
 	// second scenario 2 containers are running, but nothing is reserved in redis. Delete containers and removed reservations.
@@ -106,16 +111,7 @@ func TestCheck(t *testing.T) {
 		WithDeleteStaleMappedPort()
 	docker = repomocks.NewDockerRepositoryMock().
 		WithContainerRemove(nil).
-		WithContainerGetUsedPorts(portsMap, errors.New("No results"))
-
-	pm = NewPortMapper(redis, 5)
-	port1, err = pm.Reserve()
-	assert.NoError(t, err, "reserve port 0/1")
-	assert.NotEqual(t, 0, port1)
-
-	port2, err = pm.Reserve()
-	assert.NoError(t, err, "reserve port 0/1")
-	assert.NotEqual(t, 0, port2)
+		WithContainerGetUsedPorts(portsMap, nil)
 
 	Check(docker, pm, redis)
 	for port, available := range pm.ports.portsAvailable {

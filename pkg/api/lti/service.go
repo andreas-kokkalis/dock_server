@@ -1,31 +1,37 @@
 package lti
 
 import (
-	"fmt"
 	"html/template"
-	"log"
 	"net/http"
+	"path"
 	"time"
 
 	"github.com/andreas-kokkalis/dock_server/pkg/api"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/portmapper"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/repositories"
-	"github.com/andreas-kokkalis/dock_server/pkg/drivers/postgres"
 	"github.com/julienschmidt/httprouter"
 )
 
 // Service for image
 type Service struct {
-	db     *postgres.DB
-	redis  repositories.RedisRepository
-	docker repositories.DockerRepository
-	mapper *portmapper.PortMapper
+	redis       repositories.RedisRepository
+	docker      repositories.DockerRepository
+	mapper      *portmapper.PortMapper
+	templateDir string
 }
 
 // NewService creates a new Image Service
-func NewService(db *postgres.DB, redis repositories.RedisRepository, docker repositories.DockerRepository, mapper *portmapper.PortMapper) Service {
-	return Service{db, redis, docker, mapper}
+func NewService(redis repositories.RedisRepository, docker repositories.DockerRepository, mapper *portmapper.PortMapper, templateDir string) Service {
+	return Service{redis, docker, mapper, templateDir}
 }
+
+// nolint
+const (
+	ErrInvalidImageID        = "Invalid ImageID. The Launch URL has not been configured correctly"
+	ErrInvalidFormData       = "Invalid form Data. There is an issue with the LTI integration"
+	ErrResourceQuotaExceeded = "there are no resources available in the system"
+	ErrContainerRun          = "unable to run container"
+)
 
 // Launch launches a url by imageID
 // validate imageID
@@ -33,90 +39,105 @@ func NewService(db *postgres.DB, redis repositories.RedisRepository, docker repo
 // check if container is running for that session
 //	-- true: return current session
 //  -- false: run container and return new session
-func Launch(s Service) httprouter.Handle {
-	return func(res http.ResponseWriter, req *http.Request, params httprouter.Params) {
+func (s Service) Launch(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 
-		fmt.Printf("Header: %+v\n", req.Header)
-		fmt.Printf("Body:  %+v\n", req.Body)
-
-		t, _ := template.ParseFiles("templates/html/assignment.html")
-		// Validate imageID
-		imageID := params.ByName("id")
-		if !api.VImageID.MatchString(imageID) {
-			_ = t.Execute(res, Resp{Error: "Invalid URL. Contact the administrator"})
-		}
-
-		// Parse LTI Post params
-		err := req.ParseForm()
-		if err != nil {
-			_ = t.Execute(res, Resp{Error: "Invalid URL. Contact the administrator"})
-		}
-		// extract Canvas userID and store is as session key
-		userID := req.PostFormValue("user_id")
-		var sessionExists bool
-		sessionExists, err = s.redis.UserRunConfigExists(userID)
-		if err != nil {
-			_ = t.Execute(res, Resp{Error: api.ErrServerError})
-		}
-
-		var cfg api.RunConfig
-		if sessionExists {
-			cfg, err = s.redis.UserRunConfigGet(userID)
-			if err != nil {
-				_ = t.Execute(res, Resp{Error: api.ErrServerError})
-			}
-			fmt.Printf("exists: %v\n", cfg)
-			// Update the TTL
-			err = s.redis.UserRunConfigSet(userID, cfg)
-			if err != nil {
-				_ = t.Execute(res, Resp{Error: api.ErrServerError})
-			}
-		} else {
-			// SESSION didn'texist
-			// Generate username and password
-			username := "guest"
-			// username := "canvas"
-			password := "password"
-			// password := newPassword()
-			// Run container request
-			var port int
-			port, err = s.mapper.Reserve()
-			if err != nil {
-				log.Printf("[CreateContainer]: %v", err.Error())
-				_ = t.Execute(res, Resp{Error: api.ErrServerError})
-			}
-			if port == -1 {
-				log.Printf("[CreateContainer]: No ports were available to reserve.\n")
-				_ = t.Execute(res, Resp{Error: "there are no resources available in the system"})
-			}
-			cfg, err = s.docker.ContainerRun(imageID, username, password, port)
-			if err != nil {
-				fmt.Println(err.Error())
-				s.mapper.Remove(port)
-				_ = t.Execute(res, Resp{Error: api.ErrServerError})
-			}
-			fmt.Printf("not exists: %v\n", cfg)
-			// Set session
-			err = s.redis.UserRunConfigSet(userID, cfg)
-			if err != nil {
-				// XXX: container is running
-				// s.mapper.Remove(port)
-				_ = t.Execute(res, Resp{Error: api.ErrServerError})
-			}
-		}
-
-		// Whether the session exists or not, write the cookie
-		cookie := &http.Cookie{
-			Name:    "dock_session",
-			Value:   s.redis.UserRunKeyGet(userID),
-			Expires: time.Now().Add(24 * time.Hour),
-		}
-		http.SetCookie(res, cookie)
-		fmt.Println(cookie)
-
-		// Return HTML template with data
-		_ = t.Execute(res, getResp(cfg))
+	// fmt.Printf("Header: %+v\n", req.Header)
+	// fmt.Printf("Body:  %+v\n", req.Body)
+	tmp := path.Join(s.templateDir, "templates/html/assignment.html")
+	t, err := template.ParseFiles(tmp)
+	if err != nil {
+		api.WriteErrorResponse(w, http.StatusInternalServerError, "Unable to find template for assignment")
+		return
 	}
+
+	// Validate imageID
+	imageID := params.ByName("id")
+	if !api.VImageID.MatchString(imageID) {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = t.Execute(w, Resp{Error: ErrInvalidImageID})
+		return
+	}
+
+	// Parse LTI Post params
+	err = r.ParseForm()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = t.Execute(w, Resp{Error: ErrInvalidFormData})
+		return
+	}
+
+	// extract Canvas userID and store is as session key
+	userID := r.PostFormValue("user_id")
+	var sessionExists bool
+	sessionExists, err = s.redis.UserRunConfigExists(userID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = t.Execute(w, Resp{Error: api.ErrServerError})
+		return
+	}
+
+	var cfg api.RunConfig
+	if sessionExists {
+		cfg, err = s.redis.UserRunConfigGet(userID)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			_ = t.Execute(w, Resp{Error: api.ErrServerError})
+			return
+		}
+		// fmt.Printf("exists: %v\n", cfg)
+		// Update the TTL
+		err = s.redis.UserRunConfigSet(userID, cfg)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			_ = t.Execute(w, Resp{Error: api.ErrServerError})
+			return
+		}
+	} else {
+		// SESSION didn'texist
+		// Generate username and password
+		username := "guest"
+		// username := "canvas"
+		password := "password"
+		// password := newPassword()
+		// Run container request
+		var port int
+		port, err = s.mapper.Reserve()
+		if err != nil || port == -1 {
+			// log.Printf("[CreateContainer]: %v", err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
+			_ = t.Execute(w, Resp{Error: ErrResourceQuotaExceeded})
+			return
+		}
+		cfg, err = s.docker.ContainerRun(imageID, username, password, port)
+		if err != nil {
+			// fmt.Println(err.Error())
+			s.mapper.Remove(port)
+			w.WriteHeader(http.StatusInternalServerError)
+			_ = t.Execute(w, Resp{Error: ErrContainerRun})
+			return
+		}
+		// Set session
+		err = s.redis.UserRunConfigSet(userID, cfg)
+		if err != nil {
+			// if key failed to set, contaienr will be killed by the mapper eventually
+			w.WriteHeader(http.StatusInternalServerError)
+			_ = t.Execute(w, Resp{Error: api.ErrServerError})
+			return
+		}
+	}
+
+	// Whether the session exists or not, write the cookie
+	cookie := &http.Cookie{
+		Name:    "dock_session",
+		Value:   s.redis.UserRunKeyGet(userID),
+		Expires: time.Now().Add(24 * time.Hour),
+	}
+	http.SetCookie(w, cookie)
+
+	// Return HTML template with data
+	w.WriteHeader(http.StatusOK)
+	_ = t.Execute(w, getResp(cfg))
+	return
 }
 
 func getResp(cfg api.RunConfig) Resp {
@@ -140,6 +161,13 @@ type Resp struct {
 }
 
 /*
+TODO
+
+Terminate button for student doesn't work.
+Add a call from the template to the terminate endpoint for student.
+Container ID can be found from the session key with prefix dock_session
+
+
 // KillContainer terminates and removes a containerID
 // DELETE /v0/containers/kill/abc33412adqw
 func KillContainer(s Service) httprouter.Handle {
