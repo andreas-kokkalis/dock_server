@@ -99,8 +99,8 @@ var Start = func(cmd *cobra.Command, args []string) (err error) {
 	router.GET("/v0/admin/containers/list/:status", authService.SessionAuth(cntService.GetContainers))
 
 	// LTI service
-	ltiService := lti.NewService(dbConn, redisRepository, dockerRepository, mapper)
-	router.POST("/v0/lti/launch/:id", authService.OAuth(lti.Launch(ltiService)))
+	ltiService := lti.NewService(redisRepository, dockerRepository, mapper, ".")
+	router.POST("/v0/lti/launch/:id", authService.OAuth(ltiService.Launch))
 
 	/****************
 	* ADMIN FRONTEND
