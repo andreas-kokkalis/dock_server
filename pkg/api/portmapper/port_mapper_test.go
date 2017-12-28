@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -114,6 +115,12 @@ func TestCheck(t *testing.T) {
 		WithContainerGetUsedPorts(portsMap, nil)
 
 	Check(docker, pm, redis)
+	for port, available := range pm.ports.portsAvailable {
+		assert.True(t, available, fmt.Sprintf("port: %d", port))
+	}
+
+	go PeriodicChecker(docker, pm, redis)
+	time.Sleep(time.Second * 5)
 	for port, available := range pm.ports.portsAvailable {
 		assert.True(t, available, fmt.Sprintf("port: %d", port))
 	}
