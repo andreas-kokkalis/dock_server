@@ -27,8 +27,5 @@ func WriteErrorResponse(w http.ResponseWriter, statusCode int, msg ...string) {
 func WriteOKResponse(w http.ResponseWriter, data interface{}) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
-	err := json.NewEncoder(w).Encode(&Response{Data: data})
-	if err != nil {
-		WriteErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
-	}
+	_ = json.NewEncoder(w).Encode(&Response{Data: data})
 }
