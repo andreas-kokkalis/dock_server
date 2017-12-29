@@ -19,18 +19,28 @@ func TestRequest(t *testing.T) {
 	tests := []struct {
 		method, url string
 		body        interface{}
+		session     string
 		name        string
 	}{
 		{
 			http.MethodGet,
 			"/foo/bar",
 			nil,
+			"",
 			"empty body",
 		},
 		{
 			http.MethodGet,
 			"/foo/bar",
 			api.Img{ID: "abc", RepoTags: []string{"foo"}, CreatedAt: time.Date(2017, 12, 20, 10, 24, 0, 0, time.UTC)},
+			"",
+			"with body",
+		},
+		{
+			http.MethodGet,
+			"/foo/bar",
+			api.Img{ID: "abc", RepoTags: []string{"foo"}, CreatedAt: time.Date(2017, 12, 20, 10, 24, 0, 0, time.UTC)},
+			"val",
 			"with body",
 		},
 	}
@@ -44,9 +54,16 @@ func TestRequest(t *testing.T) {
 
 			actual := NewRequest(tt.method, tt.url, tt.body)
 
+			if tt.session != "" {
+				actual.WithSessionCookie(tt.session)
+			}
+
 			jsonBody, err := json.Marshal(tt.body)
 			assert.NoError(t, err)
 			r := httptest.NewRequest(tt.method, tt.url, ioutil.NopCloser(bytes.NewReader(jsonBody)))
+			if tt.session != "" {
+				r.AddCookie(&http.Cookie{Name: "ses", Value: tt.session})
+			}
 			expect := &Request{method: tt.method, url: tt.url, body: tt.body, HTTPRequest: r}
 			assert.Equal(t, expect, actual)
 
