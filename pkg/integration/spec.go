@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"path"
+	"time"
 
 	"github.com/andreas-kokkalis/dock_server/pkg/api"
 	"github.com/andreas-kokkalis/dock_server/pkg/api/portmapper"
@@ -141,11 +142,15 @@ func (s *Spec) InitPortMapper() func() {
 func (s *Spec) AssertAPICall(request *Request, response *Response) {
 
 	// Perform HTTP Request
+
+	start := time.Now()
 	s.Handler.ServeHTTP(response.recorder, request.HTTPRequest)
+	took := time.Since(start)
 
 	// Log request and response to stdout
 	s.Log.Printf("\n------------------\n%s\n------------------\n", request.pretty())
 	s.Log.Printf("\n------------------\n%s\n------------------\n", response.pretty())
+	s.Log.Printf("\n------------------\nTook: %s\n------------------\n", took.String())
 
 	// Perform assertions
 	gomega.Expect(response.Code()).To(gomega.Equal(response.expectedCode), "status codes do not match")
