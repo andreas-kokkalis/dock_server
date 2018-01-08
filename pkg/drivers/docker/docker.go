@@ -13,17 +13,11 @@ type APIClient struct {
 
 // NewAPIClient initializes a new Docker API client.
 func NewAPIClient(dockerConfig map[string]string) (*APIClient, error) {
-
-	docker := &APIClient{}
-
 	_ = os.Setenv("DOCKER_API_VERSION", dockerConfig["version"])
 	_ = os.Setenv("DOCKER_HOST", dockerConfig["host"])
-
 	cli, err := client.NewEnvClient()
 	if err != nil {
-		docker.Cli = nil
-		return docker, err
+		return nil, err
 	}
-	docker.Cli = cli
-	return docker, nil
+	return &APIClient{Cli: cli}, nil
 }
