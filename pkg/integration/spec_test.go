@@ -1,8 +1,8 @@
 package integration
 
 import (
-	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"path"
 	"testing"
 
@@ -37,28 +37,32 @@ var expectedJSONBody = `
 
 func TestAssertAPICall(t *testing.T) {
 	RegisterFailHandler(Fail)
-	GinkgoRecover()
+	defer GinkgoRecover()
 
 	s := NewSpec(topDir)
 	router := httprouter.New()
 
 	router.GET("/", func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-		w.WriteHeader(200)
-
 		type SampleData struct {
 			Foo string `json:"foo"`
 		}
 
-		wb, _ := json.Marshal(api.Response{Data: SampleData{"bar"}})
-		w.Write(wb)
+		cookie := &http.Cookie{
+			Name:  "ses",
+			Value: "val",
+			Path:  "/",
+		}
+		http.SetCookie(w, cookie)
+		api.WriteOKResponse(w, SampleData{"bar"})
 	})
 
 	s.Handler = router
 
 	req := NewRequest(http.MethodGet, "/", nil)
-	res := NewResponse(200, expectedJSONBody)
+	res := NewResponse(200, expectedJSONBody).WithSessionCookie("val")
 
 	s.AssertAPICall(req, res)
+
 }
 
 var _ = Describe("Test methods of Spec struct", func() {
@@ -112,6 +116,16 @@ var _ = Describe("Test methods of Spec struct", func() {
 
 	})
 })
+
+func TestGetSessionCookie(t *testing.T) {
+	expectCookie := &http.Cookie{Name: "ses", Value: "val"}
+	w := httptest.NewRecorder()
+	http.SetCookie(w, expectCookie)
+	assert.Equal(t, getSessionCookie(w.Result()).String(), expectCookie.String())
+
+	w = httptest.NewRecorder()
+	assert.Nil(t, getSessionCookie(w.Result()))
+}
 
 func TestInitConfig(t *testing.T) {
 	RegisterFailHandler(Fail)
