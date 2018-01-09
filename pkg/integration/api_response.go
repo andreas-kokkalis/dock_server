@@ -13,6 +13,7 @@ import (
 type Response struct {
 	expectedCode int
 	expectedBody string
+	cookie       *http.Cookie
 	recorder     *httptest.ResponseRecorder
 }
 
@@ -23,6 +24,16 @@ func NewResponse(expectedCode int, expectedJSONBody string) *Response {
 		expectedBody: expectedJSONBody,
 		recorder:     httptest.NewRecorder(),
 	}
+}
+
+// WithSessionCookie sets an expected session cookie in the response object
+func (r *Response) WithSessionCookie(val string) *Response {
+	r.cookie = &http.Cookie{
+		Name:  "ses",
+		Value: val,
+		Path:  "/",
+	}
+	return r
 }
 
 // ToString returns the JSON API response

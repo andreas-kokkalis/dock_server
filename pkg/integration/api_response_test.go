@@ -20,7 +20,8 @@ func TestResponse(t *testing.T) {
 	gomega.RegisterFailHandler(ginkgo.Fail)
 	defer ginkgo.GinkgoRecover()
 
-	response := NewResponse(200, `{"foo":"bar"}`)
+	response := NewResponse(200, `{"foo":"bar"}`).WithSessionCookie("cookie")
+
 	response.recorder = httptest.NewRecorder()
 	api.WriteOKResponse(response.recorder, bodyData)
 
@@ -28,4 +29,5 @@ func TestResponse(t *testing.T) {
 	response.Unmarshall(&actualData)
 	assert.Equal(t, response.recorder.Code, response.expectedCode)
 	assert.Equal(t, bodyData, actualData)
+
 }

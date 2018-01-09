@@ -117,7 +117,7 @@ func TestAdminLogout(t *testing.T) {
 			request:      cookieRequest("1"),
 			expectCode:   http.StatusOK,
 			expectCookie: &http.Cookie{Name: "ses", Value: "", Path: "/", Expires: time.Now()},
-			name:         "deleting session errors",
+			name:         "deleting session succeeds",
 		},
 	}
 	for _, tt := range tests {

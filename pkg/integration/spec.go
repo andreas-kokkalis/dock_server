@@ -34,6 +34,7 @@ type Spec struct {
 
 	// Postgres
 	DBManager *dbutil.DBManager
+	AdminRepo repositories.AdminDBRepository
 
 	// Redis
 	Redis     redis.Redis
@@ -78,6 +79,7 @@ func (s *Spec) InitDBConnection() func() {
 		db, err := dbutil.NewDBManager(s.Config.GetPGConnectionString(), path.Join(s.TopDir, scriptDir))
 		gomega.Expect(err).To(gomega.BeNil(), "Connect Postgres")
 		s.DBManager = db
+		s.AdminRepo = repositories.NewAdminDBRepository(db.DB)
 	}
 }
 
@@ -138,11 +140,19 @@ func (s *Spec) InitPortMapper() func() {
 	}
 }
 
+func getSessionCookie(req *http.Response) *http.Cookie {
+	for _, cookie := range req.Cookies() {
+		if cookie.Name == "ses" {
+			return cookie
+		}
+	}
+	return nil
+}
+
 // AssertAPICall performs an HTTP request, records the output and asserts if it matches against the expected response code and body.
 func (s *Spec) AssertAPICall(request *Request, response *Response) {
 
 	// Perform HTTP Request
-
 	start := time.Now()
 	s.Handler.ServeHTTP(response.recorder, request.HTTPRequest)
 	took := time.Since(start)
@@ -154,6 +164,13 @@ func (s *Spec) AssertAPICall(request *Request, response *Response) {
 
 	// Perform assertions
 	gomega.Expect(response.Code()).To(gomega.Equal(response.expectedCode), "status codes do not match")
+
+	if response.cookie != nil {
+		cookie := getSessionCookie(response.recorder.Result())
+		gomega.Expect(cookie.Name).To(gomega.Equal(response.cookie.Name))
+		gomega.Expect(cookie.Path).To(gomega.Equal(response.cookie.Path))
+		gomega.Expect(cookie.Value).To(gomega.Equal(response.cookie.Value))
+	}
 
 	var actualResponse api.Response
 	err := json.Unmarshal(response.recorder.Body.Bytes(), &actualResponse)
