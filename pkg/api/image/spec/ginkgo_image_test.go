@@ -80,11 +80,14 @@ var _ = Describe("Image api endpoints", func() {
 		response.Unmarshall(&images)
 		img = images[len(images)-1]
 
+		integration.Report("/admin/images", spec.Time)
+
 	})
 	It("Should get image history of seed image", func() {
 		request := integration.NewRequest(http.MethodGet, fmt.Sprintf("/v0/admin/images/history/%s", img.ID), nil).WithSessionCookie(authspec.ValidSessionKey)
 		response := integration.NewResponse(http.StatusOK, imgspec.ImageHistoryGood)
 		spec.AssertAPICall(request, response)
+		integration.Report("/admin/images/history/:id", spec.Time)
 	})
 	It("Should not find image history for invalid image ID", func() {
 		invalidImageIDReponse := `

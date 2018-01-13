@@ -137,6 +137,7 @@ var _ = Describe("Image Suite", func() {
 		response := integration.NewResponse(http.StatusOK, containerRunResponse)
 		spec.AssertAPICall(request, response)
 		response.Unmarshall(&containerRun)
+		integration.Report("/admin/containers/run/:id", spec.Time)
 	})
 	var containerKillResponse = `
 	{
@@ -147,6 +148,7 @@ var _ = Describe("Image Suite", func() {
 			WithSessionCookie(authspec.ValidSessionKey)
 		response := integration.NewResponse(http.StatusOK, containerKillResponse)
 		spec.AssertAPICall(request, response)
+		integration.Report("/admin/containers/kill/:id", spec.Time)
 	})
 	It("Should run the container again after removing it", func() {
 		request := integration.NewRequest(http.MethodPost, fmt.Sprintf("/v0/admin/containers/run/%s", img.ID), nil).
@@ -184,6 +186,7 @@ var _ = Describe("Image Suite", func() {
 		response := integration.NewResponse(http.StatusOK, containerCommitResponse)
 		spec.AssertAPICall(request, response)
 		response.Unmarshall(&newImgID)
+		integration.Report("/admin/containers/commit/:id", spec.Time)
 	})
 	It("Should fail removing the container since commit removed it already", func() {
 		failContainerRemoveRequest := `
@@ -207,5 +210,6 @@ var _ = Describe("Image Suite", func() {
 			WithSessionCookie(authspec.ValidSessionKey)
 		response := integration.NewResponse(http.StatusOK, imageRemoveResponse)
 		spec.AssertAPICall(request, response)
+		integration.Report("/admin/images/delete/:id", spec.Time)
 	})
 })

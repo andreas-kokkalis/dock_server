@@ -52,6 +52,9 @@ type Spec struct {
 
 	// Handler
 	Handler http.Handler
+
+	// time elapshed
+	Time float64
 }
 
 // NewSpec initializes a spec struct with the given values
@@ -156,6 +159,7 @@ func (s *Spec) AssertAPICall(request *Request, response *Response) {
 	start := time.Now()
 	s.Handler.ServeHTTP(response.recorder, request.HTTPRequest)
 	took := time.Since(start)
+	s.Time = took.Seconds() * 1000
 
 	// Log request and response to stdout
 	s.Log.Printf("\n------------------\n%s\n------------------\n", request.pretty())

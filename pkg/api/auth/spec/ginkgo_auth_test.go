@@ -54,6 +54,7 @@ var _ = Describe("Admin auth endpoints", func() {
 	// adminGood := api.Admin{Username: "admin", Password: "kthtest"}
 	It("Should login", func() {
 		authspec.LoginGoodSpecfunc(spec)
+		integration.Report("/admin/login", spec.Time)
 	})
 	It("Should not error if attempting to login and is already logged in", func() {
 		authspec.LoginGoodSpecfunc(spec)
@@ -64,6 +65,7 @@ var _ = Describe("Admin auth endpoints", func() {
 		response := integration.NewResponse(http.StatusOK, "{}").
 			WithSessionCookie("")
 		spec.AssertAPICall(request, response)
+		integration.Report("/admin/logout", spec.Time)
 	})
 	It("Should fail to logout if already logged out", func() {
 		request := integration.NewRequest(http.MethodGet, "/v0/admin/logout", nil)
